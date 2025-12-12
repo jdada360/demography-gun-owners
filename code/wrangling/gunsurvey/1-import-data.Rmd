@@ -1,0 +1,61 @@
+# Import survey data
+
+This script imports the survey data and converts into the R formats.
+
+## Data
+
+**Input**
+  - DemographyGunOwners/data/raw/gunsurvey/
+
+**Output**
+  - 
+
+**Last ran**
+  - 12/12/2O25
+
+```{r 1-import-data,  message = FALSE, warning = FALSE}
+
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "dplyr",
+    "here"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import and convert to rds format
+
+```{r}
+purrr::map(
+  c(2013, 2015, 2017, 2019, 2021, 2023),
+  ~ {
+    read_dta(
+      here(
+        path_od, 
+        "data",
+        "raw",
+        "gunsurvey",
+        paste0(.x, ".dta")
+      )
+    ) %>% 
+      write_rds(
+         here(
+          path_od, 
+          "data",
+          "raw",
+          "gunsurvey",
+          paste0(.x, ".rds")
+        )
+      )
+  }
+)
+```
