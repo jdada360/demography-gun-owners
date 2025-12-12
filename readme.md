@@ -1,18 +1,6 @@
-# How to use this template
+# Demographics of Gun Owners
 
-1. If you want to start a new repository, click on `Use this template` and then `Create a new repository`. If the repository was created for you, skip this step.
-1. Copy the relevant [issues](https://github.com/DevInnovationLab/dil-template-repo/issues) from the template repository to your new repository.
-1. Delete this section of the README.
-1. Follow the instructions in the issues.
-
-# Template README and Guidance
-
-> INSTRUCTIONS: Include a brief project summary here, as well as short instructions for how to run the code in the repository. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
-
-- Edit `programs/config.do` to adjust the default path
-- Run `programs/00_setup.do` once on a new system to set up the working environment. 
-- Download the data files referenced above. Each should be stored in the prepared subdirectories of `data/`, in the format that you download them in. Do not unzip. Scripts are provided in each directory to download the public-use files. Confidential data files requested as part of your FSRDC project will appear in the `/data` folder. No further action is needed on the replicator's part.
-- Run `programs/01_master.do` to run all steps in sequence.
+This project analyzes survey data to explore how the demographics of gun owners have changed over time. The focus to explore how the recent pandemic has changed the profile of a typical gun owner.
 
 **Contents**
 - [Comments for replicators](#comments-for-replicators)
