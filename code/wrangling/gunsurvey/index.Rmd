@@ -1,5 +1,5 @@
 --- 
-title: "NPI Panel"
+title: "Clean Gun Survey"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
@@ -9,9 +9,7 @@ documentclass: book
 
 # Introduction {-}
 
-The code in this book creates 2 panel data sets: an individual level and a state level data set where each observation is at the NPI-time level. The data created in this book are the primary analysis data for a study looking at the impact of the NLC and other licensure policies on labor mobility.
-
-The code from this book must be ran **after** the code from the book in the folder code/wrangling/survey-data as these data sets are merged into the panel data.
+The code in this books cleans the gun survey data. 
 
 ```{r}
 knitr::opts_chunk$set(

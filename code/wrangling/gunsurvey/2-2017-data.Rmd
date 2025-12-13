@@ -1,0 +1,63 @@
+# Merge yearly data
+
+This script merges the yearly data.
+
+## Data
+
+**Input**
+  - DemographyGunOwners/data/raw/gunsurvey/
+
+**Output**
+  - - DemographyGunOwners/data/constructed/
+
+**Last ran**
+  - 12/12/2O25
+
+```{r,  message = FALSE, warning = FALSE}
+
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "dplyr",
+    "here"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import and bind
+
+```{r}
+for (i in c(2013, 2015, 2017, 2019, 2021, 2023)){
+  
+  assign(
+    paste0("data_", i),
+    read_rds(
+     here(
+      path_od, 
+      "data",
+      "raw",
+      "gunsurvey",
+      paste0(i, ".rds")
+      )
+    )
+  )
+} 
+```
+
+
+## 2017
+
+```{r}
+
+```
+
