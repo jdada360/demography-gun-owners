@@ -2,16 +2,15 @@
 
 This script imports the survey data and converts into the R formats.
 
-## Data
-
 **Input**
-  - DemographyGunOwners/data/raw/gunsurvey/
+
+-   DemographyGunOwners/data/raw/gunsurvey/...dta
 
 **Output**
-  - 
 
-**Last ran**
-  - 12/12/2O25
+-   DemographyGunOwners/data/raw/gunsurvey/...rds
+
+**Last ran** - 12/14/2025
 
 ```{r 1-import-data,  message = FALSE, warning = FALSE}
 
@@ -59,4 +58,3 @@ purrr::map(
   }
 )
 ```
-

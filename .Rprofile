@@ -1,3 +1,6 @@
+library(ggplot2)
+library(purrr)
+
 path_od <-
   file.path(
     Sys.getenv("ONEDRIVE"),
@@ -10,8 +13,6 @@ path_git <-
     Sys.getenv("GITHUB"),
     "demography-gun-owners"
   )
-
-library(ggplot2)
 
 theme <-
   theme_minimal() +
@@ -40,3 +41,8 @@ theme_event <-
       color = "gray80"
     )
   )
+
+map(
+  list.files(file.path(path_git, "code/funs"), full.names = TRUE),
+  ~ source(.x)
+)

@@ -3,6 +3,5 @@ new_session: yes
 output_dir: "gunsurvey"
 rmd_files: [
   "index.Rmd",
-  "1-import-data.Rmd",
-  "clean-2017-data.Rmd"
+  "summary-stats.Rmd"
 ]

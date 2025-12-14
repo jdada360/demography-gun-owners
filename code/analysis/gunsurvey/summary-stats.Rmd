@@ -1,0 +1,89 @@
+# Summary Statistics
+
+Survey weights were normalized to the sample size; therefore, population counts were obtained by multiplying weighted proportions by external Census population totals.
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gunsurvey/...rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran** - 12/14/2025
+
+```{r,  message = FALSE, warning = FALSE}
+
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "janitor",
+    "dplyr",
+    "here"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+raw <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "raw",
+      "gunsurvey",
+      "2017.rds"
+      )
+  )
+```
+
+
+## Set up survey design
+
+This uses the package `survey`.
+
+```{r}
+des <- svydesign(
+  ids = ~1,                 # no clustering
+  weights = ~ weight1,   # your post-strat weight
+  data = raw
+) 
+```
+
+## NRA membership
+
+```{r}
+raw %>% tabyl(q29)
+```
+
+```{r}
+svymean(~ q29, des)
+```
+
+
+```{r}
+p <- svymean(~ q29, des)[1]   # weighted proportion
+N <- 258e6                         # US adult population
+owners <- p * N
+```
+
+### By gender
+
+```{r}
+svyby(
+  ~q29,
+  ~gender,
+  des,
+  svymean
+)
+```

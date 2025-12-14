@@ -1,7 +1,7 @@
 --- 
 title: "Gun Survey Data Cleaning"
 author: "Joy Dada"
-date: '`r format(Sys.Date(), format = "%A %B %d %Y")`'
+date: 'Sunday December 14 2025'
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 documentclass: book
@@ -11,9 +11,4 @@ documentclass: book
 
 The code in this books cleans the gun survey data. 
 
-```{r, warning = FALSE, message = FALSE, echo = F}
-knitr::opts_chunk$set(
-  warning = FALSE,
-  meassage = FALSE
-  )
-```
+

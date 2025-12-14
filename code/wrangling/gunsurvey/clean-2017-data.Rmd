@@ -1,20 +1,18 @@
-# Merge yearly data
+# Clean 2017 data
 
-This script merges the yearly data.
-
-## Data
+This script cleans the 2017 survey data.
 
 **Input**
-  - DemographyGunOwners/data/raw/gunsurvey/
+
+-   DemographyGunOwners/data/raw/gunsurvey/2017.rds
 
 **Output**
-  - - DemographyGunOwners/data/constructed/
 
-**Last ran**
-  - 12/12/2O25
+-   DemographyGunOwners/data/gunsurvey/2017.rds
+
+**Last ran** - 12/13/2025
 
 ```{r,  message = FALSE, warning = FALSE}
-
 packages <-
   c(
     "tidyverse",
@@ -22,10 +20,17 @@ packages <-
     "haven",
     "tidyr",
     "janitor",
+    "weights",
+    "kableExtra",
+    "survey",
     "skimr",
     "psych",
     "dplyr",
-    "here"
+    "here",
+    "vtable",
+    "fixest",
+    "lfe",
+    "broom"
   )
 
 pacman::p_load(
@@ -34,24 +39,10 @@ pacman::p_load(
 )
 ```
 
-## Import and bind
+## Import data
 
 ```{r}
-for (i in c(2013, 2015, 2017, 2019, 2021, 2023)){
-  
-  assign(
-    paste0("data_", i),
-    
-    )
-  )
-} 
-```
-
-
-## 2017
-
-```{r}
-raw <-
+source <-
   read_rds(
      here(
       path_od, 
@@ -60,6 +51,147 @@ raw <-
       "gunsurvey",
       "2017.rds"
       )
+  ) %>% 
+  clean_names()
+```
+
+## Explore data
+
+```{r}
+source %>% 
+  sample_n(10) %>% 
+  head(10) %>% 
+  kbl(
+    caption = 
+      "Gun Survey 2017 Data",
+    align = "c",
+    format = "html",
+    booktabs = TRUE
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+    )  %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+### Summary table
+
+| Name | Value |
+|------------------------|-----------------------------------------------|
+| Number of observations | `r nrow(raw)` |
+| Number of unique cases | `r n_distinct(source$case_id)` |
+| Sum of weights | `r sum(``source``$weight1)` |
+| Number of variables | `r length(``source``)` |
+| Variable names | `r``source``%>% names() %>% paste(collapse = ", ")` |
+
+## Clean names and remove Stata encoding
+
+```{r}
+raw <-
+  source %>% 
+  mutate(
+    across(
+      where(is.havenlab), ~ factor(haven::as_factor(.x))
+    )
   )
 ```
 
+```{r}
+demovars <-
+  c(
+    "age",
+    "hhsize",
+    "gender",
+    "raceethnicity",
+    "educ",
+    "marital",
+    "employ",
+    "income",
+    "internet",
+    "home_type"
+  )
+
+summstats <-
+  c("notNA(x)", "mean(x)", "sd(x)")
+summnames <-
+  c("Observations", "Mean", "SD")
+```
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  raw,
+  vars = demovars,
+  group.weights = "weight1",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary",
+  out = "kable",
+  numformat = "comma"
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+## Data quality
+
+### Duration of survey
+
+Figure \@ref(fig:durhist) shows that over half of survey respondents
+have a survey duration of greater than 3 hours (180 minutes), which seems suspicious. 
+
+```{r}
+summary(raw$duration)
+```
+
+
+```{r durhist, fig.cap="Distribution of survey duration",  fig.topcaption=TRUE}
+raw %>% 
+  mutate(
+    duration = 
+      ifelse(duration > 180, 180, duration)
+    ) %>% 
+  ggplot( 
+    aes(x = duration, weight = weight1)
+    ) +
+  geom_histogram(
+    aes(y = after_stat(count / sum(count))),
+    bins = 150,
+    boundary = 0,
+    closed = "left"
+  ) +
+  scale_y_continuous(
+    labels = scales::percent
+    ) +
+  scale_x_continuous(n.breaks = 12) +
+  theme +
+  labs(
+    x = "Weighted distribution of survey duration (in minutes)",
+    y = "Weighted percent of respondents"
+  )
+```
+
+Age is positively correlated with duration of survey.
+
+```{r}
+felm(
+  duration ~ gender +  income + age | state,
+  data = raw
+)
+```
+
+```{r}
+t.test(duration ~ surv_mode, data = raw )
+
+```
+
+```{r}
+raw %>% 
+  group_by(surv_mode) %>% 
+  summarise(
+    mean = sum(weight1*duration)/sum(weight1)
+  )
+```
