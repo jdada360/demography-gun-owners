@@ -722,14 +722,14 @@ Do you happen to have in your home or garage any guns or revolvers? = `q40` = `g
 Do any of these guns personally belong to you? = `gunhomeper`.  There are `r nrow(filter(raw, q41 =="NA"))` observations with NA hardcoded for `q41`. 
 This corresponds to people who said answered no to q40.
 
-ISSUE WITH NA FOR Q41.
+
 ```{r}
 raw %>% tabyl(q40)
 raw %>% tabyl(q41)
 ```
 
 ```{r}
-test <-
+raw <-
   raw %>% 
   rename(
     gunhome = q40,
@@ -738,7 +738,7 @@ test <-
   mutate(
     gunhomeper = 
       case_when(
-        is.na(gunhomeper) ~  as.character(gunhome), 
+        gunhomeper == "NA" ~  as.character(gunhome), 
         TRUE ~ as.character(gunhomeper)
       ),
     across(
@@ -752,16 +752,18 @@ test <-
       )
   ) %>% 
   set_variable_labels(
-    gunhome = "Do you happen to have in your home or garage any guns or revolvers?"
+    gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
+    gunhomeper = "Do any of guns or revolvers in your home or garagepersonally belong to you?"
   )
 ```
 
 ```{r}
-raw %>% tabyl(gunhome)
-raw %>% tabyl(gunhomeper)
+raw %>% tabyl(gunhome, gunhomeper)
 ```
 
 ## Political party
+
+To align with the 2023 coding, I group any observations that are either don't know, skipped on web, or refused as "Unknown". I also define `party5` which groups political parties into 5 categories to match 2023.
 
 ```{r}
 raw %>% tabyl(partyid7)
@@ -770,30 +772,52 @@ raw %>% tabyl(partyid7)
 ```{r}
 raw <-
   raw %>% 
-  rename(party = partyid7) %>% 
+  rename(party7 = partyid7) %>% 
   mutate(
-    party =
+    party7 =
       factor(
-        as.numeric(party), 
-        levels = c(1:7, 98),
+        as.numeric(party7), 
+        levels = c(98, 1:7),
         labels = 
-          c("Strong Democrat",
+          c("Unknown",
+            "Strong Democrat",
             "Not so strong Democrat",
             "Lean Democrat",
             "Don't Lean/Independent/None",
             "Lean Republican",
             "Not so strong Republican",
-            "Strong Republican",
-            "Skipped on web")
+            "Strong Republican"
+            )
+      ),
+    party5 =
+      case_when(
+        grepl("Unknown", party7) ~ -1,
+        grepl("strong demo", party7, ignore.case = T) ~ 1,
+        grepl("lean demo", party7, ignore.case = T) ~ 2,
+        grepl("none", party7, ignore.case = T) ~ 3,
+        grepl("lean repub", party7, ignore.case = T) ~ 4,
+        grepl("strong repub", party7, ignore.case = T) ~ 5
+      ) %>% 
+      factor(
+        levels = c(-1, 1:5),
+        labels = 
+          c("Unknown",
+            "Democrat",
+            "Lean Democrat",
+            "Don't Lean/Independent/None",
+            "Lean Republican",
+            "Republican"
+            )
       )
   ) %>% 
   set_variable_labels(
-    party = "Political affiliation"
+    party7 = "7-level political affiliation",
+    party5 = "5-level political affiliation"
   )
 ```
 
 ```{r}
-raw %>% tabyl(party)
+raw %>% tabyl(party7, party5)
 ```
 
 ## Household size
@@ -839,7 +863,7 @@ demovars <-
     "income",
     "internet",
     "home_type",
-    "party"
+    "party7"
   )
 
 summstats <-
