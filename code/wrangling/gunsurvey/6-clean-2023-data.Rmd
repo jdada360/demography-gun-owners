@@ -1,22 +1,25 @@
-# Clean 2021 data
+# Clean 2023 data
+
+We use this [codebook.](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/9558_JHU%20Gun%20Policy%202023_codebook.xlsx?d=w551a28b764fc4672a2bfc152b24b6e04&csf=1&web=1&e=4Jb9Vt).
+
+Note that all of the demographic variables are the same as the 2021 survey.
 
 **Input**
 
--   DemographyGunOwners/data/raw/gunsurvey/2021.rds
+-   DemographyGunOwners/data/raw/gunsurvey/2023.rds
 
 **Output**
 
--   DemographyGunOwners/data/clean/gs-2021.rds
+-   DemographyGunOwners/data/clean/gs-2023.rds
 
 **Last ran**
 
--   01/26/26
+-   01/27/26
 
 ```{r,  message = FALSE, warning = FALSE}
 packages <-
   c(
     "tidyverse",
-    "purrr",
     "haven",
     "labelled",
     "tidyr",
@@ -24,14 +27,11 @@ packages <-
     "weights",
     "conflicted",
     "kableExtra",
-    "survey",
     "skimr",
-    "psych",
+    "purrr",
     "dplyr",
     "here",
     "vtable",
-    "fixest",
-    "lfe",
     "broom"
   )
 
@@ -53,7 +53,7 @@ source <-
       "data",
       "raw",
       "gunsurvey",
-      "2021.rds"
+      "2023.rds"
       )
   ) %>% 
   clean_names()
@@ -67,7 +67,7 @@ source %>%
   head(10) %>% 
   kbl(
     caption = 
-      "Gun Survey 2021 Data",
+      "Gun Survey 2023 Data",
     align = "c",
     format = "html",
     booktabs = TRUE
@@ -81,19 +81,32 @@ source %>%
 
 ### Summary table
 
-| Name | Value |
+| Name                   | Value                                             |
 |-------------------------|-----------------------------------------------|
-| Number of observations | `r nrow(source)` |
-| Number of unique cases | `r n_distinct(source$case_id)` |
-| Sum of weights | ` r sum(source$weight1) ` |
-| Number of variables | ` r length(source) ` |
-| Variable names | `r source %>% names() %>% paste(collapse = ", ") ` |
+| Number of observations | `r nrow(source)`                                  |
+| Number of unique cases | `r n_distinct(source$case_id)`                    |
+| Sum of weights         | `r sum(source$weight1)`                           |
+| Number of variables    | `r length(source)`                                |
+| Variable names         | `r source %>% names() %>% paste(collapse = ", ")` |
 
-## Decode variables
+## Drop order variables
 
-All questions are encoded, so we decode them using the [codebook](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/2021%20Documentation/8999_JHU_Gun%20Policy%202021_Codebook.xlsx?d=w75cec2186ce04efd95f19e64b723f885&csf=1&web=1&e=YHbc6U).
+In the survey, the questions are ordered randomly. We remove the variables that denote the order of the questions.
 
-We focus on demographic variables and the main variables about gun ownership.
+```{r}
+raw <- 
+  source %>% 
+  select(
+    -c(
+      matches("order"),
+      "rnd_01"
+      )
+  )
+```
+
+## Select variables
+
+We select demographic variables and a handful of the questions that pertain to a political identity in order to characterize the typical gun owner.
 
 ```{r}
 demovars <-
@@ -104,7 +117,6 @@ demovars <-
     "hhsize",
     "gender",
     "racethnicity",
-    "partyid7",
     "educ5",
     "marital",
     "employ",
@@ -124,16 +136,39 @@ demovars <-
     "hh25",
     "hh612",
     "hh1317",
-    "hh18ov"
+    "hh18ov",
+    "veteran_1",
+    "veteran2_1"
+  )
+
+politics <-
+  c(
+    "party_id7",
+    "party_id5",
+    "qcandi20",
+    "qvotediff",
+    "q_vote22",
+    "qvotediff2"
   )
 
 gun <-
   c(
     "gun",
+    "qguntypea",
+    "qguntypeb",
+    "qguntypec",
+    "qguntyped", 
     "q39a",
     "q39b",
+    "q40_23",
     "q40",
-    "q41"
+    "q41",
+    "q41_23",
+    "q42_23",
+    "q43_23a",
+    "q43_23b",
+    "q43_23c",
+    "q47_23"
   )
 ```
 
@@ -142,7 +177,7 @@ raw <-
   source %>% 
   dplyr::select(
     starts_with(c("caseid", "weight")), 
-    all_of(c(demovars, gun))
+    all_of(c(demovars, politics, gun))
   )
 ```
 
@@ -201,7 +236,6 @@ raw <-
 ```{r}
 raw %>% tabyl(gender)
 ```
-
 
 ## Age
 
@@ -281,6 +315,7 @@ raw <-
 ```{r}
 raw %>% tabyl(racethnicity)
 ```
+
 ## Education
 
 ```{r}
@@ -389,6 +424,7 @@ raw %>% tabyl(income)
 raw %>% tabyl(income4)
 raw %>% tabyl(income9)
 ```
+
 ```{r}
 raw <-
   raw %>% 
@@ -666,6 +702,70 @@ raw <-
 raw %>% tabyl(phoneservice)
 ```
 
+## Gun ownership type
+
+Do you personally own any of the following types of guns?
+
+-   `qguntypea` = handguns
+
+-   `qguntypeb` = rifles
+
+-   `qguntypec` = shotguns
+
+-   `qguntyped` = other
+
+```{r}
+walk(
+  c("qguntypea", "qguntypeb", "qguntypec", "qguntyped"),
+  ~ print(raw %>% tabyl(.x))
+)
+```
+
+```{r}
+raw <- 
+  raw %>% 
+  rename(
+    ownhandgun = qguntypea,
+    ownrifle = qguntypeb, 
+    ownshot = qguntypec,
+    ownother = qguntyped
+  ) %>% 
+  mutate(
+    across(
+      starts_with("own"),
+      ~ case_when(
+        is.na(.x) ~ 100,
+        TRUE ~ .x
+      ) %>% 
+        factor(
+          levels = c(1:2, 77, 98:100),
+          labels =
+            c("Yes", 
+              "No",
+              "Don't know",
+              "Skipped on web",
+              "Refused",
+              "Non-gun owner")
+        )
+    )
+  ) %>% 
+    set_variable_labels(
+      ownhandgun = "Do you personally own any hanguns?",
+      ownrifle = "Do you personally own any rifles?", 
+      ownshot = "Do you personally own any shotguns?",
+      ownother = "Do you personally own any other types of guns?",
+    )
+```
+
+
+```{r}
+walk(
+    raw %>% select(starts_with("own")) %>% names(),
+  ~ print(raw %>% tabyl(.x))
+)
+```
+
+
 ## Q39a and b
 
 Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
@@ -713,170 +813,4 @@ raw <-
 
 ```{r}
 raw %>% tabyl(nranow, nraever)
-```
-
-## Q40 & 41
-
-Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
-
-Do any of these guns personally belong to you? = `gunhomeper`.  There are `r nrow(filter(raw, q41 =="NA"))` observations with NA hardcoded for `q41`. 
-This corresponds to people who said answered no to q40.
-
-ISSUE WITH NA FOR Q41.
-```{r}
-raw %>% tabyl(q40)
-raw %>% tabyl(q41)
-```
-
-```{r}
-test <-
-  raw %>% 
-  rename(
-    gunhome = q40,
-    gunhomeper = q41
-    ) %>% 
-  mutate(
-    gunhomeper = 
-      case_when(
-        is.na(gunhomeper) ~  as.character(gunhome), 
-        TRUE ~ as.character(gunhomeper)
-      ),
-    across(
-      starts_with("gunhome"),
-      ~ factor(
-          as.numeric(.x),
-          levels = c(1:2, 98:99),
-          labels =
-            c("Yes", "No", "Skipped on web", "Refused")
-        )
-      )
-  ) %>% 
-  set_variable_labels(
-    gunhome = "Do you happen to have in your home or garage any guns or revolvers?"
-  )
-```
-
-```{r}
-raw %>% tabyl(gunhome)
-raw %>% tabyl(gunhomeper)
-```
-
-## Political party
-
-```{r}
-raw %>% tabyl(partyid7)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  rename(party = partyid7) %>% 
-  mutate(
-    party =
-      factor(
-        as.numeric(party), 
-        levels = c(1:7, 98),
-        labels = 
-          c("Strong Democrat",
-            "Not so strong Democrat",
-            "Lean Democrat",
-            "Don't Lean/Independent/None",
-            "Lean Republican",
-            "Not so strong Republican",
-            "Strong Republican",
-            "Skipped on web")
-      )
-  ) %>% 
-  set_variable_labels(
-    party = "Political affiliation"
-  )
-```
-
-```{r}
-raw %>% tabyl(party)
-```
-
-## Household size
-
-```{r}
-raw <-
-  raw %>% 
-  set_variable_labels(
-    hhsize = "Household size (including children)",
-    hh01 = "Number of HH members age 0-1",
-    hh25 = "Number of HH members age 2-5",
-    hh612 = "Number of HH members age 6-12",
-    hh1317 = "Number of HH members age 13-17",
-    hh18ov = "Number of HH members age 18+"
-  )
-```
-
-## Weights
-
-```{r}
-clean <-
-  raw %>% 
-  set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population (N=2,778)",
-    weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other) (N=2,778)",
-weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=2,778)"
-  )
-```
-
-## Explore demographic variables
-
-```{r}
-demovars <-
-  c(
-    "gun",
-    "age",
-    "hhsize",
-    "gender",
-    "raceethnicity",
-    "educ",
-    "marital",
-    "employ",
-    "income",
-    "internet",
-    "home_type",
-    "party"
-  )
-
-summstats <-
-  c("notNA(x)", "mean(x)", "sd(x)")
-summnames <-
-  c("Observations", "Mean", "SD")
-```
-
-```{r, results = "asis", warning = F, message = F}
-st(
-  clean,
-  vars = demovars,
-  group.weights = "weight",
-  summ = summstats,
-  summ.names = summnames,
-  title = "Weighted demographic summary",
-  out = "kable",
-  numformat = "comma",
-  labels =  T
-  ) %>% 
-  kable_classic(
-    full_width = FALSE,
-    html_font = "Cambria"
-  ) %>% 
-  scroll_box(width = "800px", height = "500px")
-```
-
-## Export data
-
-```{r}
-write_rds(
-  clean,
-  here(
-    path_od, 
-    "data",
-    "clean",
-    "gs-2021.rds"
-    )
-  ) 
 ```
