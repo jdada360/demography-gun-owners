@@ -1,0 +1,2939 @@
+# Clean 2021 data
+
+**Input**
+
+-   DemographyGunOwners/data/raw/gunsurvey/2021.rds
+
+**Output**
+
+-   DemographyGunOwners/data/clean/gs-2021.rds
+
+**Last ran**
+
+-   01/26/26
+
+
+``` r
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "labelled",
+    "tidyr",
+    "janitor",
+    "weights",
+    "conflicted",
+    "kableExtra",
+    "survey",
+    "skimr",
+    "psych",
+    "dplyr",
+    "here",
+    "vtable",
+    "fixest",
+    "lfe",
+    "broom"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+
+conflicts_prefer(dplyr::filter)
+```
+
+## Import data
+
+
+``` r
+source <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "raw",
+      "gunsurvey",
+      "2021.rds"
+      )
+  ) %>% 
+  clean_names()
+```
+
+## Explore data
+
+
+``` r
+source %>% 
+  sample_n(10) %>% 
+  head(10) %>% 
+  kbl(
+    caption = 
+      "Gun Survey 2021 Data",
+    align = "c",
+    format = "html",
+    booktabs = TRUE
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+    )  %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:500px; overflow-x: scroll; width:800px; "><table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-3)Gun Survey 2021 Data</caption>
+ <thead>
+  <tr>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> v1 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> caseid </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> weight </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> weight2 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> weight3 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> gun </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q1 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q2 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q3 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q4 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q5 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q5b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q6 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q7 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q8 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q9 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q10 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q12a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q12b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q13 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q14 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q15 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q16 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q17 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q18 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q19 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q20 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q21 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q22 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q23 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q25 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q26 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q27 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q28 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q29 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q31 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q32 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q33 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q5a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q11a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q11b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q11c </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q11d </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q24a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q24b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q30a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q30b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q34a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q34b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q35a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q35b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q36a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q36b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q37 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q32a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q32b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q32c </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q32d </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q39a </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q39b </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q40 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> q41 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> partyid7 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> startdt </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> enddt </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> duration </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> surv_mode </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> surv_lang </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> device </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> gender </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> age </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> age4 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> age7 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> racethnicity </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> educ5 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> marital </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> employ </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> income </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> income4 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> income9 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> state </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> region4 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> region9 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> metro </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> internet </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> housing </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> home_type </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> phoneservice </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> hhsize </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> hh01 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> hh25 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> hh612 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> hh1317 </th>
+   <th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;"> hh18ov </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:center;"> 2740 </td>
+   <td style="text-align:center;"> 3568 </td>
+   <td style="text-align:center;"> 0.0654200 </td>
+   <td style="text-align:center;"> 0.1248861 </td>
+   <td style="text-align:center;"> 0.0650940 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 77 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 77 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 77 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2021-01-05 00:14:57 </td>
+   <td style="text-align:center;"> 2021-01-06 18:08:46 </td>
+   <td style="text-align:center;"> 20 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Phone interview (not online) </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 77 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 7 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> MI </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 107 </td>
+   <td style="text-align:center;"> 184 </td>
+   <td style="text-align:center;"> 6.2375379 </td>
+   <td style="text-align:center;"> 4.7398729 </td>
+   <td style="text-align:center;"> 6.2064614 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2021-01-06 08:38:45 </td>
+   <td style="text-align:center;"> 2021-01-06 09:05:34 </td>
+   <td style="text-align:center;"> 25 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Smartphone </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 21 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 9 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> OH </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 4 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 976 </td>
+   <td style="text-align:center;"> 1310 </td>
+   <td style="text-align:center;"> 0.7418886 </td>
+   <td style="text-align:center;"> 0.5637573 </td>
+   <td style="text-align:center;"> 0.7381924 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2021-01-04 19:40:24 </td>
+   <td style="text-align:center;"> 2021-01-04 19:51:10 </td>
+   <td style="text-align:center;"> 11 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Smartphone </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 47 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 17 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 9 </td>
+   <td style="text-align:center;"> WA </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 9 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 3 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 2017 </td>
+   <td style="text-align:center;"> 2626 </td>
+   <td style="text-align:center;"> 2.5401096 </td>
+   <td style="text-align:center;"> 1.9302162 </td>
+   <td style="text-align:center;"> 2.5700543 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2021-01-05 15:27:34 </td>
+   <td style="text-align:center;"> 2021-01-05 15:38:53 </td>
+   <td style="text-align:center;"> 11 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Desktop </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 43 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 14 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 8 </td>
+   <td style="text-align:center;"> VA </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 895 </td>
+   <td style="text-align:center;"> 1189 </td>
+   <td style="text-align:center;"> 0.1110095 </td>
+   <td style="text-align:center;"> 0.1528211 </td>
+   <td style="text-align:center;"> 0.1104564 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2021-01-05 07:21:09 </td>
+   <td style="text-align:center;"> 2021-01-05 07:34:10 </td>
+   <td style="text-align:center;"> 13 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Smartphone </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 48 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> MO </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 2238 </td>
+   <td style="text-align:center;"> 2916 </td>
+   <td style="text-align:center;"> 0.1739966 </td>
+   <td style="text-align:center;"> 0.2395322 </td>
+   <td style="text-align:center;"> 0.1760478 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 98 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 98 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 2021-01-04 22:33:25 </td>
+   <td style="text-align:center;"> 2021-01-04 22:44:37 </td>
+   <td style="text-align:center;"> 11 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Smartphone </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 71 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> MI </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 851 </td>
+   <td style="text-align:center;"> 1137 </td>
+   <td style="text-align:center;"> 1.6567900 </td>
+   <td style="text-align:center;"> 2.2808175 </td>
+   <td style="text-align:center;"> 1.6763214 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 98 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 98 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 98 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2021-01-04 22:20:02 </td>
+   <td style="text-align:center;"> 2021-01-04 16:37:30 </td>
+   <td style="text-align:center;"> 18 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Smartphone </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 73 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 9 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> AL </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 2296 </td>
+   <td style="text-align:center;"> 2990 </td>
+   <td style="text-align:center;"> 0.6103488 </td>
+   <td style="text-align:center;"> 1.1651496 </td>
+   <td style="text-align:center;"> 0.6073079 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2021-01-07 07:33:37 </td>
+   <td style="text-align:center;"> 2021-01-07 08:37:53 </td>
+   <td style="text-align:center;"> 27 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Smartphone </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 63 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> TN </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 251 </td>
+   <td style="text-align:center;"> 366 </td>
+   <td style="text-align:center;"> 0.5285302 </td>
+   <td style="text-align:center;"> 1.0089588 </td>
+   <td style="text-align:center;"> 0.5258970 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2021-01-04 22:02:10 </td>
+   <td style="text-align:center;"> 2021-01-04 22:08:25 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Desktop </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 56 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 18 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 9 </td>
+   <td style="text-align:center;"> IN </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> 990 </td>
+   <td style="text-align:center;"> 1329 </td>
+   <td style="text-align:center;"> 1.1711549 </td>
+   <td style="text-align:center;"> 0.8899545 </td>
+   <td style="text-align:center;"> 1.1653199 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> NA </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 2021-01-12 16:56:23 </td>
+   <td style="text-align:center;"> 2021-01-12 17:15:58 </td>
+   <td style="text-align:center;"> 20 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> Smartphone </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 24 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> 1 </td>
+   <td style="text-align:center;"> WI </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 2 </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 4 </td>
+  </tr>
+</tbody>
+</table></div>
+
+### Summary table
+
+| Name | Value |
+|-------------------------|-----------------------------------------------|
+| Number of observations | 2778 |
+| Number of unique cases | 0 |
+| Sum of weights | ` r sum(source$weight1) ` |
+| Number of variables | ` r length(source) ` |
+| Variable names | v1, caseid, weight, weight2, weight3, gun, q1, q2, q3, q4, q5, q5b, q6, q7, q8, q9, q10, q12a, q12b, q13, q14, q15, q16, q17, q18, q19, q20, q21, q22, q23, q25, q26, q27, q28, q29, q31, q32, q33, q5a, q11a, q11b, q11c, q11d, q24a, q24b, q30a, q30b, q34a, q34b, q35a, q35b, q36a, q36b, q37, q32a, q32b, q32c, q32d, q39a, q39b, q40, q41, partyid7, startdt, enddt, duration, surv_mode, surv_lang, device, gender, age, age4, age7, racethnicity, educ5, marital, employ, income, income4, income9, state, region4, region9, metro, internet, housing, home_type, phoneservice, hhsize, hh01, hh25, hh612, hh1317, hh18ov |
+
+## Select variables
+
+All questions are encoded, so we decode them using the [codebook](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/2021%20Documentation/8999_JHU_Gun%20Policy%202021_Codebook.xlsx?d=w75cec2186ce04efd95f19e64b723f885&csf=1&web=1&e=YHbc6U).
+
+We focus on demographic variables and the main variables about gun ownership.
+
+
+``` r
+demovars <-
+  c(
+    "age",
+    "age4",
+    "age7",
+    "hhsize",
+    "gender",
+    "racethnicity",
+    "partyid7",
+    "educ5",
+    "marital",
+    "employ",
+    "income",
+    "income4",
+    "income9",
+    "state",
+    "region4",
+    "region9",
+    "metro",
+    "internet",
+    "housing",
+    "home_type",
+    "phoneservice",
+    "hhsize",
+    "hh01",
+    "hh25",
+    "hh612",
+    "hh1317",
+    "hh18ov"
+  )
+
+gun <-
+  c(
+    "gun",
+    "q39a",
+    "q39b",
+    "q40",
+    "q41"
+  )
+```
+
+
+``` r
+raw <-
+  source %>% 
+  dplyr::select(
+    starts_with(c("caseid", "weight")), 
+    all_of(c(demovars, gun))
+  )
+```
+
+## Gun
+
+Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes.
+
+
+``` r
+raw %>% tabyl(gun)
+```
+
+```
+##  gun    n  percent
+##    1  835 0.300576
+##    2 1943 0.699424
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    gun = 
+      factor(
+        gun,
+        levels = 1:2,
+        labels = 
+          c("Gun owner",
+            "Non-gun owner")
+      )
+  ) %>% 
+  set_variable_labels(
+    gun = "Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes"
+  )
+```
+
+
+``` r
+raw %>% tabyl(gun)
+```
+
+```
+##            gun    n  percent
+##      Gun owner  835 0.300576
+##  Non-gun owner 1943 0.699424
+```
+
+## Gender
+
+
+``` r
+raw %>% tabyl(gender)
+```
+
+```
+##  gender    n   percent
+##       1 1393 0.5014399
+##       2 1385 0.4985601
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    gender = 
+      factor(
+        gender, 
+        levels = 1:2,
+        labels = c("Male", "Female")
+      )
+  ) %>% 
+  set_variable_labels(
+    gender = "Respondent gender"
+  )
+```
+
+
+``` r
+raw %>% tabyl(gender)
+```
+
+```
+##  gender    n   percent
+##    Male 1393 0.5014399
+##  Female 1385 0.4985601
+```
+
+
+## Age
+
+
+``` r
+raw %>% tabyl(age4)
+```
+
+```
+##  age4   n   percent
+##     1 394 0.1418287
+##     2 816 0.2937365
+##     3 640 0.2303816
+##     4 928 0.3340533
+```
+
+``` r
+raw %>% tabyl(age7)
+```
+
+```
+##  age7   n    percent
+##     1 133 0.04787617
+##     2 625 0.22498200
+##     3 452 0.16270698
+##     4 395 0.14218862
+##     5 524 0.18862491
+##     6 470 0.16918647
+##     7 179 0.06443485
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    age4 = 
+      factor(
+        age4,
+        levels = 1:4,
+        labels =
+          c("18-29",
+            "30-44",
+            "45-59",
+            "60+")
+      ),
+    age7 = 
+      factor(
+        age7,
+        levels = 1:7,
+        labels =
+          c("18-24",
+            "25-34",
+            "35-44",
+            "45-54",
+            "55-64",
+            "65-74",
+            "75+")
+      )
+  ) %>% 
+  set_variable_labels(
+    age = "Age",
+    age4 = "Age - 4 Categories",
+    age7 = "Age - 7 Categories"
+  )
+```
+
+
+``` r
+raw %>% tabyl(age4)
+```
+
+```
+##   age4   n   percent
+##  18-29 394 0.1418287
+##  30-44 816 0.2937365
+##  45-59 640 0.2303816
+##    60+ 928 0.3340533
+```
+
+``` r
+raw %>% tabyl(age7)
+```
+
+```
+##   age7   n    percent
+##  18-24 133 0.04787617
+##  25-34 625 0.22498200
+##  35-44 452 0.16270698
+##  45-54 395 0.14218862
+##  55-64 524 0.18862491
+##  65-74 470 0.16918647
+##    75+ 179 0.06443485
+```
+
+## Race and ethnicity
+
+
+``` r
+raw %>% tabyl(racethnicity)
+```
+
+```
+##  racethnicity    n    percent
+##             1 1359 0.48920086
+##             2  634 0.22822174
+##             3   30 0.01079914
+##             4  637 0.22930166
+##             5   64 0.02303816
+##             6   54 0.01943844
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    racethnicity = 
+      factor(
+        racethnicity,
+        levels = 1:6,
+        labels =
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Other, non-Hispanic",
+            "Hispanic",
+            "2+, non-Hispanic",
+            "Asian, non-Hispanic")
+      )
+  ) %>% 
+  set_variable_labels(
+    racethnicity = "Combined race/ethnicity"
+  )
+```
+
+
+``` r
+raw %>% tabyl(racethnicity)
+```
+
+```
+##         racethnicity    n    percent
+##  White, non-Hispanic 1359 0.48920086
+##  Black, non-Hispanic  634 0.22822174
+##  Other, non-Hispanic   30 0.01079914
+##             Hispanic  637 0.22930166
+##     2+, non-Hispanic   64 0.02303816
+##  Asian, non-Hispanic   54 0.01943844
+```
+## Education
+
+
+``` r
+raw %>% tabyl(educ5)
+```
+
+```
+##  educ5    n    percent
+##      1  126 0.04535637
+##      2  462 0.16630670
+##      3 1251 0.45032397
+##      4  562 0.20230382
+##      5  377 0.13570914
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    educ5 = 
+      factor(
+        educ5,
+        levels = 1:5,
+        labels = 
+          c("Less than HS",
+            "HS graduate",
+            "Vocational/tech school/some college/ associates",
+            "Bachelors degree",
+            "Post grad study/professional degree"
+            )
+      )
+  ) %>% 
+  set_variable_labels(
+    educ5 = "Highest level of education"
+  )
+```
+
+
+``` r
+raw %>% tabyl(educ5)
+```
+
+```
+##                                            educ5    n    percent
+##                                     Less than HS  126 0.04535637
+##                                      HS graduate  462 0.16630670
+##  Vocational/tech school/some college/ associates 1251 0.45032397
+##                                 Bachelors degree  562 0.20230382
+##              Post grad study/professional degree  377 0.13570914
+```
+
+## Martial status
+
+
+``` r
+raw %>% tabyl(marital)
+```
+
+```
+##  marital    n    percent
+##        1 1291 0.46472282
+##        2  136 0.04895608
+##        3  350 0.12598992
+##        4   79 0.02843772
+##        5  687 0.24730022
+##        6  235 0.08459323
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    marital = 
+      factor(
+        marital, 
+        levels = 1:6,
+        labels = 
+          c(
+            "Married",
+            "Widowed",
+            "Divorced",
+            "Separated",
+            "Never married",
+            "Living with partner"
+          )
+      )
+  )  %>% 
+  set_variable_labels(
+    marital = "Marital status"
+  )
+```
+
+
+``` r
+raw %>% tabyl(marital)
+```
+
+```
+##              marital    n    percent
+##              Married 1291 0.46472282
+##              Widowed  136 0.04895608
+##             Divorced  350 0.12598992
+##            Separated   79 0.02843772
+##        Never married  687 0.24730022
+##  Living with partner  235 0.08459323
+```
+
+## Employment
+
+
+``` r
+raw %>% tabyl(employ)
+```
+
+```
+##  employ    n     percent
+##       1 1437 0.517278618
+##       2  231 0.083153348
+##       3   27 0.009719222
+##       4  148 0.053275738
+##       5  552 0.198704104
+##       6  193 0.069474442
+##       7  190 0.068394528
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    employ = 
+      factor(
+        employ, 
+        levels = 1:7, 
+        labels = 
+          c(
+            "Working - as a paid employee",
+            "Working - self-employed",
+            "Not working - on temporary layoff from a job",
+            "Not working - looking for work",
+            "Not working - retired",
+            "Not working - disabled",
+            "Not working - other"
+          )
+      )
+  )   %>% 
+  set_variable_labels(
+    employ = "Current employment status"
+  )
+```
+
+
+``` r
+raw %>% tabyl(employ)
+```
+
+```
+##                                        employ    n     percent
+##                  Working - as a paid employee 1437 0.517278618
+##                       Working - self-employed  231 0.083153348
+##  Not working - on temporary layoff from a job   27 0.009719222
+##                Not working - looking for work  148 0.053275738
+##                         Not working - retired  552 0.198704104
+##                        Not working - disabled  193 0.069474442
+##                           Not working - other  190 0.068394528
+```
+
+## Income
+
+
+``` r
+raw %>% tabyl(income)
+```
+
+```
+##  income   n    percent
+##       1  78 0.02807775
+##       2  88 0.03167747
+##       3 138 0.04967603
+##       4 117 0.04211663
+##       5 189 0.06803456
+##       6 174 0.06263499
+##       7 153 0.05507559
+##       8 109 0.03923686
+##       9 274 0.09863211
+##      10 251 0.09035277
+##      11 282 0.10151188
+##      12 117 0.04211663
+##      13 251 0.09035277
+##      14 234 0.08423326
+##      15 123 0.04427646
+##      16  81 0.02915767
+##      17  42 0.01511879
+##      18  77 0.02771778
+```
+
+``` r
+raw %>% tabyl(income4)
+```
+
+```
+##  income4   n   percent
+##        1 784 0.2822174
+##        2 787 0.2832973
+##        3 650 0.2339813
+##        4 557 0.2005040
+```
+
+``` r
+raw %>% tabyl(income9)
+```
+
+```
+##  income9   n    percent
+##        1 166 0.05975522
+##        2 255 0.09179266
+##        3 363 0.13066955
+##        4 262 0.09431246
+##        5 274 0.09863211
+##        6 533 0.19186465
+##        7 368 0.13246940
+##        8 357 0.12850972
+##        9 200 0.07199424
+```
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    income = 
+      factor(
+        income, 
+        levels = 1:18,
+        labels = 
+          c("Less than $5,000",
+            "$5,000-9,999",
+            "$10,000-14,999",
+            "$15,000-19,999",
+            "$20,000-24,999",
+            "$25,000-29,999",
+            "$30,000-34,999",
+            "$35,000-39,999",
+            "$40,000-49,999",
+            "$50,000-59,999",
+            "$60,000-74,999",
+            "$75,000-84,999",
+            "$85,000-99,999",
+            "$100,000-124,999",
+            "$125,000-149,999",
+            "$150,000-174,999",
+            "$175,000-199,999",
+            "$200,000 or more")
+      ),
+    income4 = 
+      factor(
+        income4, 
+        levels = 1:4, 
+        labels = 
+          c("Less than $30,000",
+            "$30,000-60,000",
+            "$60,000-100,000",
+            "$100,000 or more")
+      ),
+    income9 = 
+      factor(
+        income9, 
+        levels = 1:9, 
+        labels = 
+          c("Under $10,000",
+            "$10,000-20,000",
+            "$20,000-30,000",
+            "$30,000-40,000",
+            "$40,000-50,000",
+            "$50,000-75,000",
+            "$75,000-100,000",
+            "$100,000-150,000",
+            "$150,000 or more")
+      )
+  )  %>% 
+  set_variable_labels(
+    income = "Household income",
+    income4 = "Household income: 4 categories",
+    income9 = "Household income: 9 categories"
+  )
+```
+
+
+``` r
+raw %>% tabyl(income)
+```
+
+```
+##            income   n    percent
+##  Less than $5,000  78 0.02807775
+##      $5,000-9,999  88 0.03167747
+##    $10,000-14,999 138 0.04967603
+##    $15,000-19,999 117 0.04211663
+##    $20,000-24,999 189 0.06803456
+##    $25,000-29,999 174 0.06263499
+##    $30,000-34,999 153 0.05507559
+##    $35,000-39,999 109 0.03923686
+##    $40,000-49,999 274 0.09863211
+##    $50,000-59,999 251 0.09035277
+##    $60,000-74,999 282 0.10151188
+##    $75,000-84,999 117 0.04211663
+##    $85,000-99,999 251 0.09035277
+##  $100,000-124,999 234 0.08423326
+##  $125,000-149,999 123 0.04427646
+##  $150,000-174,999  81 0.02915767
+##  $175,000-199,999  42 0.01511879
+##  $200,000 or more  77 0.02771778
+```
+
+``` r
+raw %>% tabyl(income4)
+```
+
+```
+##            income4   n   percent
+##  Less than $30,000 784 0.2822174
+##     $30,000-60,000 787 0.2832973
+##    $60,000-100,000 650 0.2339813
+##   $100,000 or more 557 0.2005040
+```
+
+``` r
+raw %>% tabyl(income9)
+```
+
+```
+##           income9   n    percent
+##     Under $10,000 166 0.05975522
+##    $10,000-20,000 255 0.09179266
+##    $20,000-30,000 363 0.13066955
+##    $30,000-40,000 262 0.09431246
+##    $40,000-50,000 274 0.09863211
+##    $50,000-75,000 533 0.19186465
+##   $75,000-100,000 368 0.13246940
+##  $100,000-150,000 357 0.12850972
+##  $150,000 or more 200 0.07199424
+```
+
+## State
+
+
+``` r
+raw %>% tabyl(state)
+```
+
+```
+##  state   n     percent
+##     AK   4 0.001439885
+##     AL  37 0.013318934
+##     AR  15 0.005399568
+##     AZ  55 0.019798416
+##     CA 354 0.127429806
+##     CO  56 0.020158387
+##     CT  30 0.010799136
+##     DC   9 0.003239741
+##     DE  12 0.004319654
+##     FL 200 0.071994240
+##     GA  93 0.033477322
+##     HI  11 0.003959683
+##     IA  24 0.008639309
+##     ID  33 0.011879050
+##     IL 100 0.035997120
+##     IN  64 0.023038157
+##     KS  27 0.009719222
+##     KY  30 0.010799136
+##     LA  51 0.018358531
+##     MA  50 0.017998560
+##     MD  50 0.017998560
+##     ME  15 0.005399568
+##     MI  96 0.034557235
+##     MN  44 0.015838733
+##     MO  63 0.022678186
+##     MS  19 0.006839453
+##     MT   8 0.002879770
+##     NC  91 0.032757379
+##     ND  12 0.004319654
+##     NE  36 0.012958963
+##     NH   6 0.002159827
+##     NJ  65 0.023398128
+##     NM  28 0.010079194
+##     NV  32 0.011519078
+##     NY 118 0.042476602
+##     OH  92 0.033117351
+##     OK  23 0.008279338
+##     OR  38 0.013678906
+##     PA  78 0.028077754
+##     RI   8 0.002879770
+##     SC  38 0.013678906
+##     SD  11 0.003959683
+##     TN  72 0.025917927
+##     TX 237 0.085313175
+##     UT  21 0.007559395
+##     VA  72 0.025917927
+##     VT  11 0.003959683
+##     WA  45 0.016198704
+##     WI  70 0.025197984
+##     WV  15 0.005399568
+##     WY   9 0.003239741
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  set_variable_labels(
+    state = "State"
+  )
+```
+
+## Region
+
+
+``` r
+raw %>% tabyl(region4)
+```
+
+```
+##  region4    n   percent
+##        1  381 0.1371490
+##        2  639 0.2300216
+##        3 1064 0.3830094
+##        4  694 0.2498200
+```
+
+``` r
+raw %>% tabyl(region9)
+```
+
+```
+##  region9   n    percent
+##        1 120 0.04319654
+##        2 261 0.09395248
+##        3 422 0.15190785
+##        4 217 0.07811375
+##        5 580 0.20878330
+##        6 158 0.05687545
+##        7 326 0.11735061
+##        8 242 0.08711303
+##        9 452 0.16270698
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    region4 = 
+      factor(
+        region4, 
+        levels = 1:4,
+        labels =
+          c("Northeast",
+            "Midwest",
+            "South",
+            "West")
+      ),
+    region9 = 
+      factor(
+        region9, 
+        levels = 1:9,
+        labels =
+          c("New England",
+            "Mid-Atlantic",
+            "East North Central",
+            "West North Central",
+            "South Atlantic",
+            "East South Central",
+            "West South Central",
+            "Mountain",
+            "Pacific")
+      )
+  )  %>% 
+  set_variable_labels(
+    region4 = "4-level region",
+    region9 = "9-level region"
+  )
+```
+
+
+``` r
+raw %>% tabyl(region4)
+```
+
+```
+##    region4    n   percent
+##  Northeast  381 0.1371490
+##    Midwest  639 0.2300216
+##      South 1064 0.3830094
+##       West  694 0.2498200
+```
+
+``` r
+raw %>% tabyl(region9)
+```
+
+```
+##             region9   n    percent
+##         New England 120 0.04319654
+##        Mid-Atlantic 261 0.09395248
+##  East North Central 422 0.15190785
+##  West North Central 217 0.07811375
+##      South Atlantic 580 0.20878330
+##  East South Central 158 0.05687545
+##  West South Central 326 0.11735061
+##            Mountain 242 0.08711303
+##             Pacific 452 0.16270698
+```
+
+## Metropolitan area flag
+
+
+``` r
+raw %>% tabyl(metro)
+```
+
+```
+##  metro    n   percent
+##      0  425 0.1529878
+##      1 2353 0.8470122
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    metro = 
+      factor(
+        metro, 
+        levels = 0:1, 
+        labels = c("Non-Metro Area", "Metro Area")
+      )
+  ) %>% 
+  set_variable_labels(
+    metro = "Metropolitan area flag"
+  )
+```
+
+
+``` r
+raw %>% tabyl(metro)
+```
+
+```
+##           metro    n   percent
+##  Non-Metro Area  425 0.1529878
+##      Metro Area 2353 0.8470122
+```
+
+## Internet
+
+
+``` r
+raw %>% tabyl(internet)
+```
+
+```
+##  internet    n   percent
+##         0  394 0.1418287
+##         1 2384 0.8581713
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    internet = 
+      factor(
+        internet,
+        levels = 0:1,
+        labels = c("Non-internet household",
+                   "Internet household")
+      )
+  ) %>% 
+  set_variable_labels(
+    internet = "HH internet access via dial-up, DSL, or cable broadband at home"
+  )
+```
+
+
+``` r
+raw %>% tabyl(internet)
+```
+
+```
+##                internet    n   percent
+##  Non-internet household  394 0.1418287
+##      Internet household 2384 0.8581713
+```
+
+## Housing
+
+
+``` r
+raw %>% tabyl(housing)
+```
+
+```
+##  housing    n    percent
+##        1 1703 0.61303096
+##        2 1006 0.36213103
+##        3   69 0.02483801
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    housing = 
+      factor(
+        housing, 
+        levels = 1:3,
+        labels = 
+            c(
+              "Owned or being bought by you or someone in your household",
+              "Rented for cash",
+              "Occupied without payment of cash rent"
+              )
+      )
+  ) %>% 
+  set_variable_labels(
+    housing = "Home ownership"
+  )
+```
+
+
+``` r
+raw %>% tabyl(housing)
+```
+
+```
+##                                                    housing    n    percent
+##  Owned or being bought by you or someone in your household 1703 0.61303096
+##                                            Rented for cash 1006 0.36213103
+##                      Occupied without payment of cash rent   69 0.02483801
+```
+
+## Home type
+
+
+``` r
+raw %>% tabyl(home_type)
+```
+
+```
+##  home_type    n     percent
+##          1 1677 0.603671706
+##          2  263 0.094672426
+##          3  725 0.260979122
+##          4  109 0.039236861
+##          5    4 0.001439885
+```
+
+
+``` r
+raw <- 
+  raw %>% 
+  mutate(
+    home_type = 
+      factor(
+        home_type, 
+        levels = 1:5, 
+        labels = 
+          c("A one-family house detached from any other house",
+            "A one-family house attached to one or more houses",
+            "A building with 2 or more apartments",
+            "A mobile home or trailer",
+            "Boat, RV, van, etc")
+      )
+  ) %>% 
+  set_variable_labels(
+    home_type = "Type of building of panelists' residence"
+  )
+```
+
+
+``` r
+raw %>% tabyl(home_type)
+```
+
+```
+##                                          home_type    n     percent
+##   A one-family house detached from any other house 1677 0.603671706
+##  A one-family house attached to one or more houses  263 0.094672426
+##               A building with 2 or more apartments  725 0.260979122
+##                           A mobile home or trailer  109 0.039236861
+##                                 Boat, RV, van, etc    4 0.001439885
+```
+
+## Phone service
+
+
+``` r
+raw %>% tabyl(phoneservice)
+```
+
+```
+##  phoneservice    n    percent
+##             1  142 0.05111591
+##             2  650 0.23398128
+##             3  325 0.11699064
+##             4 1636 0.58891289
+##             5   25 0.00899928
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  mutate(
+    phoneservice = 
+      factor(
+        phoneservice,
+        levels = 1:5,
+        labels = 
+          c("Landline telephone only",
+            "Have a landline, but mostly use cellphone",
+            "Have cellphone, but mostly use landline",
+            "Cellphone only",
+            "No telephone service"
+            )
+      )
+  ) %>% 
+  set_variable_labels(
+    phoneservice = "Telephone service for the household"
+  )
+```
+
+
+``` r
+raw %>% tabyl(phoneservice)
+```
+
+```
+##                               phoneservice    n    percent
+##                    Landline telephone only  142 0.05111591
+##  Have a landline, but mostly use cellphone  650 0.23398128
+##    Have cellphone, but mostly use landline  325 0.11699064
+##                             Cellphone only 1636 0.58891289
+##                       No telephone service   25 0.00899928
+```
+
+## Q39a and b
+
+Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
+
+Have you ever been a member of the National Rifle Association--also known as the NRA?  = `q39b` = `nraever`
+
+There are 186 observations with NA hardcoded for `q39b`. 
+This corresponds to people who said in q39a that they are current members of the 
+NRA or skipped/refused to answer q39a.
+
+
+``` r
+raw %>% tabyl(q39a)
+```
+
+```
+##  q39a    n      percent
+##     1  166 0.0597552196
+##     2 2592 0.9330453564
+##    98   19 0.0068394528
+##    99    1 0.0003599712
+```
+
+``` r
+raw %>% tabyl(q39b)
+```
+
+```
+##  q39b    n     percent
+##     1  146 0.052555796
+##     2 2439 0.877969762
+##    98    7 0.002519798
+##    NA  186 0.066954644
+```
+
+``` r
+raw %>% tabyl(q39a, q39b)
+```
+
+```
+##  q39a   1    2 98  NA
+##     1   0    0  0 166
+##     2 146 2439  7   0
+##    98   0    0  0  19
+##    99   0    0  0   1
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  rename(
+    nranow = q39a,
+    nraever = q39b
+    ) %>% 
+  mutate(
+    nraever = 
+      case_when(
+        nraever == "NA" ~ as.numeric(nranow),
+        TRUE ~ as.numeric(nraever)
+      ),
+    across(
+      starts_with("nra"),
+      ~ factor(
+        as.numeric(.x), 
+        levels = c(1:2, 98:99),
+        labels =
+          c("Yes", "No", "Skipped on web", "Refused")
+      )
+    )
+  ) %>% 
+  set_variable_labels(
+    nraever = "Have you ever been a member of the NRA?",
+    nranow = "Are you a member of the NRA?"
+  )
+```
+
+
+``` r
+raw %>% tabyl(nranow, nraever)
+```
+
+```
+##          nranow Yes   No Skipped on web Refused
+##             Yes 166    0              0       0
+##              No 146 2439              7       0
+##  Skipped on web   0    0             19       0
+##         Refused   0    0              0       1
+```
+
+## Q40 & 41
+
+Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
+
+Do any of these guns personally belong to you? = `gunhomeper`.  There are 1767 observations with NA hardcoded for `q41`. 
+This corresponds to people who said answered no to q40.
+
+
+
+``` r
+raw %>% tabyl(q40)
+```
+
+```
+##  q40    n     percent
+##    1 1011 0.363930886
+##    2 1687 0.607271418
+##   98   77 0.027717783
+##   99    3 0.001079914
+```
+
+``` r
+raw %>% tabyl(q41)
+```
+
+```
+##  q41    n      percent
+##    1  808 0.2908567315
+##    2  201 0.0723542117
+##   98    2 0.0007199424
+##   NA 1767 0.6360691145
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  rename(
+    gunhome = q40,
+    gunhomeper = q41
+    ) %>% 
+  mutate(
+    gunhomeper = 
+      case_when(
+        gunhomeper == "NA" ~  as.character(gunhome), 
+        TRUE ~ as.character(gunhomeper)
+      ),
+    across(
+      starts_with("gunhome"),
+      ~ factor(
+          as.numeric(.x),
+          levels = c(1:2, 98:99),
+          labels =
+            c("Yes", "No", "Skipped on web", "Refused")
+        )
+      )
+  ) %>% 
+  set_variable_labels(
+    gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
+    gunhomeper = "Do any of guns or revolvers in your home or garagepersonally belong to you?"
+  )
+```
+
+
+``` r
+raw %>% tabyl(gunhome, gunhomeper)
+```
+
+```
+##         gunhome Yes   No Skipped on web Refused
+##             Yes 808  201              2       0
+##              No   0 1687              0       0
+##  Skipped on web   0    0             77       0
+##         Refused   0    0              0       3
+```
+
+## Political party
+
+To align with the 2023 coding, I group any observations that are either don't know, skipped on web, or refused as "Unknown". I also define `party5` which groups political parties into 5 categories to match 2023.
+
+
+``` r
+raw %>% tabyl(partyid7)
+```
+
+```
+##  partyid7   n     percent
+##         1 660 0.237580994
+##         2 476 0.171346292
+##         3 343 0.123470122
+##         4 417 0.150107991
+##         5 257 0.092512599
+##         6 279 0.100431965
+##         7 332 0.119510439
+##        98  14 0.005039597
+```
+
+
+``` r
+raw <-
+  raw %>% 
+  rename(party7 = partyid7) %>% 
+  mutate(
+    party7 =
+      factor(
+        as.numeric(party7), 
+        levels = c(98, 1:7),
+        labels = 
+          c("Unknown",
+            "Strong Democrat",
+            "Not so strong Democrat",
+            "Lean Democrat",
+            "Don't Lean/Independent/None",
+            "Lean Republican",
+            "Not so strong Republican",
+            "Strong Republican"
+            )
+      ),
+    party5 =
+      case_when(
+        grepl("Unknown", party7) ~ -1,
+        grepl("strong demo", party7, ignore.case = T) ~ 1,
+        grepl("lean demo", party7, ignore.case = T) ~ 2,
+        grepl("none", party7, ignore.case = T) ~ 3,
+        grepl("lean repub", party7, ignore.case = T) ~ 4,
+        grepl("strong repub", party7, ignore.case = T) ~ 5
+      ) %>% 
+      factor(
+        levels = c(-1, 1:5),
+        labels = 
+          c("Unknown",
+            "Democrat",
+            "Lean Democrat",
+            "Don't Lean/Independent/None",
+            "Lean Republican",
+            "Republican"
+            )
+      )
+  ) %>% 
+  set_variable_labels(
+    party7 = "7-level political affiliation",
+    party5 = "5-level political affiliation"
+  )
+```
+
+
+``` r
+raw %>% tabyl(party7, party5)
+```
+
+```
+##                       party7 Unknown Democrat Lean Democrat
+##                      Unknown      14        0             0
+##              Strong Democrat       0      660             0
+##       Not so strong Democrat       0      476             0
+##                Lean Democrat       0        0           343
+##  Don't Lean/Independent/None       0        0             0
+##              Lean Republican       0        0             0
+##     Not so strong Republican       0        0             0
+##            Strong Republican       0        0             0
+##  Don't Lean/Independent/None Lean Republican Republican
+##                            0               0          0
+##                            0               0          0
+##                            0               0          0
+##                            0               0          0
+##                          417               0          0
+##                            0             257          0
+##                            0               0        279
+##                            0               0        332
+```
+
+## Household size
+
+
+``` r
+raw <-
+  raw %>% 
+  set_variable_labels(
+    hhsize = "Household size (including children)",
+    hh01 = "Number of HH members age 0-1",
+    hh25 = "Number of HH members age 2-5",
+    hh612 = "Number of HH members age 6-12",
+    hh1317 = "Number of HH members age 13-17",
+    hh18ov = "Number of HH members age 18+"
+  )
+```
+
+## Weights
+
+
+``` r
+clean <-
+  raw %>% 
+  set_variable_labels(
+    weight = "Post-stratification weights - 18+ general population (N=2,778)",
+    weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other) (N=2,778)",
+weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=2,778)"
+  )
+```
+
+## Explore demographic variables
+
+
+``` r
+demovars <-
+  c(
+    "gun",
+    "age",
+    "hhsize",
+    "gender",
+    "raceethnicity",
+    "educ",
+    "marital",
+    "employ",
+    "income",
+    "internet",
+    "home_type",
+    "party7"
+  )
+
+summstats <-
+  c("notNA(x)", "mean(x)", "sd(x)")
+summnames <-
+  c("Observations", "Mean", "SD")
+```
+
+
+``` r
+st(
+  clean,
+  vars = demovars,
+  group.weights = "weight",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary",
+  out = "kable",
+  numformat = "comma",
+  labels =  T
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:500px; overflow-x: scroll; width:800px; "><table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-62)Weighted demographic summary</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;"> Variable </th>
+   <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;"> Observations </th>
+   <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;"> Mean </th>
+   <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;"> SD </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Gun owner </td>
+   <td style="text-align:left;"> 835 </td>
+   <td style="text-align:left;"> 30% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Non-gun owner </td>
+   <td style="text-align:left;"> 1,943 </td>
+   <td style="text-align:left;"> 70% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Age </td>
+   <td style="text-align:left;"> 2778 </td>
+   <td style="text-align:left;"> 49 </td>
+   <td style="text-align:left;"> 17 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Household size (including children) </td>
+   <td style="text-align:left;"> 2778 </td>
+   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:left;"> 1.6 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Respondent gender </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Male </td>
+   <td style="text-align:left;"> 1,393 </td>
+   <td style="text-align:left;"> 50% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Female </td>
+   <td style="text-align:left;"> 1,385 </td>
+   <td style="text-align:left;"> 50% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> raceethnicity </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> educ </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Marital status </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Married </td>
+   <td style="text-align:left;"> 1,291 </td>
+   <td style="text-align:left;"> 46% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Widowed </td>
+   <td style="text-align:left;"> 136 </td>
+   <td style="text-align:left;"> 5% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Divorced </td>
+   <td style="text-align:left;"> 350 </td>
+   <td style="text-align:left;"> 13% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Separated </td>
+   <td style="text-align:left;"> 79 </td>
+   <td style="text-align:left;"> 3% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Never married </td>
+   <td style="text-align:left;"> 687 </td>
+   <td style="text-align:left;"> 25% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Living with partner </td>
+   <td style="text-align:left;"> 235 </td>
+   <td style="text-align:left;"> 8% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Current employment status </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Working - as a paid employee </td>
+   <td style="text-align:left;"> 1,437 </td>
+   <td style="text-align:left;"> 52% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Working - self-employed </td>
+   <td style="text-align:left;"> 231 </td>
+   <td style="text-align:left;"> 8% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Not working - on temporary layoff from a job </td>
+   <td style="text-align:left;"> 27 </td>
+   <td style="text-align:left;"> 1% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Not working - looking for work </td>
+   <td style="text-align:left;"> 148 </td>
+   <td style="text-align:left;"> 5% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Not working - retired </td>
+   <td style="text-align:left;"> 552 </td>
+   <td style="text-align:left;"> 20% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Not working - disabled </td>
+   <td style="text-align:left;"> 193 </td>
+   <td style="text-align:left;"> 7% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Not working - other </td>
+   <td style="text-align:left;"> 190 </td>
+   <td style="text-align:left;"> 7% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Household income </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Less than $5,000 </td>
+   <td style="text-align:left;"> 78 </td>
+   <td style="text-align:left;"> 3% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $5,000-9,999 </td>
+   <td style="text-align:left;"> 88 </td>
+   <td style="text-align:left;"> 3% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $10,000-14,999 </td>
+   <td style="text-align:left;"> 138 </td>
+   <td style="text-align:left;"> 5% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $15,000-19,999 </td>
+   <td style="text-align:left;"> 117 </td>
+   <td style="text-align:left;"> 4% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $20,000-24,999 </td>
+   <td style="text-align:left;"> 189 </td>
+   <td style="text-align:left;"> 7% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $25,000-29,999 </td>
+   <td style="text-align:left;"> 174 </td>
+   <td style="text-align:left;"> 6% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $30,000-34,999 </td>
+   <td style="text-align:left;"> 153 </td>
+   <td style="text-align:left;"> 6% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $35,000-39,999 </td>
+   <td style="text-align:left;"> 109 </td>
+   <td style="text-align:left;"> 4% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $40,000-49,999 </td>
+   <td style="text-align:left;"> 274 </td>
+   <td style="text-align:left;"> 10% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $50,000-59,999 </td>
+   <td style="text-align:left;"> 251 </td>
+   <td style="text-align:left;"> 9% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $60,000-74,999 </td>
+   <td style="text-align:left;"> 282 </td>
+   <td style="text-align:left;"> 10% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $75,000-84,999 </td>
+   <td style="text-align:left;"> 117 </td>
+   <td style="text-align:left;"> 4% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $85,000-99,999 </td>
+   <td style="text-align:left;"> 251 </td>
+   <td style="text-align:left;"> 9% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $100,000-124,999 </td>
+   <td style="text-align:left;"> 234 </td>
+   <td style="text-align:left;"> 8% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $125,000-149,999 </td>
+   <td style="text-align:left;"> 123 </td>
+   <td style="text-align:left;"> 4% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $150,000-174,999 </td>
+   <td style="text-align:left;"> 81 </td>
+   <td style="text-align:left;"> 3% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $175,000-199,999 </td>
+   <td style="text-align:left;"> 42 </td>
+   <td style="text-align:left;"> 2% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... $200,000 or more </td>
+   <td style="text-align:left;"> 77 </td>
+   <td style="text-align:left;"> 3% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> HH internet access via dial-up, DSL, or cable broadband at home </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Non-internet household </td>
+   <td style="text-align:left;"> 394 </td>
+   <td style="text-align:left;"> 14% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Internet household </td>
+   <td style="text-align:left;"> 2,384 </td>
+   <td style="text-align:left;"> 86% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Type of building of panelists' residence </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... A one-family house detached from any other house </td>
+   <td style="text-align:left;"> 1,677 </td>
+   <td style="text-align:left;"> 60% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... A one-family house attached to one or more houses </td>
+   <td style="text-align:left;"> 263 </td>
+   <td style="text-align:left;"> 9% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... A building with 2 or more apartments </td>
+   <td style="text-align:left;"> 725 </td>
+   <td style="text-align:left;"> 26% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... A mobile home or trailer </td>
+   <td style="text-align:left;"> 109 </td>
+   <td style="text-align:left;"> 4% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Boat, RV, van, etc </td>
+   <td style="text-align:left;"> 4 </td>
+   <td style="text-align:left;"> 0% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 7-level political affiliation </td>
+   <td style="text-align:left;"> 2,778 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Unknown </td>
+   <td style="text-align:left;"> 14 </td>
+   <td style="text-align:left;"> 1% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Strong Democrat </td>
+   <td style="text-align:left;"> 660 </td>
+   <td style="text-align:left;"> 24% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Not so strong Democrat </td>
+   <td style="text-align:left;"> 476 </td>
+   <td style="text-align:left;"> 17% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Lean Democrat </td>
+   <td style="text-align:left;"> 343 </td>
+   <td style="text-align:left;"> 12% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Don't Lean/Independent/None </td>
+   <td style="text-align:left;"> 417 </td>
+   <td style="text-align:left;"> 15% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Lean Republican </td>
+   <td style="text-align:left;"> 257 </td>
+   <td style="text-align:left;"> 9% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Not so strong Republican </td>
+   <td style="text-align:left;"> 279 </td>
+   <td style="text-align:left;"> 10% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ... Strong Republican </td>
+   <td style="text-align:left;"> 332 </td>
+   <td style="text-align:left;"> 12% </td>
+   <td style="text-align:left;">  </td>
+  </tr>
+</tbody>
+</table></div>
+
+## Export data
+
+
+``` r
+write_rds(
+  clean,
+  here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2021.rds"
+    )
+  ) 
+```

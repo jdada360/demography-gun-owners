@@ -13,23 +13,6 @@ This script imports the survey data and converts into the R formats.
 **Last ran** - 12/14/2025
 
 
-``` r
-packages <-
-  c(
-    "tidyverse",
-    "purrr",
-    "haven",
-    "tidyr",
-    "janitor",
-    "dplyr",
-    "here"
-  )
-
-pacman::p_load(
-  packages,
-  character.only = TRUE
-)
-```
 
 ## Import and convert to rds format
 

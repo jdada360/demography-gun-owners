@@ -1,0 +1,4841 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>2 Clean 2019 data | Gun Survey Data Cleaning</title>
+  <meta name="description" content="2 Clean 2019 data | Gun Survey Data Cleaning" />
+  <meta name="generator" content="bookdown 0.43 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="2 Clean 2019 data | Gun Survey Data Cleaning" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="2 Clean 2019 data | Gun Survey Data Cleaning" />
+  
+  
+  
+
+<meta name="author" content="Joy Dada" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="import-survey-data.html"/>
+<link rel="next" href="clean-2021-data.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/codefolding-lua-1.1/codefolding-lua.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Gun Survey Data Cleaning</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="1" data-path="import-survey-data.html"><a href="import-survey-data.html"><i class="fa fa-check"></i><b>1</b> Import survey data</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="import-survey-data.html"><a href="import-survey-data.html#import-and-convert-to-rds-format"><i class="fa fa-check"></i><b>1.1</b> Import and convert to rds format</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="clean-2019-data.html"><a href="clean-2019-data.html"><i class="fa fa-check"></i><b>2</b> Clean 2019 data</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="clean-2019-data.html"><a href="clean-2019-data.html#data"><i class="fa fa-check"></i><b>2.1</b> Data</a></li>
+<li class="chapter" data-level="2.2" data-path="clean-2019-data.html"><a href="clean-2019-data.html#import-data"><i class="fa fa-check"></i><b>2.2</b> Import data</a></li>
+<li class="chapter" data-level="2.3" data-path="clean-2019-data.html"><a href="clean-2019-data.html#explore-data"><i class="fa fa-check"></i><b>2.3</b> Explore data</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="clean-2019-data.html"><a href="clean-2019-data.html#summary-table"><i class="fa fa-check"></i><b>2.3.1</b> Summary table</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="clean-2019-data.html"><a href="clean-2019-data.html#select-variables"><i class="fa fa-check"></i><b>2.4</b> Select variables</a></li>
+<li class="chapter" data-level="2.5" data-path="clean-2019-data.html"><a href="clean-2019-data.html#gender"><i class="fa fa-check"></i><b>2.5</b> Gender</a></li>
+<li class="chapter" data-level="2.6" data-path="clean-2019-data.html"><a href="clean-2019-data.html#age"><i class="fa fa-check"></i><b>2.6</b> Age</a></li>
+<li class="chapter" data-level="2.7" data-path="clean-2019-data.html"><a href="clean-2019-data.html#race-and-ethnicity"><i class="fa fa-check"></i><b>2.7</b> Race and ethnicity</a></li>
+<li class="chapter" data-level="2.8" data-path="clean-2019-data.html"><a href="clean-2019-data.html#education"><i class="fa fa-check"></i><b>2.8</b> Education</a></li>
+<li class="chapter" data-level="2.9" data-path="clean-2019-data.html"><a href="clean-2019-data.html#martial-status"><i class="fa fa-check"></i><b>2.9</b> Martial status</a></li>
+<li class="chapter" data-level="2.10" data-path="clean-2019-data.html"><a href="clean-2019-data.html#employment"><i class="fa fa-check"></i><b>2.10</b> Employment</a></li>
+<li class="chapter" data-level="2.11" data-path="clean-2019-data.html"><a href="clean-2019-data.html#income"><i class="fa fa-check"></i><b>2.11</b> Income</a></li>
+<li class="chapter" data-level="2.12" data-path="clean-2019-data.html"><a href="clean-2019-data.html#state"><i class="fa fa-check"></i><b>2.12</b> State</a></li>
+<li class="chapter" data-level="2.13" data-path="clean-2019-data.html"><a href="clean-2019-data.html#region"><i class="fa fa-check"></i><b>2.13</b> Region</a></li>
+<li class="chapter" data-level="2.14" data-path="clean-2019-data.html"><a href="clean-2019-data.html#metropolitan-area-flag"><i class="fa fa-check"></i><b>2.14</b> Metropolitan area flag</a></li>
+<li class="chapter" data-level="2.15" data-path="clean-2019-data.html"><a href="clean-2019-data.html#internet"><i class="fa fa-check"></i><b>2.15</b> Internet</a></li>
+<li class="chapter" data-level="2.16" data-path="clean-2019-data.html"><a href="clean-2019-data.html#housing"><i class="fa fa-check"></i><b>2.16</b> Housing</a></li>
+<li class="chapter" data-level="2.17" data-path="clean-2019-data.html"><a href="clean-2019-data.html#home-type"><i class="fa fa-check"></i><b>2.17</b> Home type</a></li>
+<li class="chapter" data-level="2.18" data-path="clean-2019-data.html"><a href="clean-2019-data.html#phone-service"><i class="fa fa-check"></i><b>2.18</b> Phone service</a></li>
+<li class="chapter" data-level="2.19" data-path="clean-2019-data.html"><a href="clean-2019-data.html#political-party"><i class="fa fa-check"></i><b>2.19</b> Political party</a></li>
+<li class="chapter" data-level="2.20" data-path="clean-2019-data.html"><a href="clean-2019-data.html#q31"><i class="fa fa-check"></i><b>2.20</b> Q31</a></li>
+<li class="chapter" data-level="2.21" data-path="clean-2019-data.html"><a href="clean-2019-data.html#q32-33"><i class="fa fa-check"></i><b>2.21</b> Q32 &amp; 33</a></li>
+<li class="chapter" data-level="2.22" data-path="clean-2019-data.html"><a href="clean-2019-data.html#household-size"><i class="fa fa-check"></i><b>2.22</b> Household size</a></li>
+<li class="chapter" data-level="2.23" data-path="clean-2019-data.html"><a href="clean-2019-data.html#weights"><i class="fa fa-check"></i><b>2.23</b> Weights</a></li>
+<li class="chapter" data-level="2.24" data-path="clean-2019-data.html"><a href="clean-2019-data.html#explore-demographic-variables"><i class="fa fa-check"></i><b>2.24</b> Explore demographic variables</a></li>
+<li class="chapter" data-level="2.25" data-path="clean-2019-data.html"><a href="clean-2019-data.html#export-data"><i class="fa fa-check"></i><b>2.25</b> Export data</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="clean-2021-data.html"><a href="clean-2021-data.html"><i class="fa fa-check"></i><b>3</b> Clean 2021 data</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="clean-2021-data.html"><a href="clean-2021-data.html#import-data-1"><i class="fa fa-check"></i><b>3.1</b> Import data</a></li>
+<li class="chapter" data-level="3.2" data-path="clean-2021-data.html"><a href="clean-2021-data.html#explore-data-1"><i class="fa fa-check"></i><b>3.2</b> Explore data</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="clean-2021-data.html"><a href="clean-2021-data.html#summary-table-1"><i class="fa fa-check"></i><b>3.2.1</b> Summary table</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="clean-2021-data.html"><a href="clean-2021-data.html#select-variables-1"><i class="fa fa-check"></i><b>3.3</b> Select variables</a></li>
+<li class="chapter" data-level="3.4" data-path="clean-2021-data.html"><a href="clean-2021-data.html#gun"><i class="fa fa-check"></i><b>3.4</b> Gun</a></li>
+<li class="chapter" data-level="3.5" data-path="clean-2021-data.html"><a href="clean-2021-data.html#gender-1"><i class="fa fa-check"></i><b>3.5</b> Gender</a></li>
+<li class="chapter" data-level="3.6" data-path="clean-2021-data.html"><a href="clean-2021-data.html#age-1"><i class="fa fa-check"></i><b>3.6</b> Age</a></li>
+<li class="chapter" data-level="3.7" data-path="clean-2021-data.html"><a href="clean-2021-data.html#race-and-ethnicity-1"><i class="fa fa-check"></i><b>3.7</b> Race and ethnicity</a></li>
+<li class="chapter" data-level="3.8" data-path="clean-2021-data.html"><a href="clean-2021-data.html#education-1"><i class="fa fa-check"></i><b>3.8</b> Education</a></li>
+<li class="chapter" data-level="3.9" data-path="clean-2021-data.html"><a href="clean-2021-data.html#martial-status-1"><i class="fa fa-check"></i><b>3.9</b> Martial status</a></li>
+<li class="chapter" data-level="3.10" data-path="clean-2021-data.html"><a href="clean-2021-data.html#employment-1"><i class="fa fa-check"></i><b>3.10</b> Employment</a></li>
+<li class="chapter" data-level="3.11" data-path="clean-2021-data.html"><a href="clean-2021-data.html#income-1"><i class="fa fa-check"></i><b>3.11</b> Income</a></li>
+<li class="chapter" data-level="3.12" data-path="clean-2021-data.html"><a href="clean-2021-data.html#state-1"><i class="fa fa-check"></i><b>3.12</b> State</a></li>
+<li class="chapter" data-level="3.13" data-path="clean-2021-data.html"><a href="clean-2021-data.html#region-1"><i class="fa fa-check"></i><b>3.13</b> Region</a></li>
+<li class="chapter" data-level="3.14" data-path="clean-2021-data.html"><a href="clean-2021-data.html#metropolitan-area-flag-1"><i class="fa fa-check"></i><b>3.14</b> Metropolitan area flag</a></li>
+<li class="chapter" data-level="3.15" data-path="clean-2021-data.html"><a href="clean-2021-data.html#internet-1"><i class="fa fa-check"></i><b>3.15</b> Internet</a></li>
+<li class="chapter" data-level="3.16" data-path="clean-2021-data.html"><a href="clean-2021-data.html#housing-1"><i class="fa fa-check"></i><b>3.16</b> Housing</a></li>
+<li class="chapter" data-level="3.17" data-path="clean-2021-data.html"><a href="clean-2021-data.html#home-type-1"><i class="fa fa-check"></i><b>3.17</b> Home type</a></li>
+<li class="chapter" data-level="3.18" data-path="clean-2021-data.html"><a href="clean-2021-data.html#phone-service-1"><i class="fa fa-check"></i><b>3.18</b> Phone service</a></li>
+<li class="chapter" data-level="3.19" data-path="clean-2021-data.html"><a href="clean-2021-data.html#q39a-and-b"><i class="fa fa-check"></i><b>3.19</b> Q39a and b</a></li>
+<li class="chapter" data-level="3.20" data-path="clean-2021-data.html"><a href="clean-2021-data.html#q40-41"><i class="fa fa-check"></i><b>3.20</b> Q40 &amp; 41</a></li>
+<li class="chapter" data-level="3.21" data-path="clean-2021-data.html"><a href="clean-2021-data.html#political-party-1"><i class="fa fa-check"></i><b>3.21</b> Political party</a></li>
+<li class="chapter" data-level="3.22" data-path="clean-2021-data.html"><a href="clean-2021-data.html#household-size-1"><i class="fa fa-check"></i><b>3.22</b> Household size</a></li>
+<li class="chapter" data-level="3.23" data-path="clean-2021-data.html"><a href="clean-2021-data.html#weights-1"><i class="fa fa-check"></i><b>3.23</b> Weights</a></li>
+<li class="chapter" data-level="3.24" data-path="clean-2021-data.html"><a href="clean-2021-data.html#explore-demographic-variables-1"><i class="fa fa-check"></i><b>3.24</b> Explore demographic variables</a></li>
+<li class="chapter" data-level="3.25" data-path="clean-2021-data.html"><a href="clean-2021-data.html#export-data-1"><i class="fa fa-check"></i><b>3.25</b> Export data</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="clean-2023-data.html"><a href="clean-2023-data.html"><i class="fa fa-check"></i><b>4</b> Clean 2023 data</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="clean-2023-data.html"><a href="clean-2023-data.html#import-data-2"><i class="fa fa-check"></i><b>4.1</b> Import data</a></li>
+<li class="chapter" data-level="4.2" data-path="clean-2023-data.html"><a href="clean-2023-data.html#explore-data-2"><i class="fa fa-check"></i><b>4.2</b> Explore data</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="clean-2023-data.html"><a href="clean-2023-data.html#summary-table-2"><i class="fa fa-check"></i><b>4.2.1</b> Summary table</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="clean-2023-data.html"><a href="clean-2023-data.html#drop-order-variables"><i class="fa fa-check"></i><b>4.3</b> Drop order variables</a></li>
+<li class="chapter" data-level="4.4" data-path="clean-2023-data.html"><a href="clean-2023-data.html#select-variables-2"><i class="fa fa-check"></i><b>4.4</b> Select variables</a></li>
+<li class="chapter" data-level="4.5" data-path="clean-2023-data.html"><a href="clean-2023-data.html#gun-1"><i class="fa fa-check"></i><b>4.5</b> Gun</a></li>
+<li class="chapter" data-level="4.6" data-path="clean-2023-data.html"><a href="clean-2023-data.html#gender-2"><i class="fa fa-check"></i><b>4.6</b> Gender</a></li>
+<li class="chapter" data-level="4.7" data-path="clean-2023-data.html"><a href="clean-2023-data.html#age-2"><i class="fa fa-check"></i><b>4.7</b> Age</a></li>
+<li class="chapter" data-level="4.8" data-path="clean-2023-data.html"><a href="clean-2023-data.html#race-and-ethnicity-2"><i class="fa fa-check"></i><b>4.8</b> Race and ethnicity</a></li>
+<li class="chapter" data-level="4.9" data-path="clean-2023-data.html"><a href="clean-2023-data.html#education-2"><i class="fa fa-check"></i><b>4.9</b> Education</a></li>
+<li class="chapter" data-level="4.10" data-path="clean-2023-data.html"><a href="clean-2023-data.html#martial-status-2"><i class="fa fa-check"></i><b>4.10</b> Martial status</a></li>
+<li class="chapter" data-level="4.11" data-path="clean-2023-data.html"><a href="clean-2023-data.html#employment-2"><i class="fa fa-check"></i><b>4.11</b> Employment</a></li>
+<li class="chapter" data-level="4.12" data-path="clean-2023-data.html"><a href="clean-2023-data.html#income-2"><i class="fa fa-check"></i><b>4.12</b> Income</a></li>
+<li class="chapter" data-level="4.13" data-path="clean-2023-data.html"><a href="clean-2023-data.html#state-2"><i class="fa fa-check"></i><b>4.13</b> State</a></li>
+<li class="chapter" data-level="4.14" data-path="clean-2023-data.html"><a href="clean-2023-data.html#region-2"><i class="fa fa-check"></i><b>4.14</b> Region</a></li>
+<li class="chapter" data-level="4.15" data-path="clean-2023-data.html"><a href="clean-2023-data.html#metropolitan-area-flag-2"><i class="fa fa-check"></i><b>4.15</b> Metropolitan area flag</a></li>
+<li class="chapter" data-level="4.16" data-path="clean-2023-data.html"><a href="clean-2023-data.html#internet-2"><i class="fa fa-check"></i><b>4.16</b> Internet</a></li>
+<li class="chapter" data-level="4.17" data-path="clean-2023-data.html"><a href="clean-2023-data.html#housing-2"><i class="fa fa-check"></i><b>4.17</b> Housing</a></li>
+<li class="chapter" data-level="4.18" data-path="clean-2023-data.html"><a href="clean-2023-data.html#home-type-2"><i class="fa fa-check"></i><b>4.18</b> Home type</a></li>
+<li class="chapter" data-level="4.19" data-path="clean-2023-data.html"><a href="clean-2023-data.html#phone-service-2"><i class="fa fa-check"></i><b>4.19</b> Phone service</a></li>
+<li class="chapter" data-level="4.20" data-path="clean-2023-data.html"><a href="clean-2023-data.html#gun-ownership-type"><i class="fa fa-check"></i><b>4.20</b> Gun ownership type</a></li>
+<li class="chapter" data-level="4.21" data-path="clean-2023-data.html"><a href="clean-2023-data.html#q39a-and-b-1"><i class="fa fa-check"></i><b>4.21</b> Q39a and b</a></li>
+<li class="chapter" data-level="4.22" data-path="clean-2023-data.html"><a href="clean-2023-data.html#q40_23-q41_23"><i class="fa fa-check"></i><b>4.22</b> Q40_23, Q41_23</a></li>
+<li class="chapter" data-level="4.23" data-path="clean-2023-data.html"><a href="clean-2023-data.html#q40-41-1"><i class="fa fa-check"></i><b>4.23</b> Q40 &amp; 41</a></li>
+<li class="chapter" data-level="4.24" data-path="clean-2023-data.html"><a href="clean-2023-data.html#q42_23-q43_23a-c"><i class="fa fa-check"></i><b>4.24</b> Q42_23, Q43_23a-c</a></li>
+<li class="chapter" data-level="4.25" data-path="clean-2023-data.html"><a href="clean-2023-data.html#q47_23"><i class="fa fa-check"></i><b>4.25</b> Q47_23</a></li>
+<li class="chapter" data-level="4.26" data-path="clean-2023-data.html"><a href="clean-2023-data.html#veteran"><i class="fa fa-check"></i><b>4.26</b> Veteran</a></li>
+<li class="chapter" data-level="4.27" data-path="clean-2023-data.html"><a href="clean-2023-data.html#political-party-2"><i class="fa fa-check"></i><b>4.27</b> Political party</a></li>
+<li class="chapter" data-level="4.28" data-path="clean-2023-data.html"><a href="clean-2023-data.html#elections"><i class="fa fa-check"></i><b>4.28</b> Elections</a></li>
+<li class="chapter" data-level="4.29" data-path="clean-2023-data.html"><a href="clean-2023-data.html#household-size-2"><i class="fa fa-check"></i><b>4.29</b> Household size</a></li>
+<li class="chapter" data-level="4.30" data-path="clean-2023-data.html"><a href="clean-2023-data.html#weights-2"><i class="fa fa-check"></i><b>4.30</b> Weights</a></li>
+<li class="chapter" data-level="4.31" data-path="clean-2023-data.html"><a href="clean-2023-data.html#explore-demographic-variables-2"><i class="fa fa-check"></i><b>4.31</b> Explore demographic variables</a></li>
+<li class="chapter" data-level="4.32" data-path="clean-2023-data.html"><a href="clean-2023-data.html#export-data-2"><i class="fa fa-check"></i><b>4.32</b> Export data</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Gun Survey Data Cleaning</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="clean-2019-data" class="section level1 hasAnchor" number="2">
+<h1><span class="header-section-number">2</span> Clean 2019 data<a href="clean-2019-data.html#clean-2019-data" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>This script cleans 2019 survey data.</p>
+<p>All questions are encoded, so we decode them using the <a href="https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/8480_JHU_Gun%20Policy%20Survey%202019_Codebook.xlsx?d=w4b80c19e8e0c426fa544cfd0c6068a8e&amp;csf=1&amp;web=1&amp;e=COLske">codebook</a>.</p>
+<div id="data" class="section level2 hasAnchor" number="2.1">
+<h2><span class="header-section-number">2.1</span> Data<a href="clean-2019-data.html#data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p><strong>Input</strong>
+- DemographyGunOwners/data/raw/gunsurvey/2019.rds</p>
+<p><strong>Output</strong>
+- - DemographyGunOwners/data/constructed/</p>
+<p><strong>Last ran</strong>
+- 01/28/2026</p>
+</div>
+<div id="import-data" class="section level2 hasAnchor" number="2.2">
+<h2><span class="header-section-number">2.2</span> Import data<a href="clean-2019-data.html#import-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="clean-2019-data.html#cb3-1" tabindex="-1"></a>source <span class="ot">&lt;-</span></span>
+<span id="cb3-2"><a href="clean-2019-data.html#cb3-2" tabindex="-1"></a>  <span class="fu">read_rds</span>(</span>
+<span id="cb3-3"><a href="clean-2019-data.html#cb3-3" tabindex="-1"></a>     <span class="fu">here</span>(</span>
+<span id="cb3-4"><a href="clean-2019-data.html#cb3-4" tabindex="-1"></a>      path_od, </span>
+<span id="cb3-5"><a href="clean-2019-data.html#cb3-5" tabindex="-1"></a>      <span class="st">&quot;data&quot;</span>,</span>
+<span id="cb3-6"><a href="clean-2019-data.html#cb3-6" tabindex="-1"></a>      <span class="st">&quot;raw&quot;</span>,</span>
+<span id="cb3-7"><a href="clean-2019-data.html#cb3-7" tabindex="-1"></a>      <span class="st">&quot;gunsurvey&quot;</span>,</span>
+<span id="cb3-8"><a href="clean-2019-data.html#cb3-8" tabindex="-1"></a>      <span class="st">&quot;2019.rds&quot;</span></span>
+<span id="cb3-9"><a href="clean-2019-data.html#cb3-9" tabindex="-1"></a>      )</span>
+<span id="cb3-10"><a href="clean-2019-data.html#cb3-10" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-11"><a href="clean-2019-data.html#cb3-11" tabindex="-1"></a>  <span class="fu">clean_names</span>()</span></code></pre></div>
+</details>
+</div>
+<div id="explore-data" class="section level2 hasAnchor" number="2.3">
+<h2><span class="header-section-number">2.3</span> Explore data<a href="clean-2019-data.html#explore-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="clean-2019-data.html#cb4-1" tabindex="-1"></a>source <span class="sc">%&gt;%</span> </span>
+<span id="cb4-2"><a href="clean-2019-data.html#cb4-2" tabindex="-1"></a>  <span class="fu">sample_n</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-3"><a href="clean-2019-data.html#cb4-3" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-4"><a href="clean-2019-data.html#cb4-4" tabindex="-1"></a>  <span class="fu">kbl</span>(</span>
+<span id="cb4-5"><a href="clean-2019-data.html#cb4-5" tabindex="-1"></a>    <span class="at">caption =</span> </span>
+<span id="cb4-6"><a href="clean-2019-data.html#cb4-6" tabindex="-1"></a>      <span class="st">&quot;Gun Survey 2019 Data&quot;</span>,</span>
+<span id="cb4-7"><a href="clean-2019-data.html#cb4-7" tabindex="-1"></a>    <span class="at">align =</span> <span class="st">&quot;c&quot;</span>,</span>
+<span id="cb4-8"><a href="clean-2019-data.html#cb4-8" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb4-9"><a href="clean-2019-data.html#cb4-9" tabindex="-1"></a>    <span class="at">booktabs =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-10"><a href="clean-2019-data.html#cb4-10" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-11"><a href="clean-2019-data.html#cb4-11" tabindex="-1"></a>  <span class="fu">kable_classic</span>(</span>
+<span id="cb4-12"><a href="clean-2019-data.html#cb4-12" tabindex="-1"></a>    <span class="at">full_width =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-13"><a href="clean-2019-data.html#cb4-13" tabindex="-1"></a>    <span class="at">html_font =</span> <span class="st">&quot;Cambria&quot;</span></span>
+<span id="cb4-14"><a href="clean-2019-data.html#cb4-14" tabindex="-1"></a>    )  <span class="sc">%&gt;%</span> </span>
+<span id="cb4-15"><a href="clean-2019-data.html#cb4-15" tabindex="-1"></a>  <span class="fu">scroll_box</span>(<span class="at">width =</span> <span class="st">&quot;800px&quot;</span>, <span class="at">height =</span> <span class="st">&quot;500px&quot;</span>)</span></code></pre></div>
+</details>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:500px; overflow-x: scroll; width:800px; ">
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-3">Table 2.1: </span>Gun Survey 2019 Data
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+case_id
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+weight
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+p_partyid
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q1
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q2
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q3
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q4
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q5
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q6
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q7
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q8
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q9
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q10
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q11
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q12
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q13
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q14
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q15
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q16
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q17
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q18
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q19
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q20
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q21
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q22
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q23
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q24
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q25
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q26
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q27
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q28
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q29
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q30a
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q30b
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q30c
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q30d
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q31
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q32
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+q33
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+startdt
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+enddt
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+duration
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+surv_mode
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+surv_lang
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+device
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+gender
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+age
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+age4
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+age7
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+racethnicity
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+educ
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+educ4
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+marital
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+employ
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+income
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+state
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+region4
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+region9
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+metro
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+internet
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+housing
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+home_type
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+phoneservice
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+hhsize
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+hh01
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+hh25
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+hh612
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+hh1317
+</th>
+<th style="text-align:center;position: sticky; top:0; background-color: #FFFFFF;">
+hh18ov
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+872
+</td>
+<td style="text-align:center;">
+1.1803076
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:center;">
+2019-01-05 17:05:32
+</td>
+<td style="text-align:center;">
+2019-01-05 17:07:58
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+NY
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+61
+</td>
+<td style="text-align:center;">
+0.6096597
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2019-01-02 11:54:14
+</td>
+<td style="text-align:center;">
+2019-01-02 11:57:28
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Desktop
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+53
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+TX
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1380
+</td>
+<td style="text-align:center;">
+2.2331920
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:center;">
+2019-01-04 19:55:04
+</td>
+<td style="text-align:center;">
+2019-01-06 03:09:40
+</td>
+<td style="text-align:center;">
+1874
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+40
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+CA
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1512
+</td>
+<td style="text-align:center;">
+1.1105771
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2019-01-03 08:44:38
+</td>
+<td style="text-align:center;">
+2019-01-03 08:50:09
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+49
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+16
+</td>
+<td style="text-align:center;">
+NC
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1829
+</td>
+<td style="text-align:center;">
+0.5322796
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:center;">
+2019-01-04 15:31:27
+</td>
+<td style="text-align:center;">
+2019-01-04 15:43:20
+</td>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+33
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+AL
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+786
+</td>
+<td style="text-align:center;">
+2.7698495
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:center;">
+2019-01-03 07:42:16
+</td>
+<td style="text-align:center;">
+2019-01-03 07:45:35
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+28
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+NC
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1156
+</td>
+<td style="text-align:center;">
+0.2594945
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:center;">
+2019-01-05 16:59:21
+</td>
+<td style="text-align:center;">
+2019-01-05 17:07:17
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+44
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+8
+</td>
+<td style="text-align:center;">
+TX
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1252
+</td>
+<td style="text-align:center;">
+0.2676662
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2019-01-03 12:49:05
+</td>
+<td style="text-align:center;">
+2019-01-03 12:59:48
+</td>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Desktop
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+71
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:center;">
+MN
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1361
+</td>
+<td style="text-align:center;">
+2.7739702
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:center;">
+2019-01-03 18:24:33
+</td>
+<td style="text-align:center;">
+2019-01-03 18:31:54
+</td>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:center;">
+VA
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+408
+</td>
+<td style="text-align:center;">
+0.8199321
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:center;">
+2019-01-03 11:49:01
+</td>
+<td style="text-align:center;">
+2019-01-03 12:08:51
+</td>
+<td style="text-align:center;">
+19
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+Smartphone
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+67
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:center;">
+IN
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+2
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="summary-table" class="section level3 hasAnchor" number="2.3.1">
+<h3><span class="header-section-number">2.3.1</span> Summary table<a href="clean-2019-data.html#summary-table" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<table>
+<colgroup>
+<col width="34%" />
+<col width="65%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Number of observations</td>
+<td>1680</td>
+</tr>
+<tr class="even">
+<td>Number of unique cases</td>
+<td>1680</td>
+</tr>
+<tr class="odd">
+<td>Sum of weights</td>
+<td>1680</td>
+</tr>
+<tr class="even">
+<td>Number of variables</td>
+<td>69</td>
+</tr>
+<tr class="odd">
+<td>Variable names</td>
+<td>case_id, weight, p_partyid, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20, q21, q22, q23, q24, q25, q26, q27, q28, q29, q30a, q30b, q30c, q30d, q31, q32, q33, startdt, enddt, duration, surv_mode, surv_lang, device, gender, age, age4, age7, racethnicity, educ, educ4, marital, employ, income, state, region4, region9, metro, internet, housing, home_type, phoneservice, hhsize, hh01, hh25, hh612, hh1317, hh18ov</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="select-variables" class="section level2 hasAnchor" number="2.4">
+<h2><span class="header-section-number">2.4</span> Select variables<a href="clean-2019-data.html#select-variables" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="clean-2019-data.html#cb5-1" tabindex="-1"></a>demovars <span class="ot">&lt;-</span></span>
+<span id="cb5-2"><a href="clean-2019-data.html#cb5-2" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb5-3"><a href="clean-2019-data.html#cb5-3" tabindex="-1"></a>    <span class="st">&quot;age&quot;</span>,</span>
+<span id="cb5-4"><a href="clean-2019-data.html#cb5-4" tabindex="-1"></a>    <span class="st">&quot;age4&quot;</span>,</span>
+<span id="cb5-5"><a href="clean-2019-data.html#cb5-5" tabindex="-1"></a>    <span class="st">&quot;age7&quot;</span>,</span>
+<span id="cb5-6"><a href="clean-2019-data.html#cb5-6" tabindex="-1"></a>    <span class="st">&quot;hhsize&quot;</span>,</span>
+<span id="cb5-7"><a href="clean-2019-data.html#cb5-7" tabindex="-1"></a>    <span class="st">&quot;gender&quot;</span>,</span>
+<span id="cb5-8"><a href="clean-2019-data.html#cb5-8" tabindex="-1"></a>    <span class="st">&quot;racethnicity&quot;</span>,</span>
+<span id="cb5-9"><a href="clean-2019-data.html#cb5-9" tabindex="-1"></a>    <span class="st">&quot;p_partyid&quot;</span>,</span>
+<span id="cb5-10"><a href="clean-2019-data.html#cb5-10" tabindex="-1"></a>    <span class="st">&quot;educ&quot;</span>,</span>
+<span id="cb5-11"><a href="clean-2019-data.html#cb5-11" tabindex="-1"></a>    <span class="st">&quot;educ4&quot;</span>,</span>
+<span id="cb5-12"><a href="clean-2019-data.html#cb5-12" tabindex="-1"></a>    <span class="st">&quot;marital&quot;</span>,</span>
+<span id="cb5-13"><a href="clean-2019-data.html#cb5-13" tabindex="-1"></a>    <span class="st">&quot;employ&quot;</span>,</span>
+<span id="cb5-14"><a href="clean-2019-data.html#cb5-14" tabindex="-1"></a>    <span class="st">&quot;income&quot;</span>,</span>
+<span id="cb5-15"><a href="clean-2019-data.html#cb5-15" tabindex="-1"></a>    <span class="st">&quot;state&quot;</span>,</span>
+<span id="cb5-16"><a href="clean-2019-data.html#cb5-16" tabindex="-1"></a>    <span class="st">&quot;region4&quot;</span>,</span>
+<span id="cb5-17"><a href="clean-2019-data.html#cb5-17" tabindex="-1"></a>    <span class="st">&quot;region9&quot;</span>,</span>
+<span id="cb5-18"><a href="clean-2019-data.html#cb5-18" tabindex="-1"></a>    <span class="st">&quot;metro&quot;</span>,</span>
+<span id="cb5-19"><a href="clean-2019-data.html#cb5-19" tabindex="-1"></a>    <span class="st">&quot;internet&quot;</span>,</span>
+<span id="cb5-20"><a href="clean-2019-data.html#cb5-20" tabindex="-1"></a>    <span class="st">&quot;housing&quot;</span>,</span>
+<span id="cb5-21"><a href="clean-2019-data.html#cb5-21" tabindex="-1"></a>    <span class="st">&quot;home_type&quot;</span>,</span>
+<span id="cb5-22"><a href="clean-2019-data.html#cb5-22" tabindex="-1"></a>    <span class="st">&quot;phoneservice&quot;</span>,</span>
+<span id="cb5-23"><a href="clean-2019-data.html#cb5-23" tabindex="-1"></a>    <span class="st">&quot;hhsize&quot;</span>,</span>
+<span id="cb5-24"><a href="clean-2019-data.html#cb5-24" tabindex="-1"></a>    <span class="st">&quot;hh01&quot;</span>,</span>
+<span id="cb5-25"><a href="clean-2019-data.html#cb5-25" tabindex="-1"></a>    <span class="st">&quot;hh25&quot;</span>,</span>
+<span id="cb5-26"><a href="clean-2019-data.html#cb5-26" tabindex="-1"></a>    <span class="st">&quot;hh612&quot;</span>,</span>
+<span id="cb5-27"><a href="clean-2019-data.html#cb5-27" tabindex="-1"></a>    <span class="st">&quot;hh1317&quot;</span>,</span>
+<span id="cb5-28"><a href="clean-2019-data.html#cb5-28" tabindex="-1"></a>    <span class="st">&quot;hh18ov&quot;</span></span>
+<span id="cb5-29"><a href="clean-2019-data.html#cb5-29" tabindex="-1"></a>  )</span>
+<span id="cb5-30"><a href="clean-2019-data.html#cb5-30" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="clean-2019-data.html#cb5-31" tabindex="-1"></a>gun <span class="ot">&lt;-</span></span>
+<span id="cb5-32"><a href="clean-2019-data.html#cb5-32" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb5-33"><a href="clean-2019-data.html#cb5-33" tabindex="-1"></a>    <span class="st">&quot;q31&quot;</span>,</span>
+<span id="cb5-34"><a href="clean-2019-data.html#cb5-34" tabindex="-1"></a>    <span class="st">&quot;q32&quot;</span>,</span>
+<span id="cb5-35"><a href="clean-2019-data.html#cb5-35" tabindex="-1"></a>    <span class="st">&quot;q33&quot;</span></span>
+<span id="cb5-36"><a href="clean-2019-data.html#cb5-36" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="clean-2019-data.html#cb6-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb6-2"><a href="clean-2019-data.html#cb6-2" tabindex="-1"></a>  source <span class="sc">%&gt;%</span> </span>
+<span id="cb6-3"><a href="clean-2019-data.html#cb6-3" tabindex="-1"></a>  <span class="fu">clean_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-4"><a href="clean-2019-data.html#cb6-4" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb6-5"><a href="clean-2019-data.html#cb6-5" tabindex="-1"></a>    <span class="fu">starts_with</span>(<span class="fu">c</span>(<span class="st">&quot;caseid&quot;</span>, <span class="st">&quot;weight&quot;</span>)),</span>
+<span id="cb6-6"><a href="clean-2019-data.html#cb6-6" tabindex="-1"></a>    <span class="fu">all_of</span>(<span class="fu">c</span>(demovars, gun))</span>
+<span id="cb6-7"><a href="clean-2019-data.html#cb6-7" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+</div>
+<div id="gender" class="section level2 hasAnchor" number="2.5">
+<h2><span class="header-section-number">2.5</span> Gender<a href="clean-2019-data.html#gender" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="clean-2019-data.html#cb7-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(gender)</span></code></pre></div>
+</details>
+<pre><code>##  gender   n   percent
+##       1 873 0.5196429
+##       2 807 0.4803571</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="clean-2019-data.html#cb9-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb9-2"><a href="clean-2019-data.html#cb9-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a href="clean-2019-data.html#cb9-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb9-4"><a href="clean-2019-data.html#cb9-4" tabindex="-1"></a>    <span class="at">gender =</span> </span>
+<span id="cb9-5"><a href="clean-2019-data.html#cb9-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb9-6"><a href="clean-2019-data.html#cb9-6" tabindex="-1"></a>        gender, </span>
+<span id="cb9-7"><a href="clean-2019-data.html#cb9-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>,</span>
+<span id="cb9-8"><a href="clean-2019-data.html#cb9-8" tabindex="-1"></a>        <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Male&quot;</span>, <span class="st">&quot;Female&quot;</span>)</span>
+<span id="cb9-9"><a href="clean-2019-data.html#cb9-9" tabindex="-1"></a>      )</span>
+<span id="cb9-10"><a href="clean-2019-data.html#cb9-10" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-11"><a href="clean-2019-data.html#cb9-11" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb9-12"><a href="clean-2019-data.html#cb9-12" tabindex="-1"></a>    <span class="at">gender =</span> <span class="st">&quot;Respondent gender&quot;</span></span>
+<span id="cb9-13"><a href="clean-2019-data.html#cb9-13" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="clean-2019-data.html#cb10-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(gender)</span></code></pre></div>
+</details>
+<pre><code>##  gender   n   percent
+##    Male 873 0.5196429
+##  Female 807 0.4803571</code></pre>
+</div>
+<div id="age" class="section level2 hasAnchor" number="2.6">
+<h2><span class="header-section-number">2.6</span> Age<a href="clean-2019-data.html#age" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="clean-2019-data.html#cb12-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(age4)</span></code></pre></div>
+</details>
+<pre><code>##  age4   n   percent
+##     1 253 0.1505952
+##     2 479 0.2851190
+##     3 395 0.2351190
+##     4 553 0.3291667</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="clean-2019-data.html#cb14-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(age7)</span></code></pre></div>
+</details>
+<pre><code>##  age7   n    percent
+##     1  84 0.05000000
+##     2 387 0.23035714
+##     3 261 0.15535714
+##     4 240 0.14285714
+##     5 329 0.19583333
+##     6 269 0.16011905
+##     7 110 0.06547619</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="clean-2019-data.html#cb16-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb16-2"><a href="clean-2019-data.html#cb16-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb16-3"><a href="clean-2019-data.html#cb16-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-4"><a href="clean-2019-data.html#cb16-4" tabindex="-1"></a>    <span class="at">age4 =</span> </span>
+<span id="cb16-5"><a href="clean-2019-data.html#cb16-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb16-6"><a href="clean-2019-data.html#cb16-6" tabindex="-1"></a>        age4,</span>
+<span id="cb16-7"><a href="clean-2019-data.html#cb16-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb16-8"><a href="clean-2019-data.html#cb16-8" tabindex="-1"></a>        <span class="at">labels =</span></span>
+<span id="cb16-9"><a href="clean-2019-data.html#cb16-9" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;18-29&quot;</span>,</span>
+<span id="cb16-10"><a href="clean-2019-data.html#cb16-10" tabindex="-1"></a>            <span class="st">&quot;30-44&quot;</span>,</span>
+<span id="cb16-11"><a href="clean-2019-data.html#cb16-11" tabindex="-1"></a>            <span class="st">&quot;45-59&quot;</span>,</span>
+<span id="cb16-12"><a href="clean-2019-data.html#cb16-12" tabindex="-1"></a>            <span class="st">&quot;60+&quot;</span>)</span>
+<span id="cb16-13"><a href="clean-2019-data.html#cb16-13" tabindex="-1"></a>      ),</span>
+<span id="cb16-14"><a href="clean-2019-data.html#cb16-14" tabindex="-1"></a>    <span class="at">age7 =</span> </span>
+<span id="cb16-15"><a href="clean-2019-data.html#cb16-15" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb16-16"><a href="clean-2019-data.html#cb16-16" tabindex="-1"></a>        age7,</span>
+<span id="cb16-17"><a href="clean-2019-data.html#cb16-17" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>,</span>
+<span id="cb16-18"><a href="clean-2019-data.html#cb16-18" tabindex="-1"></a>        <span class="at">labels =</span></span>
+<span id="cb16-19"><a href="clean-2019-data.html#cb16-19" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;18-24&quot;</span>,</span>
+<span id="cb16-20"><a href="clean-2019-data.html#cb16-20" tabindex="-1"></a>            <span class="st">&quot;25-34&quot;</span>,</span>
+<span id="cb16-21"><a href="clean-2019-data.html#cb16-21" tabindex="-1"></a>            <span class="st">&quot;35-44&quot;</span>,</span>
+<span id="cb16-22"><a href="clean-2019-data.html#cb16-22" tabindex="-1"></a>            <span class="st">&quot;45-54&quot;</span>,</span>
+<span id="cb16-23"><a href="clean-2019-data.html#cb16-23" tabindex="-1"></a>            <span class="st">&quot;55-64&quot;</span>,</span>
+<span id="cb16-24"><a href="clean-2019-data.html#cb16-24" tabindex="-1"></a>            <span class="st">&quot;65-74&quot;</span>,</span>
+<span id="cb16-25"><a href="clean-2019-data.html#cb16-25" tabindex="-1"></a>            <span class="st">&quot;75+&quot;</span>)</span>
+<span id="cb16-26"><a href="clean-2019-data.html#cb16-26" tabindex="-1"></a>      )</span>
+<span id="cb16-27"><a href="clean-2019-data.html#cb16-27" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-28"><a href="clean-2019-data.html#cb16-28" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb16-29"><a href="clean-2019-data.html#cb16-29" tabindex="-1"></a>    <span class="at">age =</span> <span class="st">&quot;Age&quot;</span>,</span>
+<span id="cb16-30"><a href="clean-2019-data.html#cb16-30" tabindex="-1"></a>    <span class="at">age4 =</span> <span class="st">&quot;Age - 4 Categories&quot;</span>,</span>
+<span id="cb16-31"><a href="clean-2019-data.html#cb16-31" tabindex="-1"></a>    <span class="at">age7 =</span> <span class="st">&quot;Age - 7 Categories&quot;</span></span>
+<span id="cb16-32"><a href="clean-2019-data.html#cb16-32" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="clean-2019-data.html#cb17-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(age4)</span></code></pre></div>
+</details>
+<pre><code>##   age4   n   percent
+##  18-29 253 0.1505952
+##  30-44 479 0.2851190
+##  45-59 395 0.2351190
+##    60+ 553 0.3291667</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="clean-2019-data.html#cb19-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(age7)</span></code></pre></div>
+</details>
+<pre><code>##   age7   n    percent
+##  18-24  84 0.05000000
+##  25-34 387 0.23035714
+##  35-44 261 0.15535714
+##  45-54 240 0.14285714
+##  55-64 329 0.19583333
+##  65-74 269 0.16011905
+##    75+ 110 0.06547619</code></pre>
+</div>
+<div id="race-and-ethnicity" class="section level2 hasAnchor" number="2.7">
+<h2><span class="header-section-number">2.7</span> Race and ethnicity<a href="clean-2019-data.html#race-and-ethnicity" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="clean-2019-data.html#cb21-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(racethnicity)</span></code></pre></div>
+</details>
+<pre><code>##  racethnicity    n    percent
+##             1 1115 0.66369048
+##             2  172 0.10238095
+##             3   30 0.01785714
+##             4  255 0.15178571
+##             5   58 0.03452381
+##             6   50 0.02976190</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="clean-2019-data.html#cb23-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb23-2"><a href="clean-2019-data.html#cb23-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb23-3"><a href="clean-2019-data.html#cb23-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb23-4"><a href="clean-2019-data.html#cb23-4" tabindex="-1"></a>    <span class="at">racethnicity =</span> </span>
+<span id="cb23-5"><a href="clean-2019-data.html#cb23-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb23-6"><a href="clean-2019-data.html#cb23-6" tabindex="-1"></a>        racethnicity,</span>
+<span id="cb23-7"><a href="clean-2019-data.html#cb23-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>,</span>
+<span id="cb23-8"><a href="clean-2019-data.html#cb23-8" tabindex="-1"></a>        <span class="at">labels =</span></span>
+<span id="cb23-9"><a href="clean-2019-data.html#cb23-9" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;White, non-Hispanic&quot;</span>,</span>
+<span id="cb23-10"><a href="clean-2019-data.html#cb23-10" tabindex="-1"></a>            <span class="st">&quot;Black, non-Hispanic&quot;</span>,</span>
+<span id="cb23-11"><a href="clean-2019-data.html#cb23-11" tabindex="-1"></a>            <span class="st">&quot;Other, non-Hispanic&quot;</span>,</span>
+<span id="cb23-12"><a href="clean-2019-data.html#cb23-12" tabindex="-1"></a>            <span class="st">&quot;Hispanic&quot;</span>,</span>
+<span id="cb23-13"><a href="clean-2019-data.html#cb23-13" tabindex="-1"></a>            <span class="st">&quot;2+, non-Hispanic&quot;</span>,</span>
+<span id="cb23-14"><a href="clean-2019-data.html#cb23-14" tabindex="-1"></a>            <span class="st">&quot;Asian, non-Hispanic&quot;</span>)</span>
+<span id="cb23-15"><a href="clean-2019-data.html#cb23-15" tabindex="-1"></a>      )</span>
+<span id="cb23-16"><a href="clean-2019-data.html#cb23-16" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-17"><a href="clean-2019-data.html#cb23-17" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb23-18"><a href="clean-2019-data.html#cb23-18" tabindex="-1"></a>    <span class="at">racethnicity =</span> <span class="st">&quot;Combined race/ethnicity&quot;</span></span>
+<span id="cb23-19"><a href="clean-2019-data.html#cb23-19" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="clean-2019-data.html#cb24-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(racethnicity)</span></code></pre></div>
+</details>
+<pre><code>##         racethnicity    n    percent
+##  White, non-Hispanic 1115 0.66369048
+##  Black, non-Hispanic  172 0.10238095
+##  Other, non-Hispanic   30 0.01785714
+##             Hispanic  255 0.15178571
+##     2+, non-Hispanic   58 0.03452381
+##  Asian, non-Hispanic   50 0.02976190</code></pre>
+</div>
+<div id="education" class="section level2 hasAnchor" number="2.8">
+<h2><span class="header-section-number">2.8</span> Education<a href="clean-2019-data.html#education" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We construct a new variable <code>educ5</code> using <code>educ</code> which matches the variable from 2021 and 2023.</p>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="clean-2019-data.html#cb26-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(educ)</span></code></pre></div>
+</details>
+<pre><code>##  educ   n     percent
+##     1   3 0.001785714
+##     3   2 0.001190476
+##     4   4 0.002380952
+##     5   9 0.005357143
+##     6  15 0.008928571
+##     7  13 0.007738095
+##     8  20 0.011904762
+##     9 283 0.168452381
+##    10 498 0.296428571
+##    11 225 0.133928571
+##    12 352 0.209523810
+##    13 185 0.110119048
+##    14  71 0.042261905</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="clean-2019-data.html#cb28-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(educ4)</span></code></pre></div>
+</details>
+<pre><code>##  educ4   n    percent
+##      1  66 0.03928571
+##      2 283 0.16845238
+##      3 723 0.43035714
+##      4 608 0.36190476</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="clean-2019-data.html#cb30-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb30-2"><a href="clean-2019-data.html#cb30-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb30-3"><a href="clean-2019-data.html#cb30-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb30-4"><a href="clean-2019-data.html#cb30-4" tabindex="-1"></a>    <span class="at">educ5 =</span></span>
+<span id="cb30-5"><a href="clean-2019-data.html#cb30-5" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
+<span id="cb30-6"><a href="clean-2019-data.html#cb30-6" tabindex="-1"></a>       educ <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb30-7"><a href="clean-2019-data.html#cb30-7" tabindex="-1"></a>       educ <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb30-8"><a href="clean-2019-data.html#cb30-8" tabindex="-1"></a>       educ <span class="sc">%in%</span> <span class="dv">10</span><span class="sc">:</span><span class="dv">11</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb30-9"><a href="clean-2019-data.html#cb30-9" tabindex="-1"></a>       educ <span class="sc">==</span> <span class="dv">12</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb30-10"><a href="clean-2019-data.html#cb30-10" tabindex="-1"></a>       <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">5</span></span>
+<span id="cb30-11"><a href="clean-2019-data.html#cb30-11" tabindex="-1"></a>       ) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-12"><a href="clean-2019-data.html#cb30-12" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb30-13"><a href="clean-2019-data.html#cb30-13" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,</span>
+<span id="cb30-14"><a href="clean-2019-data.html#cb30-14" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb30-15"><a href="clean-2019-data.html#cb30-15" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Less than HS&quot;</span>,</span>
+<span id="cb30-16"><a href="clean-2019-data.html#cb30-16" tabindex="-1"></a>            <span class="st">&quot;HS graduate&quot;</span>,</span>
+<span id="cb30-17"><a href="clean-2019-data.html#cb30-17" tabindex="-1"></a>            <span class="st">&quot;Vocational/tech school/some college/ associates&quot;</span>,</span>
+<span id="cb30-18"><a href="clean-2019-data.html#cb30-18" tabindex="-1"></a>            <span class="st">&quot;Bachelors degree&quot;</span>,</span>
+<span id="cb30-19"><a href="clean-2019-data.html#cb30-19" tabindex="-1"></a>            <span class="st">&quot;Post grad study/professional degree&quot;</span></span>
+<span id="cb30-20"><a href="clean-2019-data.html#cb30-20" tabindex="-1"></a>            )</span>
+<span id="cb30-21"><a href="clean-2019-data.html#cb30-21" tabindex="-1"></a>      ),</span>
+<span id="cb30-22"><a href="clean-2019-data.html#cb30-22" tabindex="-1"></a>    <span class="at">educ =</span> </span>
+<span id="cb30-23"><a href="clean-2019-data.html#cb30-23" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb30-24"><a href="clean-2019-data.html#cb30-24" tabindex="-1"></a>        educ,</span>
+<span id="cb30-25"><a href="clean-2019-data.html#cb30-25" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">14</span>,</span>
+<span id="cb30-26"><a href="clean-2019-data.html#cb30-26" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb30-27"><a href="clean-2019-data.html#cb30-27" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;No formal education&quot;</span>,</span>
+<span id="cb30-28"><a href="clean-2019-data.html#cb30-28" tabindex="-1"></a>            <span class="st">&quot;1st, 2nd, 3rd, or 4th grade&quot;</span>,</span>
+<span id="cb30-29"><a href="clean-2019-data.html#cb30-29" tabindex="-1"></a>            <span class="st">&quot;5th or 6th grade&quot;</span>,</span>
+<span id="cb30-30"><a href="clean-2019-data.html#cb30-30" tabindex="-1"></a>            <span class="st">&quot;7th or 8th grade&quot;</span>,</span>
+<span id="cb30-31"><a href="clean-2019-data.html#cb30-31" tabindex="-1"></a>            <span class="st">&quot;9th grade&quot;</span>,</span>
+<span id="cb30-32"><a href="clean-2019-data.html#cb30-32" tabindex="-1"></a>            <span class="st">&quot;10th grade&quot;</span>,</span>
+<span id="cb30-33"><a href="clean-2019-data.html#cb30-33" tabindex="-1"></a>            <span class="st">&quot;11th grade&quot;</span>,</span>
+<span id="cb30-34"><a href="clean-2019-data.html#cb30-34" tabindex="-1"></a>            <span class="st">&quot;12th grade (no diploma)&quot;</span>,</span>
+<span id="cb30-35"><a href="clean-2019-data.html#cb30-35" tabindex="-1"></a>            <span class="st">&quot;High school graduate, diploma, or GED&quot;</span>,</span>
+<span id="cb30-36"><a href="clean-2019-data.html#cb30-36" tabindex="-1"></a>            <span class="st">&quot;Some college, no degree&quot;</span>,</span>
+<span id="cb30-37"><a href="clean-2019-data.html#cb30-37" tabindex="-1"></a>            <span class="st">&quot;Associate degree&quot;</span>,</span>
+<span id="cb30-38"><a href="clean-2019-data.html#cb30-38" tabindex="-1"></a>            <span class="st">&quot;Bachelors degree&quot;</span>,</span>
+<span id="cb30-39"><a href="clean-2019-data.html#cb30-39" tabindex="-1"></a>            <span class="st">&quot;Masters degree&quot;</span>,</span>
+<span id="cb30-40"><a href="clean-2019-data.html#cb30-40" tabindex="-1"></a>            <span class="st">&quot;Professional or Doctorate degree&quot;</span>)</span>
+<span id="cb30-41"><a href="clean-2019-data.html#cb30-41" tabindex="-1"></a>      ),</span>
+<span id="cb30-42"><a href="clean-2019-data.html#cb30-42" tabindex="-1"></a>    <span class="at">educ4 =</span> </span>
+<span id="cb30-43"><a href="clean-2019-data.html#cb30-43" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb30-44"><a href="clean-2019-data.html#cb30-44" tabindex="-1"></a>        educ4, </span>
+<span id="cb30-45"><a href="clean-2019-data.html#cb30-45" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb30-46"><a href="clean-2019-data.html#cb30-46" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb30-47"><a href="clean-2019-data.html#cb30-47" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;No HS diploma&quot;</span>,</span>
+<span id="cb30-48"><a href="clean-2019-data.html#cb30-48" tabindex="-1"></a>            <span class="st">&quot;HS graduate or equivalent&quot;</span>,</span>
+<span id="cb30-49"><a href="clean-2019-data.html#cb30-49" tabindex="-1"></a>            <span class="st">&quot;Some college&quot;</span>,</span>
+<span id="cb30-50"><a href="clean-2019-data.html#cb30-50" tabindex="-1"></a>            <span class="st">&quot;BA or above&quot;</span>)</span>
+<span id="cb30-51"><a href="clean-2019-data.html#cb30-51" tabindex="-1"></a>      )</span>
+<span id="cb30-52"><a href="clean-2019-data.html#cb30-52" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-53"><a href="clean-2019-data.html#cb30-53" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb30-54"><a href="clean-2019-data.html#cb30-54" tabindex="-1"></a>    <span class="at">educ5 =</span> <span class="st">&quot;Highest level of education&quot;</span>,</span>
+<span id="cb30-55"><a href="clean-2019-data.html#cb30-55" tabindex="-1"></a>    <span class="at">educ4 =</span> <span class="st">&quot;4-level highest level of education&quot;</span>,</span>
+<span id="cb30-56"><a href="clean-2019-data.html#cb30-56" tabindex="-1"></a>    <span class="at">educ =</span> <span class="st">&quot;Highest level of education&quot;</span></span>
+<span id="cb30-57"><a href="clean-2019-data.html#cb30-57" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="clean-2019-data.html#cb31-1" tabindex="-1"></a><span class="fu">walk</span>(</span>
+<span id="cb31-2"><a href="clean-2019-data.html#cb31-2" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">&quot;educ&quot;</span>, <span class="st">&quot;educ5&quot;</span>,<span class="st">&quot;educ4&quot;</span>),</span>
+<span id="cb31-3"><a href="clean-2019-data.html#cb31-3" tabindex="-1"></a>  <span class="sc">~</span> <span class="fu">print</span>(raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(.x))</span>
+<span id="cb31-4"><a href="clean-2019-data.html#cb31-4" tabindex="-1"></a>)</span></code></pre></div>
+</details>
+<pre><code>## Warning: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+## ℹ Please use `all_of()` or `any_of()` instead.
+##   # Was:
+##   data %&gt;% select(.x)
+## 
+##   # Now:
+##   data %&gt;% select(all_of(.x))
+## 
+## See &lt;https://tidyselect.r-lib.org/reference/faq-external-vector.html&gt;.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.</code></pre>
+<pre><code>##                                   educ   n     percent
+##                    No formal education   3 0.001785714
+##            1st, 2nd, 3rd, or 4th grade   0 0.000000000
+##                       5th or 6th grade   2 0.001190476
+##                       7th or 8th grade   4 0.002380952
+##                              9th grade   9 0.005357143
+##                             10th grade  15 0.008928571
+##                             11th grade  13 0.007738095
+##                12th grade (no diploma)  20 0.011904762
+##  High school graduate, diploma, or GED 283 0.168452381
+##                Some college, no degree 498 0.296428571
+##                       Associate degree 225 0.133928571
+##                       Bachelors degree 352 0.209523810
+##                         Masters degree 185 0.110119048
+##       Professional or Doctorate degree  71 0.042261905
+##                                            educ5   n    percent
+##                                     Less than HS  66 0.03928571
+##                                      HS graduate 283 0.16845238
+##  Vocational/tech school/some college/ associates 723 0.43035714
+##                                 Bachelors degree 352 0.20952381
+##              Post grad study/professional degree 256 0.15238095
+##                      educ4   n    percent
+##              No HS diploma  66 0.03928571
+##  HS graduate or equivalent 283 0.16845238
+##               Some college 723 0.43035714
+##                BA or above 608 0.36190476</code></pre>
+</div>
+<div id="martial-status" class="section level2 hasAnchor" number="2.9">
+<h2><span class="header-section-number">2.9</span> Martial status<a href="clean-2019-data.html#martial-status" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="clean-2019-data.html#cb34-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(marital)</span></code></pre></div>
+</details>
+<pre><code>##  marital   n    percent
+##        1 895 0.53273810
+##        2  85 0.05059524
+##        3 192 0.11428571
+##        4  30 0.01785714
+##        5 342 0.20357143
+##        6 136 0.08095238</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="clean-2019-data.html#cb36-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb36-2"><a href="clean-2019-data.html#cb36-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb36-3"><a href="clean-2019-data.html#cb36-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb36-4"><a href="clean-2019-data.html#cb36-4" tabindex="-1"></a>    <span class="at">marital =</span> </span>
+<span id="cb36-5"><a href="clean-2019-data.html#cb36-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb36-6"><a href="clean-2019-data.html#cb36-6" tabindex="-1"></a>        marital, </span>
+<span id="cb36-7"><a href="clean-2019-data.html#cb36-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>,</span>
+<span id="cb36-8"><a href="clean-2019-data.html#cb36-8" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb36-9"><a href="clean-2019-data.html#cb36-9" tabindex="-1"></a>          <span class="fu">c</span>(</span>
+<span id="cb36-10"><a href="clean-2019-data.html#cb36-10" tabindex="-1"></a>            <span class="st">&quot;Married&quot;</span>,</span>
+<span id="cb36-11"><a href="clean-2019-data.html#cb36-11" tabindex="-1"></a>            <span class="st">&quot;Widowed&quot;</span>,</span>
+<span id="cb36-12"><a href="clean-2019-data.html#cb36-12" tabindex="-1"></a>            <span class="st">&quot;Divorced&quot;</span>,</span>
+<span id="cb36-13"><a href="clean-2019-data.html#cb36-13" tabindex="-1"></a>            <span class="st">&quot;Separated&quot;</span>,</span>
+<span id="cb36-14"><a href="clean-2019-data.html#cb36-14" tabindex="-1"></a>            <span class="st">&quot;Never married&quot;</span>,</span>
+<span id="cb36-15"><a href="clean-2019-data.html#cb36-15" tabindex="-1"></a>            <span class="st">&quot;Living with partner&quot;</span></span>
+<span id="cb36-16"><a href="clean-2019-data.html#cb36-16" tabindex="-1"></a>          )</span>
+<span id="cb36-17"><a href="clean-2019-data.html#cb36-17" tabindex="-1"></a>      )</span>
+<span id="cb36-18"><a href="clean-2019-data.html#cb36-18" tabindex="-1"></a>  )  <span class="sc">%&gt;%</span> </span>
+<span id="cb36-19"><a href="clean-2019-data.html#cb36-19" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb36-20"><a href="clean-2019-data.html#cb36-20" tabindex="-1"></a>    <span class="at">marital =</span> <span class="st">&quot;Marital status&quot;</span></span>
+<span id="cb36-21"><a href="clean-2019-data.html#cb36-21" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="clean-2019-data.html#cb37-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(marital)</span></code></pre></div>
+</details>
+<pre><code>##              marital   n    percent
+##              Married 895 0.53273810
+##              Widowed  85 0.05059524
+##             Divorced 192 0.11428571
+##            Separated  30 0.01785714
+##        Never married 342 0.20357143
+##  Living with partner 136 0.08095238</code></pre>
+</div>
+<div id="employment" class="section level2 hasAnchor" number="2.10">
+<h2><span class="header-section-number">2.10</span> Employment<a href="clean-2019-data.html#employment" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="clean-2019-data.html#cb39-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(employ)</span></code></pre></div>
+</details>
+<pre><code>##  employ   n     percent
+##       1 869 0.517261905
+##       2 172 0.102380952
+##       3  11 0.006547619
+##       4  69 0.041071429
+##       5 351 0.208928571
+##       6 103 0.061309524
+##       7 105 0.062500000</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="clean-2019-data.html#cb41-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb41-2"><a href="clean-2019-data.html#cb41-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb41-3"><a href="clean-2019-data.html#cb41-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb41-4"><a href="clean-2019-data.html#cb41-4" tabindex="-1"></a>    <span class="at">employ =</span> </span>
+<span id="cb41-5"><a href="clean-2019-data.html#cb41-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb41-6"><a href="clean-2019-data.html#cb41-6" tabindex="-1"></a>        employ, </span>
+<span id="cb41-7"><a href="clean-2019-data.html#cb41-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>, </span>
+<span id="cb41-8"><a href="clean-2019-data.html#cb41-8" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb41-9"><a href="clean-2019-data.html#cb41-9" tabindex="-1"></a>          <span class="fu">c</span>(</span>
+<span id="cb41-10"><a href="clean-2019-data.html#cb41-10" tabindex="-1"></a>            <span class="st">&quot;Working - as a paid employee&quot;</span>,</span>
+<span id="cb41-11"><a href="clean-2019-data.html#cb41-11" tabindex="-1"></a>            <span class="st">&quot;Working - self-employed&quot;</span>,</span>
+<span id="cb41-12"><a href="clean-2019-data.html#cb41-12" tabindex="-1"></a>            <span class="st">&quot;Not working - on temporary layoff from a job&quot;</span>,</span>
+<span id="cb41-13"><a href="clean-2019-data.html#cb41-13" tabindex="-1"></a>            <span class="st">&quot;Not working - looking for work&quot;</span>,</span>
+<span id="cb41-14"><a href="clean-2019-data.html#cb41-14" tabindex="-1"></a>            <span class="st">&quot;Not working - retired&quot;</span>,</span>
+<span id="cb41-15"><a href="clean-2019-data.html#cb41-15" tabindex="-1"></a>            <span class="st">&quot;Not working - disabled&quot;</span>,</span>
+<span id="cb41-16"><a href="clean-2019-data.html#cb41-16" tabindex="-1"></a>            <span class="st">&quot;Not working - other&quot;</span></span>
+<span id="cb41-17"><a href="clean-2019-data.html#cb41-17" tabindex="-1"></a>          )</span>
+<span id="cb41-18"><a href="clean-2019-data.html#cb41-18" tabindex="-1"></a>      )</span>
+<span id="cb41-19"><a href="clean-2019-data.html#cb41-19" tabindex="-1"></a>  )   <span class="sc">%&gt;%</span> </span>
+<span id="cb41-20"><a href="clean-2019-data.html#cb41-20" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb41-21"><a href="clean-2019-data.html#cb41-21" tabindex="-1"></a>    <span class="at">employ =</span> <span class="st">&quot;Current employment status&quot;</span></span>
+<span id="cb41-22"><a href="clean-2019-data.html#cb41-22" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="clean-2019-data.html#cb42-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(employ)</span></code></pre></div>
+</details>
+<pre><code>##                                        employ   n     percent
+##                  Working - as a paid employee 869 0.517261905
+##                       Working - self-employed 172 0.102380952
+##  Not working - on temporary layoff from a job  11 0.006547619
+##                Not working - looking for work  69 0.041071429
+##                         Not working - retired 351 0.208928571
+##                        Not working - disabled 103 0.061309524
+##                           Not working - other 105 0.062500000</code></pre>
+</div>
+<div id="income" class="section level2 hasAnchor" number="2.11">
+<h2><span class="header-section-number">2.11</span> Income<a href="clean-2019-data.html#income" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We construct 2 variables: income4 and income5 to match 2021 and 2023 data.</p>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="clean-2019-data.html#cb44-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(income)</span></code></pre></div>
+</details>
+<pre><code>##  income   n    percent
+##       1  39 0.02321429
+##       2  35 0.02083333
+##       3  58 0.03452381
+##       4  51 0.03035714
+##       5  89 0.05297619
+##       6  96 0.05714286
+##       7  83 0.04940476
+##       8  76 0.04523810
+##       9 161 0.09583333
+##      10 167 0.09940476
+##      11 179 0.10654762
+##      12  89 0.05297619
+##      13 177 0.10535714
+##      14 131 0.07797619
+##      15 100 0.05952381
+##      16  51 0.03035714
+##      17  30 0.01785714
+##      18  68 0.04047619</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="clean-2019-data.html#cb46-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb46-2"><a href="clean-2019-data.html#cb46-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb46-3"><a href="clean-2019-data.html#cb46-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb46-4"><a href="clean-2019-data.html#cb46-4" tabindex="-1"></a>    <span class="at">income4 =</span> </span>
+<span id="cb46-5"><a href="clean-2019-data.html#cb46-5" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
+<span id="cb46-6"><a href="clean-2019-data.html#cb46-6" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb46-7"><a href="clean-2019-data.html#cb46-7" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">7</span><span class="sc">:</span><span class="dv">10</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb46-8"><a href="clean-2019-data.html#cb46-8" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">11</span><span class="sc">:</span><span class="dv">13</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb46-9"><a href="clean-2019-data.html#cb46-9" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">4</span></span>
+<span id="cb46-10"><a href="clean-2019-data.html#cb46-10" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb46-11"><a href="clean-2019-data.html#cb46-11" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb46-12"><a href="clean-2019-data.html#cb46-12" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, </span>
+<span id="cb46-13"><a href="clean-2019-data.html#cb46-13" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb46-14"><a href="clean-2019-data.html#cb46-14" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Less than $30,000&quot;</span>,</span>
+<span id="cb46-15"><a href="clean-2019-data.html#cb46-15" tabindex="-1"></a>            <span class="st">&quot;$30,000-60,000&quot;</span>,</span>
+<span id="cb46-16"><a href="clean-2019-data.html#cb46-16" tabindex="-1"></a>            <span class="st">&quot;$60,000-100,000&quot;</span>,</span>
+<span id="cb46-17"><a href="clean-2019-data.html#cb46-17" tabindex="-1"></a>            <span class="st">&quot;$100,000 or more&quot;</span>)</span>
+<span id="cb46-18"><a href="clean-2019-data.html#cb46-18" tabindex="-1"></a>      ),</span>
+<span id="cb46-19"><a href="clean-2019-data.html#cb46-19" tabindex="-1"></a>    <span class="at">income9 =</span> </span>
+<span id="cb46-20"><a href="clean-2019-data.html#cb46-20" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
+<span id="cb46-21"><a href="clean-2019-data.html#cb46-21" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb46-22"><a href="clean-2019-data.html#cb46-22" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">3</span><span class="sc">:</span><span class="dv">4</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb46-23"><a href="clean-2019-data.html#cb46-23" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">5</span><span class="sc">:</span><span class="dv">6</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb46-24"><a href="clean-2019-data.html#cb46-24" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">7</span><span class="sc">:</span><span class="dv">8</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb46-25"><a href="clean-2019-data.html#cb46-25" tabindex="-1"></a>        income <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> <span class="dv">5</span>,</span>
+<span id="cb46-26"><a href="clean-2019-data.html#cb46-26" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">10</span><span class="sc">:</span><span class="dv">11</span> <span class="sc">~</span> <span class="dv">6</span>,</span>
+<span id="cb46-27"><a href="clean-2019-data.html#cb46-27" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">12</span><span class="sc">:</span><span class="dv">13</span> <span class="sc">~</span> <span class="dv">7</span>,</span>
+<span id="cb46-28"><a href="clean-2019-data.html#cb46-28" tabindex="-1"></a>        income <span class="sc">%in%</span> <span class="dv">14</span><span class="sc">:</span><span class="dv">15</span> <span class="sc">~</span> <span class="dv">8</span>,</span>
+<span id="cb46-29"><a href="clean-2019-data.html#cb46-29" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">9</span></span>
+<span id="cb46-30"><a href="clean-2019-data.html#cb46-30" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb46-31"><a href="clean-2019-data.html#cb46-31" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb46-32"><a href="clean-2019-data.html#cb46-32" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">9</span>, </span>
+<span id="cb46-33"><a href="clean-2019-data.html#cb46-33" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb46-34"><a href="clean-2019-data.html#cb46-34" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Under $10,000&quot;</span>,</span>
+<span id="cb46-35"><a href="clean-2019-data.html#cb46-35" tabindex="-1"></a>            <span class="st">&quot;$10,000-20,000&quot;</span>,</span>
+<span id="cb46-36"><a href="clean-2019-data.html#cb46-36" tabindex="-1"></a>            <span class="st">&quot;$20,000-30,000&quot;</span>,</span>
+<span id="cb46-37"><a href="clean-2019-data.html#cb46-37" tabindex="-1"></a>            <span class="st">&quot;$30,000-40,000&quot;</span>,</span>
+<span id="cb46-38"><a href="clean-2019-data.html#cb46-38" tabindex="-1"></a>            <span class="st">&quot;$40,000-50,000&quot;</span>,</span>
+<span id="cb46-39"><a href="clean-2019-data.html#cb46-39" tabindex="-1"></a>            <span class="st">&quot;$50,000-75,000&quot;</span>,</span>
+<span id="cb46-40"><a href="clean-2019-data.html#cb46-40" tabindex="-1"></a>            <span class="st">&quot;$75,000-100,000&quot;</span>,</span>
+<span id="cb46-41"><a href="clean-2019-data.html#cb46-41" tabindex="-1"></a>            <span class="st">&quot;$100,000-150,000&quot;</span>,</span>
+<span id="cb46-42"><a href="clean-2019-data.html#cb46-42" tabindex="-1"></a>            <span class="st">&quot;$150,000 or more&quot;</span>)</span>
+<span id="cb46-43"><a href="clean-2019-data.html#cb46-43" tabindex="-1"></a>      ),</span>
+<span id="cb46-44"><a href="clean-2019-data.html#cb46-44" tabindex="-1"></a>    <span class="at">income =</span> </span>
+<span id="cb46-45"><a href="clean-2019-data.html#cb46-45" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb46-46"><a href="clean-2019-data.html#cb46-46" tabindex="-1"></a>        income, </span>
+<span id="cb46-47"><a href="clean-2019-data.html#cb46-47" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">18</span>,</span>
+<span id="cb46-48"><a href="clean-2019-data.html#cb46-48" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb46-49"><a href="clean-2019-data.html#cb46-49" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Less than $5,000&quot;</span>,</span>
+<span id="cb46-50"><a href="clean-2019-data.html#cb46-50" tabindex="-1"></a>            <span class="st">&quot;$5,000-9,999&quot;</span>,</span>
+<span id="cb46-51"><a href="clean-2019-data.html#cb46-51" tabindex="-1"></a>            <span class="st">&quot;$10,000-14,999&quot;</span>,</span>
+<span id="cb46-52"><a href="clean-2019-data.html#cb46-52" tabindex="-1"></a>            <span class="st">&quot;$15,000-19,999&quot;</span>,</span>
+<span id="cb46-53"><a href="clean-2019-data.html#cb46-53" tabindex="-1"></a>            <span class="st">&quot;$20,000-24,999&quot;</span>,</span>
+<span id="cb46-54"><a href="clean-2019-data.html#cb46-54" tabindex="-1"></a>            <span class="st">&quot;$25,000-29,999&quot;</span>,</span>
+<span id="cb46-55"><a href="clean-2019-data.html#cb46-55" tabindex="-1"></a>            <span class="st">&quot;$30,000-34,999&quot;</span>,</span>
+<span id="cb46-56"><a href="clean-2019-data.html#cb46-56" tabindex="-1"></a>            <span class="st">&quot;$35,000-39,999&quot;</span>,</span>
+<span id="cb46-57"><a href="clean-2019-data.html#cb46-57" tabindex="-1"></a>            <span class="st">&quot;$40,000-49,999&quot;</span>,</span>
+<span id="cb46-58"><a href="clean-2019-data.html#cb46-58" tabindex="-1"></a>            <span class="st">&quot;$50,000-59,999&quot;</span>,</span>
+<span id="cb46-59"><a href="clean-2019-data.html#cb46-59" tabindex="-1"></a>            <span class="st">&quot;$60,000-74,999&quot;</span>,</span>
+<span id="cb46-60"><a href="clean-2019-data.html#cb46-60" tabindex="-1"></a>            <span class="st">&quot;$75,000-84,999&quot;</span>,</span>
+<span id="cb46-61"><a href="clean-2019-data.html#cb46-61" tabindex="-1"></a>            <span class="st">&quot;$85,000-99,999&quot;</span>,</span>
+<span id="cb46-62"><a href="clean-2019-data.html#cb46-62" tabindex="-1"></a>            <span class="st">&quot;$100,000-124,999&quot;</span>,</span>
+<span id="cb46-63"><a href="clean-2019-data.html#cb46-63" tabindex="-1"></a>            <span class="st">&quot;$125,000-149,999&quot;</span>,</span>
+<span id="cb46-64"><a href="clean-2019-data.html#cb46-64" tabindex="-1"></a>            <span class="st">&quot;$150,000-174,999&quot;</span>,</span>
+<span id="cb46-65"><a href="clean-2019-data.html#cb46-65" tabindex="-1"></a>            <span class="st">&quot;$175,000-199,999&quot;</span>,</span>
+<span id="cb46-66"><a href="clean-2019-data.html#cb46-66" tabindex="-1"></a>            <span class="st">&quot;$200,000 or more&quot;</span>)</span>
+<span id="cb46-67"><a href="clean-2019-data.html#cb46-67" tabindex="-1"></a>      )</span>
+<span id="cb46-68"><a href="clean-2019-data.html#cb46-68" tabindex="-1"></a>  )  <span class="sc">%&gt;%</span> </span>
+<span id="cb46-69"><a href="clean-2019-data.html#cb46-69" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb46-70"><a href="clean-2019-data.html#cb46-70" tabindex="-1"></a>    <span class="at">income =</span> <span class="st">&quot;Household income&quot;</span>,</span>
+<span id="cb46-71"><a href="clean-2019-data.html#cb46-71" tabindex="-1"></a>    <span class="at">income4 =</span> <span class="st">&quot;Household income: 4 categories&quot;</span>,</span>
+<span id="cb46-72"><a href="clean-2019-data.html#cb46-72" tabindex="-1"></a>    <span class="at">income9 =</span> <span class="st">&quot;Household income: 9 categories&quot;</span></span>
+<span id="cb46-73"><a href="clean-2019-data.html#cb46-73" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="clean-2019-data.html#cb47-1" tabindex="-1"></a><span class="fu">walk</span>(</span>
+<span id="cb47-2"><a href="clean-2019-data.html#cb47-2" tabindex="-1"></a>    raw <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;income&quot;</span>)) <span class="sc">%&gt;%</span> names,</span>
+<span id="cb47-3"><a href="clean-2019-data.html#cb47-3" tabindex="-1"></a>  <span class="sc">~</span> <span class="fu">print</span>(raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(.x))</span>
+<span id="cb47-4"><a href="clean-2019-data.html#cb47-4" tabindex="-1"></a>)</span></code></pre></div>
+</details>
+<pre><code>##            income   n    percent
+##  Less than $5,000  39 0.02321429
+##      $5,000-9,999  35 0.02083333
+##    $10,000-14,999  58 0.03452381
+##    $15,000-19,999  51 0.03035714
+##    $20,000-24,999  89 0.05297619
+##    $25,000-29,999  96 0.05714286
+##    $30,000-34,999  83 0.04940476
+##    $35,000-39,999  76 0.04523810
+##    $40,000-49,999 161 0.09583333
+##    $50,000-59,999 167 0.09940476
+##    $60,000-74,999 179 0.10654762
+##    $75,000-84,999  89 0.05297619
+##    $85,000-99,999 177 0.10535714
+##  $100,000-124,999 131 0.07797619
+##  $125,000-149,999 100 0.05952381
+##  $150,000-174,999  51 0.03035714
+##  $175,000-199,999  30 0.01785714
+##  $200,000 or more  68 0.04047619
+##            income4   n   percent
+##  Less than $30,000 368 0.2190476
+##     $30,000-60,000 487 0.2898810
+##    $60,000-100,000 445 0.2648810
+##   $100,000 or more 380 0.2261905
+##           income9   n    percent
+##     Under $10,000  74 0.04404762
+##    $10,000-20,000 109 0.06488095
+##    $20,000-30,000 185 0.11011905
+##    $30,000-40,000 159 0.09464286
+##    $40,000-50,000 161 0.09583333
+##    $50,000-75,000 346 0.20595238
+##   $75,000-100,000 266 0.15833333
+##  $100,000-150,000 231 0.13750000
+##  $150,000 or more 149 0.08869048</code></pre>
+</div>
+<div id="state" class="section level2 hasAnchor" number="2.12">
+<h2><span class="header-section-number">2.12</span> State<a href="clean-2019-data.html#state" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="clean-2019-data.html#cb49-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(state)</span></code></pre></div>
+</details>
+<pre><code>##  state   n     percent
+##     AL  18 0.010714286
+##     AR   8 0.004761905
+##     AZ  52 0.030952381
+##     CA 177 0.105357143
+##     CO  45 0.026785714
+##     CT   8 0.004761905
+##     DC   3 0.001785714
+##     DE  13 0.007738095
+##     FL 142 0.084523810
+##     GA  40 0.023809524
+##     HI   5 0.002976190
+##     IA  16 0.009523810
+##     ID  21 0.012500000
+##     IL  75 0.044642857
+##     IN  37 0.022023810
+##     KS  10 0.005952381
+##     KY  24 0.014285714
+##     LA  30 0.017857143
+##     MA  31 0.018452381
+##     MD  13 0.007738095
+##     ME  12 0.007142857
+##     MI  68 0.040476190
+##     MN  33 0.019642857
+##     MO  43 0.025595238
+##     MS   5 0.002976190
+##     MT   2 0.001190476
+##     NC  47 0.027976190
+##     ND   2 0.001190476
+##     NE  26 0.015476190
+##     NH   4 0.002380952
+##     NJ  43 0.025595238
+##     NM  13 0.007738095
+##     NV  15 0.008928571
+##     NY  75 0.044642857
+##     OH  73 0.043452381
+##     OK  20 0.011904762
+##     OR  20 0.011904762
+##     PA  68 0.040476190
+##     RI   6 0.003571429
+##     SC   9 0.005357143
+##     SD  12 0.007142857
+##     TN  42 0.025000000
+##     TX 128 0.076190476
+##     UT  14 0.008333333
+##     VA  29 0.017261905
+##     VT   2 0.001190476
+##     WA  38 0.022619048
+##     WI  46 0.027380952
+##     WV  15 0.008928571
+##     WY   2 0.001190476</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="clean-2019-data.html#cb51-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb51-2"><a href="clean-2019-data.html#cb51-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb51-3"><a href="clean-2019-data.html#cb51-3" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb51-4"><a href="clean-2019-data.html#cb51-4" tabindex="-1"></a>    <span class="at">state =</span> <span class="st">&quot;State&quot;</span></span>
+<span id="cb51-5"><a href="clean-2019-data.html#cb51-5" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+</div>
+<div id="region" class="section level2 hasAnchor" number="2.13">
+<h2><span class="header-section-number">2.13</span> Region<a href="clean-2019-data.html#region" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="clean-2019-data.html#cb52-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(region4)</span></code></pre></div>
+</details>
+<pre><code>##  region4   n   percent
+##        1 249 0.1482143
+##        2 441 0.2625000
+##        3 586 0.3488095
+##        4 404 0.2404762</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="clean-2019-data.html#cb54-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(region9)</span></code></pre></div>
+</details>
+<pre><code>##  region9   n    percent
+##        1  63 0.03750000
+##        2 186 0.11071429
+##        3 299 0.17797619
+##        4 142 0.08452381
+##        5 311 0.18511905
+##        6  89 0.05297619
+##        7 186 0.11071429
+##        8 164 0.09761905
+##        9 240 0.14285714</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="clean-2019-data.html#cb56-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb56-2"><a href="clean-2019-data.html#cb56-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb56-3"><a href="clean-2019-data.html#cb56-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb56-4"><a href="clean-2019-data.html#cb56-4" tabindex="-1"></a>    <span class="at">region4 =</span> </span>
+<span id="cb56-5"><a href="clean-2019-data.html#cb56-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb56-6"><a href="clean-2019-data.html#cb56-6" tabindex="-1"></a>        region4, </span>
+<span id="cb56-7"><a href="clean-2019-data.html#cb56-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb56-8"><a href="clean-2019-data.html#cb56-8" tabindex="-1"></a>        <span class="at">labels =</span></span>
+<span id="cb56-9"><a href="clean-2019-data.html#cb56-9" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Northeast&quot;</span>,</span>
+<span id="cb56-10"><a href="clean-2019-data.html#cb56-10" tabindex="-1"></a>            <span class="st">&quot;Midwest&quot;</span>,</span>
+<span id="cb56-11"><a href="clean-2019-data.html#cb56-11" tabindex="-1"></a>            <span class="st">&quot;South&quot;</span>,</span>
+<span id="cb56-12"><a href="clean-2019-data.html#cb56-12" tabindex="-1"></a>            <span class="st">&quot;West&quot;</span>)</span>
+<span id="cb56-13"><a href="clean-2019-data.html#cb56-13" tabindex="-1"></a>      ),</span>
+<span id="cb56-14"><a href="clean-2019-data.html#cb56-14" tabindex="-1"></a>    <span class="at">region9 =</span> </span>
+<span id="cb56-15"><a href="clean-2019-data.html#cb56-15" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb56-16"><a href="clean-2019-data.html#cb56-16" tabindex="-1"></a>        region9, </span>
+<span id="cb56-17"><a href="clean-2019-data.html#cb56-17" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">9</span>,</span>
+<span id="cb56-18"><a href="clean-2019-data.html#cb56-18" tabindex="-1"></a>        <span class="at">labels =</span></span>
+<span id="cb56-19"><a href="clean-2019-data.html#cb56-19" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;New England&quot;</span>,</span>
+<span id="cb56-20"><a href="clean-2019-data.html#cb56-20" tabindex="-1"></a>            <span class="st">&quot;Mid-Atlantic&quot;</span>,</span>
+<span id="cb56-21"><a href="clean-2019-data.html#cb56-21" tabindex="-1"></a>            <span class="st">&quot;East North Central&quot;</span>,</span>
+<span id="cb56-22"><a href="clean-2019-data.html#cb56-22" tabindex="-1"></a>            <span class="st">&quot;West North Central&quot;</span>,</span>
+<span id="cb56-23"><a href="clean-2019-data.html#cb56-23" tabindex="-1"></a>            <span class="st">&quot;South Atlantic&quot;</span>,</span>
+<span id="cb56-24"><a href="clean-2019-data.html#cb56-24" tabindex="-1"></a>            <span class="st">&quot;East South Central&quot;</span>,</span>
+<span id="cb56-25"><a href="clean-2019-data.html#cb56-25" tabindex="-1"></a>            <span class="st">&quot;West South Central&quot;</span>,</span>
+<span id="cb56-26"><a href="clean-2019-data.html#cb56-26" tabindex="-1"></a>            <span class="st">&quot;Mountain&quot;</span>,</span>
+<span id="cb56-27"><a href="clean-2019-data.html#cb56-27" tabindex="-1"></a>            <span class="st">&quot;Pacific&quot;</span>)</span>
+<span id="cb56-28"><a href="clean-2019-data.html#cb56-28" tabindex="-1"></a>      )</span>
+<span id="cb56-29"><a href="clean-2019-data.html#cb56-29" tabindex="-1"></a>  )  <span class="sc">%&gt;%</span> </span>
+<span id="cb56-30"><a href="clean-2019-data.html#cb56-30" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb56-31"><a href="clean-2019-data.html#cb56-31" tabindex="-1"></a>    <span class="at">region4 =</span> <span class="st">&quot;4-level region&quot;</span>,</span>
+<span id="cb56-32"><a href="clean-2019-data.html#cb56-32" tabindex="-1"></a>    <span class="at">region9 =</span> <span class="st">&quot;9-level region&quot;</span></span>
+<span id="cb56-33"><a href="clean-2019-data.html#cb56-33" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="clean-2019-data.html#cb57-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(region4)</span></code></pre></div>
+</details>
+<pre><code>##    region4   n   percent
+##  Northeast 249 0.1482143
+##    Midwest 441 0.2625000
+##      South 586 0.3488095
+##       West 404 0.2404762</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="clean-2019-data.html#cb59-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(region9)</span></code></pre></div>
+</details>
+<pre><code>##             region9   n    percent
+##         New England  63 0.03750000
+##        Mid-Atlantic 186 0.11071429
+##  East North Central 299 0.17797619
+##  West North Central 142 0.08452381
+##      South Atlantic 311 0.18511905
+##  East South Central  89 0.05297619
+##  West South Central 186 0.11071429
+##            Mountain 164 0.09761905
+##             Pacific 240 0.14285714</code></pre>
+</div>
+<div id="metropolitan-area-flag" class="section level2 hasAnchor" number="2.14">
+<h2><span class="header-section-number">2.14</span> Metropolitan area flag<a href="clean-2019-data.html#metropolitan-area-flag" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="clean-2019-data.html#cb61-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(metro)</span></code></pre></div>
+</details>
+<pre><code>##  metro    n   percent
+##      0  204 0.1214286
+##      1 1476 0.8785714</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="clean-2019-data.html#cb63-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb63-2"><a href="clean-2019-data.html#cb63-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb63-3"><a href="clean-2019-data.html#cb63-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb63-4"><a href="clean-2019-data.html#cb63-4" tabindex="-1"></a>    <span class="at">metro =</span> </span>
+<span id="cb63-5"><a href="clean-2019-data.html#cb63-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb63-6"><a href="clean-2019-data.html#cb63-6" tabindex="-1"></a>        metro, </span>
+<span id="cb63-7"><a href="clean-2019-data.html#cb63-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, </span>
+<span id="cb63-8"><a href="clean-2019-data.html#cb63-8" tabindex="-1"></a>        <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Non-Metro Area&quot;</span>, <span class="st">&quot;Metro Area&quot;</span>)</span>
+<span id="cb63-9"><a href="clean-2019-data.html#cb63-9" tabindex="-1"></a>      )</span>
+<span id="cb63-10"><a href="clean-2019-data.html#cb63-10" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-11"><a href="clean-2019-data.html#cb63-11" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb63-12"><a href="clean-2019-data.html#cb63-12" tabindex="-1"></a>    <span class="at">metro =</span> <span class="st">&quot;Metropolitan area flag&quot;</span></span>
+<span id="cb63-13"><a href="clean-2019-data.html#cb63-13" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="clean-2019-data.html#cb64-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(metro)</span></code></pre></div>
+</details>
+<pre><code>##           metro    n   percent
+##  Non-Metro Area  204 0.1214286
+##      Metro Area 1476 0.8785714</code></pre>
+</div>
+<div id="internet" class="section level2 hasAnchor" number="2.15">
+<h2><span class="header-section-number">2.15</span> Internet<a href="clean-2019-data.html#internet" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="clean-2019-data.html#cb66-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(internet)</span></code></pre></div>
+</details>
+<pre><code>##  internet    n  percent
+##         0  214 0.127381
+##         1 1466 0.872619</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="clean-2019-data.html#cb68-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb68-2"><a href="clean-2019-data.html#cb68-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb68-3"><a href="clean-2019-data.html#cb68-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb68-4"><a href="clean-2019-data.html#cb68-4" tabindex="-1"></a>    <span class="at">internet =</span> </span>
+<span id="cb68-5"><a href="clean-2019-data.html#cb68-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb68-6"><a href="clean-2019-data.html#cb68-6" tabindex="-1"></a>        internet,</span>
+<span id="cb68-7"><a href="clean-2019-data.html#cb68-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>,</span>
+<span id="cb68-8"><a href="clean-2019-data.html#cb68-8" tabindex="-1"></a>        <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Non-internet household&quot;</span>,</span>
+<span id="cb68-9"><a href="clean-2019-data.html#cb68-9" tabindex="-1"></a>                   <span class="st">&quot;Internet household&quot;</span>)</span>
+<span id="cb68-10"><a href="clean-2019-data.html#cb68-10" tabindex="-1"></a>      )</span>
+<span id="cb68-11"><a href="clean-2019-data.html#cb68-11" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb68-12"><a href="clean-2019-data.html#cb68-12" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb68-13"><a href="clean-2019-data.html#cb68-13" tabindex="-1"></a>    <span class="at">internet =</span> <span class="st">&quot;HH internet access via dial-up, DSL, or cable broadband at home&quot;</span></span>
+<span id="cb68-14"><a href="clean-2019-data.html#cb68-14" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="clean-2019-data.html#cb69-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(internet)</span></code></pre></div>
+</details>
+<pre><code>##                internet    n  percent
+##  Non-internet household  214 0.127381
+##      Internet household 1466 0.872619</code></pre>
+</div>
+<div id="housing" class="section level2 hasAnchor" number="2.16">
+<h2><span class="header-section-number">2.16</span> Housing<a href="clean-2019-data.html#housing" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="clean-2019-data.html#cb71-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(housing)</span></code></pre></div>
+</details>
+<pre><code>##  housing    n    percent
+##        1 1140 0.67857143
+##        2  509 0.30297619
+##        3   31 0.01845238</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="clean-2019-data.html#cb73-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb73-2"><a href="clean-2019-data.html#cb73-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb73-3"><a href="clean-2019-data.html#cb73-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb73-4"><a href="clean-2019-data.html#cb73-4" tabindex="-1"></a>    <span class="at">housing =</span> </span>
+<span id="cb73-5"><a href="clean-2019-data.html#cb73-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb73-6"><a href="clean-2019-data.html#cb73-6" tabindex="-1"></a>        housing, </span>
+<span id="cb73-7"><a href="clean-2019-data.html#cb73-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb73-8"><a href="clean-2019-data.html#cb73-8" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb73-9"><a href="clean-2019-data.html#cb73-9" tabindex="-1"></a>            <span class="fu">c</span>(</span>
+<span id="cb73-10"><a href="clean-2019-data.html#cb73-10" tabindex="-1"></a>              <span class="st">&quot;Owned or being bought by you or someone in your household&quot;</span>,</span>
+<span id="cb73-11"><a href="clean-2019-data.html#cb73-11" tabindex="-1"></a>              <span class="st">&quot;Rented for cash&quot;</span>,</span>
+<span id="cb73-12"><a href="clean-2019-data.html#cb73-12" tabindex="-1"></a>              <span class="st">&quot;Occupied without payment of cash rent&quot;</span></span>
+<span id="cb73-13"><a href="clean-2019-data.html#cb73-13" tabindex="-1"></a>              )</span>
+<span id="cb73-14"><a href="clean-2019-data.html#cb73-14" tabindex="-1"></a>      )</span>
+<span id="cb73-15"><a href="clean-2019-data.html#cb73-15" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb73-16"><a href="clean-2019-data.html#cb73-16" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb73-17"><a href="clean-2019-data.html#cb73-17" tabindex="-1"></a>    <span class="at">housing =</span> <span class="st">&quot;Home ownership&quot;</span></span>
+<span id="cb73-18"><a href="clean-2019-data.html#cb73-18" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="clean-2019-data.html#cb74-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(housing)</span></code></pre></div>
+</details>
+<pre><code>##                                                    housing    n    percent
+##  Owned or being bought by you or someone in your household 1140 0.67857143
+##                                            Rented for cash  509 0.30297619
+##                      Occupied without payment of cash rent   31 0.01845238</code></pre>
+</div>
+<div id="home-type" class="section level2 hasAnchor" number="2.17">
+<h2><span class="header-section-number">2.17</span> Home type<a href="clean-2019-data.html#home-type" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="clean-2019-data.html#cb76-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(home_type)</span></code></pre></div>
+</details>
+<pre><code>##  home_type    n     percent
+##          1 1127 0.670833333
+##          2  137 0.081547619
+##          3  339 0.201785714
+##          4   73 0.043452381
+##          5    4 0.002380952</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="clean-2019-data.html#cb78-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span> </span>
+<span id="cb78-2"><a href="clean-2019-data.html#cb78-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb78-3"><a href="clean-2019-data.html#cb78-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb78-4"><a href="clean-2019-data.html#cb78-4" tabindex="-1"></a>    <span class="at">home_type =</span> </span>
+<span id="cb78-5"><a href="clean-2019-data.html#cb78-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb78-6"><a href="clean-2019-data.html#cb78-6" tabindex="-1"></a>        home_type, </span>
+<span id="cb78-7"><a href="clean-2019-data.html#cb78-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, </span>
+<span id="cb78-8"><a href="clean-2019-data.html#cb78-8" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb78-9"><a href="clean-2019-data.html#cb78-9" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;A one-family house detached from any other house&quot;</span>,</span>
+<span id="cb78-10"><a href="clean-2019-data.html#cb78-10" tabindex="-1"></a>            <span class="st">&quot;A one-family house attached to one or more houses&quot;</span>,</span>
+<span id="cb78-11"><a href="clean-2019-data.html#cb78-11" tabindex="-1"></a>            <span class="st">&quot;A building with 2 or more apartments&quot;</span>,</span>
+<span id="cb78-12"><a href="clean-2019-data.html#cb78-12" tabindex="-1"></a>            <span class="st">&quot;A mobile home or trailer&quot;</span>,</span>
+<span id="cb78-13"><a href="clean-2019-data.html#cb78-13" tabindex="-1"></a>            <span class="st">&quot;Boat, RV, van, etc&quot;</span>)</span>
+<span id="cb78-14"><a href="clean-2019-data.html#cb78-14" tabindex="-1"></a>      )</span>
+<span id="cb78-15"><a href="clean-2019-data.html#cb78-15" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb78-16"><a href="clean-2019-data.html#cb78-16" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb78-17"><a href="clean-2019-data.html#cb78-17" tabindex="-1"></a>    <span class="at">home_type =</span> <span class="st">&quot;Type of building of panelists&#39; residence&quot;</span></span>
+<span id="cb78-18"><a href="clean-2019-data.html#cb78-18" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="clean-2019-data.html#cb79-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(home_type)</span></code></pre></div>
+</details>
+<pre><code>##                                          home_type    n     percent
+##   A one-family house detached from any other house 1127 0.670833333
+##  A one-family house attached to one or more houses  137 0.081547619
+##               A building with 2 or more apartments  339 0.201785714
+##                           A mobile home or trailer   73 0.043452381
+##                                 Boat, RV, van, etc    4 0.002380952</code></pre>
+</div>
+<div id="phone-service" class="section level2 hasAnchor" number="2.18">
+<h2><span class="header-section-number">2.18</span> Phone service<a href="clean-2019-data.html#phone-service" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="clean-2019-data.html#cb81-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(phoneservice)</span></code></pre></div>
+</details>
+<pre><code>##  phoneservice   n     percent
+##             1  81 0.048214286
+##             2 454 0.270238095
+##             3 244 0.145238095
+##             4 887 0.527976190
+##             5  14 0.008333333</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="clean-2019-data.html#cb83-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb83-2"><a href="clean-2019-data.html#cb83-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb83-3"><a href="clean-2019-data.html#cb83-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb83-4"><a href="clean-2019-data.html#cb83-4" tabindex="-1"></a>    <span class="at">phoneservice =</span> </span>
+<span id="cb83-5"><a href="clean-2019-data.html#cb83-5" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb83-6"><a href="clean-2019-data.html#cb83-6" tabindex="-1"></a>        phoneservice,</span>
+<span id="cb83-7"><a href="clean-2019-data.html#cb83-7" tabindex="-1"></a>        <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,</span>
+<span id="cb83-8"><a href="clean-2019-data.html#cb83-8" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb83-9"><a href="clean-2019-data.html#cb83-9" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Landline telephone only&quot;</span>,</span>
+<span id="cb83-10"><a href="clean-2019-data.html#cb83-10" tabindex="-1"></a>            <span class="st">&quot;Have a landline, but mostly use cellphone&quot;</span>,</span>
+<span id="cb83-11"><a href="clean-2019-data.html#cb83-11" tabindex="-1"></a>            <span class="st">&quot;Have cellphone, but mostly use landline&quot;</span>,</span>
+<span id="cb83-12"><a href="clean-2019-data.html#cb83-12" tabindex="-1"></a>            <span class="st">&quot;Cellphone only&quot;</span>,</span>
+<span id="cb83-13"><a href="clean-2019-data.html#cb83-13" tabindex="-1"></a>            <span class="st">&quot;No telephone service&quot;</span></span>
+<span id="cb83-14"><a href="clean-2019-data.html#cb83-14" tabindex="-1"></a>            )</span>
+<span id="cb83-15"><a href="clean-2019-data.html#cb83-15" tabindex="-1"></a>      )</span>
+<span id="cb83-16"><a href="clean-2019-data.html#cb83-16" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb83-17"><a href="clean-2019-data.html#cb83-17" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb83-18"><a href="clean-2019-data.html#cb83-18" tabindex="-1"></a>    <span class="at">phoneservice =</span> <span class="st">&quot;Telephone service for the household&quot;</span></span>
+<span id="cb83-19"><a href="clean-2019-data.html#cb83-19" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="clean-2019-data.html#cb84-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(phoneservice)</span></code></pre></div>
+</details>
+<pre><code>##                               phoneservice   n     percent
+##                    Landline telephone only  81 0.048214286
+##  Have a landline, but mostly use cellphone 454 0.270238095
+##    Have cellphone, but mostly use landline 244 0.145238095
+##                             Cellphone only 887 0.527976190
+##                       No telephone service  14 0.008333333</code></pre>
+</div>
+<div id="political-party" class="section level2 hasAnchor" number="2.19">
+<h2><span class="header-section-number">2.19</span> Political party<a href="clean-2019-data.html#political-party" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb86-1"><a href="clean-2019-data.html#cb86-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(p_partyid)</span></code></pre></div>
+</details>
+<pre><code>##  p_partyid   n   percent
+##          1 216 0.1285714
+##          2 315 0.1875000
+##          3 215 0.1279762
+##          4 252 0.1500000
+##          5 183 0.1089286
+##          6 330 0.1964286
+##          7 169 0.1005952</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="clean-2019-data.html#cb88-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb88-2"><a href="clean-2019-data.html#cb88-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb88-3"><a href="clean-2019-data.html#cb88-3" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">party7 =</span> p_partyid) <span class="sc">%&gt;%</span> </span>
+<span id="cb88-4"><a href="clean-2019-data.html#cb88-4" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb88-5"><a href="clean-2019-data.html#cb88-5" tabindex="-1"></a>    <span class="at">party7 =</span></span>
+<span id="cb88-6"><a href="clean-2019-data.html#cb88-6" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb88-7"><a href="clean-2019-data.html#cb88-7" tabindex="-1"></a>        <span class="fu">as.numeric</span>(party7), </span>
+<span id="cb88-8"><a href="clean-2019-data.html#cb88-8" tabindex="-1"></a>        <span class="at">levels =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>),</span>
+<span id="cb88-9"><a href="clean-2019-data.html#cb88-9" tabindex="-1"></a>        <span class="at">labels =</span> </span>
+<span id="cb88-10"><a href="clean-2019-data.html#cb88-10" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Unknown&quot;</span>,</span>
+<span id="cb88-11"><a href="clean-2019-data.html#cb88-11" tabindex="-1"></a>            <span class="st">&quot;Strong Democrat&quot;</span>,</span>
+<span id="cb88-12"><a href="clean-2019-data.html#cb88-12" tabindex="-1"></a>            <span class="st">&quot;Not so strong Democrat&quot;</span>,</span>
+<span id="cb88-13"><a href="clean-2019-data.html#cb88-13" tabindex="-1"></a>            <span class="st">&quot;Lean Democrat&quot;</span>,</span>
+<span id="cb88-14"><a href="clean-2019-data.html#cb88-14" tabindex="-1"></a>            <span class="st">&quot;Don&#39;t Lean/Independent/None&quot;</span>,</span>
+<span id="cb88-15"><a href="clean-2019-data.html#cb88-15" tabindex="-1"></a>            <span class="st">&quot;Lean Republican&quot;</span>,</span>
+<span id="cb88-16"><a href="clean-2019-data.html#cb88-16" tabindex="-1"></a>            <span class="st">&quot;Not so strong Republican&quot;</span>,</span>
+<span id="cb88-17"><a href="clean-2019-data.html#cb88-17" tabindex="-1"></a>            <span class="st">&quot;Strong Republican&quot;</span>)</span>
+<span id="cb88-18"><a href="clean-2019-data.html#cb88-18" tabindex="-1"></a>      )</span>
+<span id="cb88-19"><a href="clean-2019-data.html#cb88-19" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb88-20"><a href="clean-2019-data.html#cb88-20" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb88-21"><a href="clean-2019-data.html#cb88-21" tabindex="-1"></a>    <span class="at">party7 =</span> <span class="st">&quot;7-level political affiliation&quot;</span></span>
+<span id="cb88-22"><a href="clean-2019-data.html#cb88-22" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="clean-2019-data.html#cb89-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(party7)</span></code></pre></div>
+</details>
+<pre><code>##                       party7   n   percent
+##                      Unknown   0 0.0000000
+##              Strong Democrat 216 0.1285714
+##       Not so strong Democrat 315 0.1875000
+##                Lean Democrat 215 0.1279762
+##  Don&#39;t Lean/Independent/None 252 0.1500000
+##              Lean Republican 183 0.1089286
+##     Not so strong Republican 330 0.1964286
+##            Strong Republican 169 0.1005952</code></pre>
+</div>
+<div id="q31" class="section level2 hasAnchor" number="2.20">
+<h2><span class="header-section-number">2.20</span> Q31<a href="clean-2019-data.html#q31" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Are you a member of the National Rifle Association–also known as the NRA? = <code>q31</code> = <code>nranow</code></p>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="clean-2019-data.html#cb91-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(q31)</span></code></pre></div>
+</details>
+<pre><code>##  q31    n     percent
+##    1  141 0.083928571
+##    2 1533 0.912500000
+##   98    4 0.002380952
+##   99    2 0.001190476</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb93"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb93-1"><a href="clean-2019-data.html#cb93-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb93-2"><a href="clean-2019-data.html#cb93-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb93-3"><a href="clean-2019-data.html#cb93-3" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">nranow =</span> q31) <span class="sc">%&gt;%</span> </span>
+<span id="cb93-4"><a href="clean-2019-data.html#cb93-4" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb93-5"><a href="clean-2019-data.html#cb93-5" tabindex="-1"></a>    <span class="at">nranow =</span></span>
+<span id="cb93-6"><a href="clean-2019-data.html#cb93-6" tabindex="-1"></a>      <span class="fu">factor</span>(</span>
+<span id="cb93-7"><a href="clean-2019-data.html#cb93-7" tabindex="-1"></a>        nranow, </span>
+<span id="cb93-8"><a href="clean-2019-data.html#cb93-8" tabindex="-1"></a>        <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="dv">98</span><span class="sc">:</span><span class="dv">99</span>),</span>
+<span id="cb93-9"><a href="clean-2019-data.html#cb93-9" tabindex="-1"></a>        <span class="at">labels =</span></span>
+<span id="cb93-10"><a href="clean-2019-data.html#cb93-10" tabindex="-1"></a>          <span class="fu">c</span>(<span class="st">&quot;Yes&quot;</span>, <span class="st">&quot;No&quot;</span>, <span class="st">&quot;Skipped on web&quot;</span>, <span class="st">&quot;Refused&quot;</span>)</span>
+<span id="cb93-11"><a href="clean-2019-data.html#cb93-11" tabindex="-1"></a>      )</span>
+<span id="cb93-12"><a href="clean-2019-data.html#cb93-12" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb93-13"><a href="clean-2019-data.html#cb93-13" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb93-14"><a href="clean-2019-data.html#cb93-14" tabindex="-1"></a>    <span class="at">nranow =</span> <span class="st">&quot;Are you a member of the NRA?&quot;</span></span>
+<span id="cb93-15"><a href="clean-2019-data.html#cb93-15" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="clean-2019-data.html#cb94-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(nranow)</span></code></pre></div>
+</details>
+<pre><code>##          nranow    n     percent
+##             Yes  141 0.083928571
+##              No 1533 0.912500000
+##  Skipped on web    4 0.002380952
+##         Refused    2 0.001190476</code></pre>
+</div>
+<div id="q32-33" class="section level2 hasAnchor" number="2.21">
+<h2><span class="header-section-number">2.21</span> Q32 &amp; 33<a href="clean-2019-data.html#q32-33" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<ul>
+<li>Do you happen to have in your home or garage any guns or revolvers? = <code>q32</code> = <code>gunhome</code></li>
+</ul>
+<p>Do any of these guns personally belong to you? = <code>gunhomeper</code>. There are some observations with NA hardcoded for <code>q33</code>. This corresponds to people who said answered no to q32.</p>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="clean-2019-data.html#cb96-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(q32)</span></code></pre></div>
+</details>
+<pre><code>##  q32   n     percent
+##    1 740 0.440476190
+##    2 890 0.529761905
+##   98  42 0.025000000
+##   99   8 0.004761905</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="clean-2019-data.html#cb98-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(q33)</span></code></pre></div>
+</details>
+<pre><code>##  q33   n      percent valid_percent
+##    1 610 0.3630952381   0.824324324
+##    2 128 0.0761904762   0.172972973
+##   98   1 0.0005952381   0.001351351
+##   99   1 0.0005952381   0.001351351
+##   NA 940 0.5595238095            NA</code></pre>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="clean-2019-data.html#cb100-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb100-2"><a href="clean-2019-data.html#cb100-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb100-3"><a href="clean-2019-data.html#cb100-3" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb100-4"><a href="clean-2019-data.html#cb100-4" tabindex="-1"></a>    <span class="at">gunhome =</span> q32,</span>
+<span id="cb100-5"><a href="clean-2019-data.html#cb100-5" tabindex="-1"></a>    <span class="at">gunhomeper =</span> q33</span>
+<span id="cb100-6"><a href="clean-2019-data.html#cb100-6" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb100-7"><a href="clean-2019-data.html#cb100-7" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb100-8"><a href="clean-2019-data.html#cb100-8" tabindex="-1"></a>    <span class="at">gunhomeper =</span> </span>
+<span id="cb100-9"><a href="clean-2019-data.html#cb100-9" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
+<span id="cb100-10"><a href="clean-2019-data.html#cb100-10" tabindex="-1"></a>       <span class="fu">is.na</span>(gunhomeper) <span class="sc">~</span>  <span class="fu">as.character</span>(gunhome), </span>
+<span id="cb100-11"><a href="clean-2019-data.html#cb100-11" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.character</span>(gunhomeper)</span>
+<span id="cb100-12"><a href="clean-2019-data.html#cb100-12" tabindex="-1"></a>      ),</span>
+<span id="cb100-13"><a href="clean-2019-data.html#cb100-13" tabindex="-1"></a>    <span class="fu">across</span>(</span>
+<span id="cb100-14"><a href="clean-2019-data.html#cb100-14" tabindex="-1"></a>      <span class="fu">starts_with</span>(<span class="st">&quot;gunhome&quot;</span>),</span>
+<span id="cb100-15"><a href="clean-2019-data.html#cb100-15" tabindex="-1"></a>      <span class="sc">~</span> <span class="fu">factor</span>(</span>
+<span id="cb100-16"><a href="clean-2019-data.html#cb100-16" tabindex="-1"></a>          <span class="fu">as.numeric</span>(.x),</span>
+<span id="cb100-17"><a href="clean-2019-data.html#cb100-17" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="dv">98</span><span class="sc">:</span><span class="dv">99</span>),</span>
+<span id="cb100-18"><a href="clean-2019-data.html#cb100-18" tabindex="-1"></a>          <span class="at">labels =</span></span>
+<span id="cb100-19"><a href="clean-2019-data.html#cb100-19" tabindex="-1"></a>            <span class="fu">c</span>(<span class="st">&quot;Yes&quot;</span>, <span class="st">&quot;No&quot;</span>, <span class="st">&quot;Skipped on web&quot;</span>, <span class="st">&quot;Refused&quot;</span>)</span>
+<span id="cb100-20"><a href="clean-2019-data.html#cb100-20" tabindex="-1"></a>        )</span>
+<span id="cb100-21"><a href="clean-2019-data.html#cb100-21" tabindex="-1"></a>      )</span>
+<span id="cb100-22"><a href="clean-2019-data.html#cb100-22" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb100-23"><a href="clean-2019-data.html#cb100-23" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb100-24"><a href="clean-2019-data.html#cb100-24" tabindex="-1"></a>    <span class="at">gunhome =</span> <span class="st">&quot;Do you happen to have in your home or garage any guns or revolvers?&quot;</span>,</span>
+<span id="cb100-25"><a href="clean-2019-data.html#cb100-25" tabindex="-1"></a>    <span class="at">gunhomeper =</span> <span class="st">&quot;Do any of guns or revolvers in your home or garagepersonally belong to you?&quot;</span></span>
+<span id="cb100-26"><a href="clean-2019-data.html#cb100-26" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="clean-2019-data.html#cb101-1" tabindex="-1"></a>raw <span class="sc">%&gt;%</span> <span class="fu">tabyl</span>(gunhome, gunhomeper)</span></code></pre></div>
+</details>
+<pre><code>##         gunhome Yes  No Skipped on web Refused
+##             Yes 610 128              1       1
+##              No   0 890              0       0
+##  Skipped on web   0   0             42       0
+##         Refused   0   0              0       8</code></pre>
+</div>
+<div id="household-size" class="section level2 hasAnchor" number="2.22">
+<h2><span class="header-section-number">2.22</span> Household size<a href="clean-2019-data.html#household-size" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="clean-2019-data.html#cb103-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span></span>
+<span id="cb103-2"><a href="clean-2019-data.html#cb103-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb103-3"><a href="clean-2019-data.html#cb103-3" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb103-4"><a href="clean-2019-data.html#cb103-4" tabindex="-1"></a>    <span class="at">hhsize =</span> <span class="st">&quot;Household size (including children)&quot;</span>,</span>
+<span id="cb103-5"><a href="clean-2019-data.html#cb103-5" tabindex="-1"></a>    <span class="at">hh01 =</span> <span class="st">&quot;Number of HH members age 0-1&quot;</span>,</span>
+<span id="cb103-6"><a href="clean-2019-data.html#cb103-6" tabindex="-1"></a>    <span class="at">hh25 =</span> <span class="st">&quot;Number of HH members age 2-5&quot;</span>,</span>
+<span id="cb103-7"><a href="clean-2019-data.html#cb103-7" tabindex="-1"></a>    <span class="at">hh612 =</span> <span class="st">&quot;Number of HH members age 6-12&quot;</span>,</span>
+<span id="cb103-8"><a href="clean-2019-data.html#cb103-8" tabindex="-1"></a>    <span class="at">hh1317 =</span> <span class="st">&quot;Number of HH members age 13-17&quot;</span>,</span>
+<span id="cb103-9"><a href="clean-2019-data.html#cb103-9" tabindex="-1"></a>    <span class="at">hh18ov =</span> <span class="st">&quot;Number of HH members age 18+&quot;</span></span>
+<span id="cb103-10"><a href="clean-2019-data.html#cb103-10" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+</div>
+<div id="weights" class="section level2 hasAnchor" number="2.23">
+<h2><span class="header-section-number">2.23</span> Weights<a href="clean-2019-data.html#weights" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Unlike 2021, and 2023, the only weight available is “Post-stratification weights - 18+ general population (gun owner augment) (N=1,680)”. This says that gun owners were over sampled. This is equivalent to the “Post-stratification weight - 18+ general population” in the other data, so we use it accordingly.</p>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="clean-2019-data.html#cb104-1" tabindex="-1"></a>clean <span class="ot">&lt;-</span></span>
+<span id="cb104-2"><a href="clean-2019-data.html#cb104-2" tabindex="-1"></a>  raw <span class="sc">%&gt;%</span> </span>
+<span id="cb104-3"><a href="clean-2019-data.html#cb104-3" tabindex="-1"></a>  <span class="fu">set_variable_labels</span>(</span>
+<span id="cb104-4"><a href="clean-2019-data.html#cb104-4" tabindex="-1"></a>    <span class="at">weight =</span> <span class="st">&quot;Post-stratification weights - 18+ general population (gun owner augment) (N=1,680)&quot;</span></span>
+<span id="cb104-5"><a href="clean-2019-data.html#cb104-5" tabindex="-1"></a>  )</span></code></pre></div>
+</details>
+</div>
+<div id="explore-demographic-variables" class="section level2 hasAnchor" number="2.24">
+<h2><span class="header-section-number">2.24</span> Explore demographic variables<a href="clean-2019-data.html#explore-demographic-variables" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="clean-2019-data.html#cb105-1" tabindex="-1"></a>demovars <span class="ot">&lt;-</span></span>
+<span id="cb105-2"><a href="clean-2019-data.html#cb105-2" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb105-3"><a href="clean-2019-data.html#cb105-3" tabindex="-1"></a>    <span class="st">&quot;age&quot;</span>,</span>
+<span id="cb105-4"><a href="clean-2019-data.html#cb105-4" tabindex="-1"></a>    <span class="st">&quot;hhsize&quot;</span>,</span>
+<span id="cb105-5"><a href="clean-2019-data.html#cb105-5" tabindex="-1"></a>    <span class="st">&quot;gender&quot;</span>,</span>
+<span id="cb105-6"><a href="clean-2019-data.html#cb105-6" tabindex="-1"></a>    <span class="st">&quot;racethnicity&quot;</span>,</span>
+<span id="cb105-7"><a href="clean-2019-data.html#cb105-7" tabindex="-1"></a>    <span class="st">&quot;educ5&quot;</span>,</span>
+<span id="cb105-8"><a href="clean-2019-data.html#cb105-8" tabindex="-1"></a>    <span class="st">&quot;marital&quot;</span>,</span>
+<span id="cb105-9"><a href="clean-2019-data.html#cb105-9" tabindex="-1"></a>    <span class="st">&quot;employ&quot;</span>,</span>
+<span id="cb105-10"><a href="clean-2019-data.html#cb105-10" tabindex="-1"></a>    <span class="st">&quot;income&quot;</span>,</span>
+<span id="cb105-11"><a href="clean-2019-data.html#cb105-11" tabindex="-1"></a>    <span class="st">&quot;internet&quot;</span>,</span>
+<span id="cb105-12"><a href="clean-2019-data.html#cb105-12" tabindex="-1"></a>    <span class="st">&quot;home_type&quot;</span>,</span>
+<span id="cb105-13"><a href="clean-2019-data.html#cb105-13" tabindex="-1"></a>    <span class="st">&quot;party7&quot;</span>,</span>
+<span id="cb105-14"><a href="clean-2019-data.html#cb105-14" tabindex="-1"></a>    <span class="st">&quot;gunhome&quot;</span></span>
+<span id="cb105-15"><a href="clean-2019-data.html#cb105-15" tabindex="-1"></a>  )</span>
+<span id="cb105-16"><a href="clean-2019-data.html#cb105-16" tabindex="-1"></a></span>
+<span id="cb105-17"><a href="clean-2019-data.html#cb105-17" tabindex="-1"></a>summstats <span class="ot">&lt;-</span></span>
+<span id="cb105-18"><a href="clean-2019-data.html#cb105-18" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">&quot;notNA(x)&quot;</span>, <span class="st">&quot;mean(x)&quot;</span>, <span class="st">&quot;sd(x)&quot;</span>)</span>
+<span id="cb105-19"><a href="clean-2019-data.html#cb105-19" tabindex="-1"></a>summnames <span class="ot">&lt;-</span></span>
+<span id="cb105-20"><a href="clean-2019-data.html#cb105-20" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">&quot;Observations&quot;</span>, <span class="st">&quot;Mean&quot;</span>, <span class="st">&quot;SD&quot;</span>)</span></code></pre></div>
+</details>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb106"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb106-1"><a href="clean-2019-data.html#cb106-1" tabindex="-1"></a><span class="fu">st</span>(</span>
+<span id="cb106-2"><a href="clean-2019-data.html#cb106-2" tabindex="-1"></a>  clean,</span>
+<span id="cb106-3"><a href="clean-2019-data.html#cb106-3" tabindex="-1"></a>  <span class="at">vars =</span> demovars,</span>
+<span id="cb106-4"><a href="clean-2019-data.html#cb106-4" tabindex="-1"></a>  <span class="at">group.weights =</span> <span class="st">&quot;weight&quot;</span>,</span>
+<span id="cb106-5"><a href="clean-2019-data.html#cb106-5" tabindex="-1"></a>  <span class="at">summ =</span> summstats,</span>
+<span id="cb106-6"><a href="clean-2019-data.html#cb106-6" tabindex="-1"></a>  <span class="at">summ.names =</span> summnames,</span>
+<span id="cb106-7"><a href="clean-2019-data.html#cb106-7" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">&quot;Weighted demographic summary&quot;</span>,</span>
+<span id="cb106-8"><a href="clean-2019-data.html#cb106-8" tabindex="-1"></a>  <span class="at">out =</span> <span class="st">&quot;kable&quot;</span>,</span>
+<span id="cb106-9"><a href="clean-2019-data.html#cb106-9" tabindex="-1"></a>  <span class="at">numformat =</span> <span class="st">&quot;comma&quot;</span>,</span>
+<span id="cb106-10"><a href="clean-2019-data.html#cb106-10" tabindex="-1"></a>  <span class="at">labels =</span>  T</span>
+<span id="cb106-11"><a href="clean-2019-data.html#cb106-11" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb106-12"><a href="clean-2019-data.html#cb106-12" tabindex="-1"></a>  <span class="fu">kable_classic</span>(</span>
+<span id="cb106-13"><a href="clean-2019-data.html#cb106-13" tabindex="-1"></a>    <span class="at">full_width =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb106-14"><a href="clean-2019-data.html#cb106-14" tabindex="-1"></a>    <span class="at">html_font =</span> <span class="st">&quot;Cambria&quot;</span></span>
+<span id="cb106-15"><a href="clean-2019-data.html#cb106-15" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb106-16"><a href="clean-2019-data.html#cb106-16" tabindex="-1"></a>  <span class="fu">scroll_box</span>(<span class="at">width =</span> <span class="st">&quot;800px&quot;</span>, <span class="at">height =</span> <span class="st">&quot;500px&quot;</span>)</span></code></pre></div>
+</details>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:500px; overflow-x: scroll; width:800px; ">
+<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-59">Table 2.2: </span>Weighted demographic summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Variable
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Observations
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Mean
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+SD
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Age
+</td>
+<td style="text-align:left;">
+1680
+</td>
+<td style="text-align:left;">
+49
+</td>
+<td style="text-align:left;">
+17
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Household size (including children)
+</td>
+<td style="text-align:left;">
+1680
+</td>
+<td style="text-align:left;">
+3.1
+</td>
+<td style="text-align:left;">
+1.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Respondent gender
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Male
+</td>
+<td style="text-align:left;">
+873
+</td>
+<td style="text-align:left;">
+52%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Female
+</td>
+<td style="text-align:left;">
+807
+</td>
+<td style="text-align:left;">
+48%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Combined race/ethnicity
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… White, non-Hispanic
+</td>
+<td style="text-align:left;">
+1,115
+</td>
+<td style="text-align:left;">
+66%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Black, non-Hispanic
+</td>
+<td style="text-align:left;">
+172
+</td>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Other, non-Hispanic
+</td>
+<td style="text-align:left;">
+30
+</td>
+<td style="text-align:left;">
+2%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Hispanic
+</td>
+<td style="text-align:left;">
+255
+</td>
+<td style="text-align:left;">
+15%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… 2+, non-Hispanic
+</td>
+<td style="text-align:left;">
+58
+</td>
+<td style="text-align:left;">
+3%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Asian, non-Hispanic
+</td>
+<td style="text-align:left;">
+50
+</td>
+<td style="text-align:left;">
+3%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Highest level of education
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Less than HS
+</td>
+<td style="text-align:left;">
+66
+</td>
+<td style="text-align:left;">
+4%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… HS graduate
+</td>
+<td style="text-align:left;">
+283
+</td>
+<td style="text-align:left;">
+17%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Vocational/tech school/some college/ associates
+</td>
+<td style="text-align:left;">
+723
+</td>
+<td style="text-align:left;">
+43%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Bachelors degree
+</td>
+<td style="text-align:left;">
+352
+</td>
+<td style="text-align:left;">
+21%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Post grad study/professional degree
+</td>
+<td style="text-align:left;">
+256
+</td>
+<td style="text-align:left;">
+15%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Marital status
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Married
+</td>
+<td style="text-align:left;">
+895
+</td>
+<td style="text-align:left;">
+53%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Widowed
+</td>
+<td style="text-align:left;">
+85
+</td>
+<td style="text-align:left;">
+5%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Divorced
+</td>
+<td style="text-align:left;">
+192
+</td>
+<td style="text-align:left;">
+11%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Separated
+</td>
+<td style="text-align:left;">
+30
+</td>
+<td style="text-align:left;">
+2%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Never married
+</td>
+<td style="text-align:left;">
+342
+</td>
+<td style="text-align:left;">
+20%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Living with partner
+</td>
+<td style="text-align:left;">
+136
+</td>
+<td style="text-align:left;">
+8%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Current employment status
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Working - as a paid employee
+</td>
+<td style="text-align:left;">
+869
+</td>
+<td style="text-align:left;">
+52%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Working - self-employed
+</td>
+<td style="text-align:left;">
+172
+</td>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Not working - on temporary layoff from a job
+</td>
+<td style="text-align:left;">
+11
+</td>
+<td style="text-align:left;">
+1%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Not working - looking for work
+</td>
+<td style="text-align:left;">
+69
+</td>
+<td style="text-align:left;">
+4%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Not working - retired
+</td>
+<td style="text-align:left;">
+351
+</td>
+<td style="text-align:left;">
+21%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Not working - disabled
+</td>
+<td style="text-align:left;">
+103
+</td>
+<td style="text-align:left;">
+6%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Not working - other
+</td>
+<td style="text-align:left;">
+105
+</td>
+<td style="text-align:left;">
+6%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Household income
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Less than $5,000
+</td>
+<td style="text-align:left;">
+39
+</td>
+<td style="text-align:left;">
+2%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $5,000-9,999
+</td>
+<td style="text-align:left;">
+35
+</td>
+<td style="text-align:left;">
+2%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $10,000-14,999
+</td>
+<td style="text-align:left;">
+58
+</td>
+<td style="text-align:left;">
+3%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $15,000-19,999
+</td>
+<td style="text-align:left;">
+51
+</td>
+<td style="text-align:left;">
+3%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $20,000-24,999
+</td>
+<td style="text-align:left;">
+89
+</td>
+<td style="text-align:left;">
+5%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $25,000-29,999
+</td>
+<td style="text-align:left;">
+96
+</td>
+<td style="text-align:left;">
+6%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $30,000-34,999
+</td>
+<td style="text-align:left;">
+83
+</td>
+<td style="text-align:left;">
+5%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $35,000-39,999
+</td>
+<td style="text-align:left;">
+76
+</td>
+<td style="text-align:left;">
+5%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $40,000-49,999
+</td>
+<td style="text-align:left;">
+161
+</td>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $50,000-59,999
+</td>
+<td style="text-align:left;">
+167
+</td>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $60,000-74,999
+</td>
+<td style="text-align:left;">
+179
+</td>
+<td style="text-align:left;">
+11%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $75,000-84,999
+</td>
+<td style="text-align:left;">
+89
+</td>
+<td style="text-align:left;">
+5%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $85,000-99,999
+</td>
+<td style="text-align:left;">
+177
+</td>
+<td style="text-align:left;">
+11%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $100,000-124,999
+</td>
+<td style="text-align:left;">
+131
+</td>
+<td style="text-align:left;">
+8%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $125,000-149,999
+</td>
+<td style="text-align:left;">
+100
+</td>
+<td style="text-align:left;">
+6%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $150,000-174,999
+</td>
+<td style="text-align:left;">
+51
+</td>
+<td style="text-align:left;">
+3%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $175,000-199,999
+</td>
+<td style="text-align:left;">
+30
+</td>
+<td style="text-align:left;">
+2%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… $200,000 or more
+</td>
+<td style="text-align:left;">
+68
+</td>
+<td style="text-align:left;">
+4%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HH internet access via dial-up, DSL, or cable broadband at home
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Non-internet household
+</td>
+<td style="text-align:left;">
+214
+</td>
+<td style="text-align:left;">
+13%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Internet household
+</td>
+<td style="text-align:left;">
+1,466
+</td>
+<td style="text-align:left;">
+87%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Type of building of panelists’ residence
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… A one-family house detached from any other house
+</td>
+<td style="text-align:left;">
+1,127
+</td>
+<td style="text-align:left;">
+67%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… A one-family house attached to one or more houses
+</td>
+<td style="text-align:left;">
+137
+</td>
+<td style="text-align:left;">
+8%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… A building with 2 or more apartments
+</td>
+<td style="text-align:left;">
+339
+</td>
+<td style="text-align:left;">
+20%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… A mobile home or trailer
+</td>
+<td style="text-align:left;">
+73
+</td>
+<td style="text-align:left;">
+4%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Boat, RV, van, etc
+</td>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:left;">
+0%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+7-level political affiliation
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Unknown
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:left;">
+0%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Strong Democrat
+</td>
+<td style="text-align:left;">
+216
+</td>
+<td style="text-align:left;">
+13%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Not so strong Democrat
+</td>
+<td style="text-align:left;">
+315
+</td>
+<td style="text-align:left;">
+19%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Lean Democrat
+</td>
+<td style="text-align:left;">
+215
+</td>
+<td style="text-align:left;">
+13%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Don’t Lean/Independent/None
+</td>
+<td style="text-align:left;">
+252
+</td>
+<td style="text-align:left;">
+15%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Lean Republican
+</td>
+<td style="text-align:left;">
+183
+</td>
+<td style="text-align:left;">
+11%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Not so strong Republican
+</td>
+<td style="text-align:left;">
+330
+</td>
+<td style="text-align:left;">
+20%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Strong Republican
+</td>
+<td style="text-align:left;">
+169
+</td>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Do you happen to have in your home or garage any guns or revolvers?
+</td>
+<td style="text-align:left;">
+1,680
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Yes
+</td>
+<td style="text-align:left;">
+740
+</td>
+<td style="text-align:left;">
+44%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… No
+</td>
+<td style="text-align:left;">
+890
+</td>
+<td style="text-align:left;">
+53%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Skipped on web
+</td>
+<td style="text-align:left;">
+42
+</td>
+<td style="text-align:left;">
+2%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+… Refused
+</td>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:left;">
+0%
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="export-data" class="section level2 hasAnchor" number="2.25">
+<h2><span class="header-section-number">2.25</span> Export data<a href="clean-2019-data.html#export-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<details class=chunk-details open><summary class=chunk-summary><span class=chunk-summary-text>Code</span></summary>
+<div class="sourceCode" id="cb107"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb107-1"><a href="clean-2019-data.html#cb107-1" tabindex="-1"></a><span class="fu">write_rds</span>(</span>
+<span id="cb107-2"><a href="clean-2019-data.html#cb107-2" tabindex="-1"></a>  clean,</span>
+<span id="cb107-3"><a href="clean-2019-data.html#cb107-3" tabindex="-1"></a>  <span class="fu">here</span>(</span>
+<span id="cb107-4"><a href="clean-2019-data.html#cb107-4" tabindex="-1"></a>    path_od, </span>
+<span id="cb107-5"><a href="clean-2019-data.html#cb107-5" tabindex="-1"></a>    <span class="st">&quot;data&quot;</span>,</span>
+<span id="cb107-6"><a href="clean-2019-data.html#cb107-6" tabindex="-1"></a>    <span class="st">&quot;clean&quot;</span>,</span>
+<span id="cb107-7"><a href="clean-2019-data.html#cb107-7" tabindex="-1"></a>    <span class="st">&quot;gs-2019.rds&quot;</span></span>
+<span id="cb107-8"><a href="clean-2019-data.html#cb107-8" tabindex="-1"></a>    )</span>
+<span id="cb107-9"><a href="clean-2019-data.html#cb107-9" tabindex="-1"></a>  ) </span></code></pre></div>
+</details>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="import-survey-data.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="clean-2021-data.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "section"
+  }
+});
+});
+</script>
+
+</body>
+
+</html>

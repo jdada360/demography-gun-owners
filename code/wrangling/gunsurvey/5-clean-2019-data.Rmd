@@ -7,13 +7,16 @@ All questions are encoded, so we decode them using the [codebook](https://livejo
 ## Data
 
 **Input**
-  - DemographyGunOwners/data/raw/gunsurvey/2019.rds
+
+-    DemographyGunOwners/data/raw/gunsurvey/2019.rds
 
 **Output**
-  - - DemographyGunOwners/data/constructed/
+
+-    DemographyGunOwners/data/constructed/
 
 **Last ran**
-  - 01/28/2026
+
+-   01/28/2026
 
 ```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 
@@ -81,9 +84,9 @@ source %>%
 |-------------------------|-----------------------------------------------|
 | Number of observations | `r nrow(source)`                                  |
 | Number of unique cases | `r n_distinct(source$case_id)`                    |
-| Sum of weights         | `r sum(source$weight)`                           |
+| Sum of weights         | `r sum(source$weight)`                            |
 | Number of variables    | `r length(source)`                                |
-| Variable names         | `r source %>% names() %>% paste(collapse = ", ")` 
+| Variable names         | `r source %>% names() %>% paste(collapse = ", ")` |
 
 ## Select variables
 
@@ -135,7 +138,6 @@ raw <-
     all_of(c(demovars, gun))
   )
 ```
-
 
 ## Gender
 
@@ -390,7 +392,6 @@ raw %>% tabyl(employ)
 ## Income
 
 We construct 2 variables: income4 and income5 to match 2021 and 2023 data.
-
 
 ```{r}
 raw %>% tabyl(income)
@@ -689,7 +690,6 @@ raw <-
 raw %>% tabyl(phoneservice)
 ```
 
-
 ## Political party
 
 ```{r}
@@ -759,7 +759,7 @@ raw %>% tabyl(nranow)
 
 -   Do you happen to have in your home or garage any guns or revolvers? = `q32` = `gunhome`
 
-Do any of these guns personally belong to you? = `gunhomeper`. There are `r nrow(filter(raw, q33 =="NA"))` observations with NA hardcoded for `q33`. This corresponds to people who said answered no to q32.
+Do any of these guns personally belong to you? = `gunhomeper`. There are some observations with NA hardcoded for `q33`. This corresponds to people who said answered no to q32.
 
 ```{r}
 raw %>% tabyl(q32)
@@ -798,6 +798,7 @@ raw <-
 ```{r}
 raw %>% tabyl(gunhome, gunhomeper)
 ```
+
 ## Household size
 
 ```{r}
@@ -824,7 +825,6 @@ clean <-
     weight = "Post-stratification weights - 18+ general population (gun owner augment) (N=1,680)"
   )
 ```
-
 
 ## Explore demographic variables
 
@@ -883,4 +883,3 @@ write_rds(
     )
   ) 
 ```
-
