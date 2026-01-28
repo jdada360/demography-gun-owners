@@ -1,25 +1,22 @@
-# Clean 2023 data
-
-We use this [codebook.](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/9558_JHU%20Gun%20Policy%202023_codebook.xlsx?d=w551a28b764fc4672a2bfc152b24b6e04&csf=1&web=1&e=4Jb9Vt).
-
-Note that all of the demographic variables are the same as the 2021 survey.
+# Clean 2021 data
 
 **Input**
 
--   DemographyGunOwners/data/raw/gunsurvey/2023.rds
+-   DemographyGunOwners/data/raw/gunsurvey/2021.rds
 
 **Output**
 
--   DemographyGunOwners/data/clean/gs-2023.rds
+-   DemographyGunOwners/data/clean/gs-2021.rds
 
 **Last ran**
 
--   01/27/26
+-   01/26/26
 
-```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+```{r,  message = FALSE, warning = FALSE}
 packages <-
   c(
     "tidyverse",
+    "purrr",
     "haven",
     "labelled",
     "tidyr",
@@ -27,11 +24,14 @@ packages <-
     "weights",
     "conflicted",
     "kableExtra",
+    "survey",
     "skimr",
-    "purrr",
+    "psych",
     "dplyr",
     "here",
     "vtable",
+    "fixest",
+    "lfe",
     "broom"
   )
 
@@ -39,6 +39,8 @@ pacman::p_load(
   packages,
   character.only = TRUE
 )
+
+conflicts_prefer(dplyr::filter)
 ```
 
 ## Import data
@@ -51,7 +53,7 @@ source <-
       "data",
       "raw",
       "gunsurvey",
-      "2023.rds"
+      "2021.rds"
       )
   ) %>% 
   clean_names()
@@ -65,7 +67,7 @@ source %>%
   head(10) %>% 
   kbl(
     caption = 
-      "Gun Survey 2023 Data",
+      "Gun Survey 2021 Data",
     align = "c",
     format = "html",
     booktabs = TRUE
@@ -79,32 +81,19 @@ source %>%
 
 ### Summary table
 
-| Name                   | Value                                             |
+| Name | Value |
 |-------------------------|-----------------------------------------------|
-| Number of observations | `r nrow(source)`                                  |
-| Number of unique cases | `r n_distinct(source$case_id)`                    |
-| Sum of weights         | `r sum(source$weight)`                           |
-| Number of variables    | `r length(source)`                                |
-| Variable names         | `r source %>% names() %>% paste(collapse = ", ")` |
-
-## Drop order variables
-
-In the survey, the questions are ordered randomly. We remove the variables that denote the order of the questions.
-
-```{r}
-raw <- 
-  source %>% 
-  select(
-    -c(
-      matches("order"),
-      "rnd_01"
-      )
-  )
-```
+| Number of observations | `r nrow(source)` |
+| Number of unique cases | `r n_distinct(source$case_id)` |
+| Sum of weights | ` r sum(source$weight1) ` |
+| Number of variables | ` r length(source) ` |
+| Variable names | `r source %>% names() %>% paste(collapse = ", ") ` |
 
 ## Select variables
 
-We select demographic variables and a handful of the questions that pertain to a political identity in order to characterize the typical gun owner.
+All questions are encoded, so we decode them using the [codebook](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/2021%20Documentation/8999_JHU_Gun%20Policy%202021_Codebook.xlsx?d=w75cec2186ce04efd95f19e64b723f885&csf=1&web=1&e=YHbc6U).
+
+We focus on demographic variables and the main variables about gun ownership.
 
 ```{r}
 demovars <-
@@ -115,6 +104,7 @@ demovars <-
     "hhsize",
     "gender",
     "racethnicity",
+    "partyid7",
     "educ5",
     "marital",
     "employ",
@@ -134,39 +124,16 @@ demovars <-
     "hh25",
     "hh612",
     "hh1317",
-    "hh18ov",
-    "veteran_1",
-    "veteran2_1"
-  )
-
-politics <-
-  c(
-    "party_id7",
-    "party_id5",
-    "qcandi20",
-    "qvotediff",
-    "q_vote22",
-    "qvotediff2"
+    "hh18ov"
   )
 
 gun <-
   c(
     "gun",
-    "qguntypea",
-    "qguntypeb",
-    "qguntypec",
-    "qguntyped", 
     "q39a",
     "q39b",
-    "q40_23",
     "q40",
-    "q41",
-    "q41_23",
-    "q42_23",
-    "q43_23a",
-    "q43_23b",
-    "q43_23c",
-    "q47_23"
+    "q41"
   )
 ```
 
@@ -175,7 +142,7 @@ raw <-
   source %>% 
   dplyr::select(
     starts_with(c("caseid", "weight")), 
-    all_of(c(demovars, politics, gun))
+    all_of(c(demovars, gun))
   )
 ```
 
@@ -234,6 +201,7 @@ raw <-
 ```{r}
 raw %>% tabyl(gender)
 ```
+
 
 ## Age
 
@@ -313,7 +281,6 @@ raw <-
 ```{r}
 raw %>% tabyl(racethnicity)
 ```
-
 ## Education
 
 ```{r}
@@ -422,7 +389,6 @@ raw %>% tabyl(income)
 raw %>% tabyl(income4)
 raw %>% tabyl(income9)
 ```
-
 ```{r}
 raw <-
   raw %>% 
@@ -700,75 +666,15 @@ raw <-
 raw %>% tabyl(phoneservice)
 ```
 
-## Gun ownership type
-
-Do you personally own any of the following types of guns?
-
--   `qguntypea` = handguns
-
--   `qguntypeb` = rifles
-
--   `qguntypec` = shotguns
-
--   `qguntyped` = other
-
-```{r}
-walk(
-  c("qguntypea", "qguntypeb", "qguntypec", "qguntyped"),
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
-```{r}
-raw <- 
-  raw %>% 
-  rename(
-    ownhandgun = qguntypea,
-    ownrifle = qguntypeb, 
-    ownshot = qguntypec,
-    ownother = qguntyped
-  ) %>% 
-  mutate(
-    across(
-      starts_with("own"),
-      ~ case_when(
-        is.na(.x) ~ 100,
-        TRUE ~ .x
-      ) %>% 
-        factor(
-          levels = c(1:2, 77, 98:100),
-          labels =
-            c("Yes", 
-              "No",
-              "Don't know",
-              "Skipped on web",
-              "Refused",
-              "Non-gun owner")
-        )
-    )
-  ) %>% 
-    set_variable_labels(
-      ownhandgun = "Do you personally own any hanguns?",
-      ownrifle = "Do you personally own any rifles?", 
-      ownshot = "Do you personally own any shotguns?",
-      ownother = "Do you personally own any other types of guns?",
-    )
-```
-
-```{r}
-walk(
-    raw %>% select(starts_with("own")) %>% names(),
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
 ## Q39a and b
 
--   Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
+Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
 
--   Have you ever been a member of the National Rifle Association--also known as the NRA? = `q39b` = `nraever`
+Have you ever been a member of the National Rifle Association--also known as the NRA?  = `q39b` = `nraever`
 
-There are `r nrow(filter(raw, q39b =="NA"))` observations with NA hardcoded for `q39b`. This corresponds to people who said in q39a that they are current members of the NRA or skipped/refused to answer q39a.
+There are `r nrow(filter(raw, q39b =="NA"))` observations with NA hardcoded for `q39b`. 
+This corresponds to people who said in q39a that they are current members of the 
+NRA or skipped/refused to answer q39a.
 
 ```{r}
 raw %>% tabyl(q39a)
@@ -786,9 +692,9 @@ raw <-
   mutate(
     nraever = 
       case_when(
-        is.na(nraever) ~ as.character(nranow),
-        TRUE ~ as.character(nraever)
-        ),
+        nraever == "NA" ~ as.numeric(nranow),
+        TRUE ~ as.numeric(nraever)
+      ),
     across(
       starts_with("nra"),
       ~ factor(
@@ -809,47 +715,13 @@ raw <-
 raw %>% tabyl(nranow, nraever)
 ```
 
-## Q40_23, Q41_23
-
-`Q40_23`= Are you a member of any other gun rights groups such as Gun Owners of America? = `goanow` i.e., GOA = gun owners of america
-
-`Q41_23` = Are you a member of any gun safety groups such as Moms Demand Action or Everytown for Gun Safety? = `mdanow` = MDA = Moms demand action
-
-```{r}
-raw %>% tabyl(q40_23)
-raw %>% tabyl(q41_23)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  rename(goanow = q40_23, mdanow = q41_23) %>% 
-  mutate(
-    across(
-      c(goanow, mdanow),
-      ~ factor(
-        .x, 
-        levels = c(1:2, 98),
-        labels = c("Yes", "No", "Skipped on web")
-      )
-    )
-  ) %>% 
-  set_variable_labels(
-    goanow = "Are you a member of any other gun rights groups such as Gun Owners of America?",
-    mdanow = "Are you a member of any gun safety groups such as Moms Demand Action or Everytown for Gun Safety?"
-  )
-```
-
-```{r}
-raw %>% tabyl(goanow)
-raw %>% tabyl(mdanow)
-```
-
 ## Q40 & 41
 
--   Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
+Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
 
-Do any of these guns personally belong to you? = `gunhomeper`. There are `r nrow(filter(raw, q41 =="NA"))` observations with NA hardcoded for `q41`. This corresponds to people who said answered no to q40.
+Do any of these guns personally belong to you? = `gunhomeper`.  There are `r nrow(filter(raw, q41 =="NA"))` observations with NA hardcoded for `q41`. 
+This corresponds to people who said answered no to q40.
+
 
 ```{r}
 raw %>% tabyl(q40)
@@ -866,7 +738,7 @@ raw <-
   mutate(
     gunhomeper = 
       case_when(
-       is.na(gunhomeper) ~  as.character(gunhome), 
+        gunhomeper == "NA" ~  as.character(gunhome), 
         TRUE ~ as.character(gunhomeper)
       ),
     across(
@@ -889,167 +761,23 @@ raw <-
 raw %>% tabyl(gunhome, gunhomeper)
 ```
 
-## Q42_23, Q43_23a-c
-
--   `q42_23` = Have you bought any guns since January 1, 2020? = `gun2020`
-
--   `q43_23a` = Did you buy your first gun after January 1, 2020? = `firstgun2020`
-
--   `q43_23b` = Was your purchase after January 1, 2020 motivated by concerns of racial violence? = `racialgun2020`
-
--   `q43_23c` = Was your purchase after January 1, 2020 motivated by concerns of political violence? = `polgun2020`
-
-```{r}
-walk(
-  c("q42_23", "q43_23a", "q43_23b", "q43_23c"),
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
-```{r}
-raw <- 
-  raw %>% 
-  rename(
-    gun2020 = q42_23,
-    firstgun2020 = q43_23a,
-    racialgun2020 = q43_23b,
-    polgun2020 = q43_23c
-  ) %>% 
-  mutate(
-    across(
-      ends_with("gun2020"),
-      ~ case_when(
-        is.na(.x) ~ 100,
-        TRUE ~ .x
-      ) %>% 
-        factor(
-          levels = c(1:2, 77, 98, 100),
-          labels = 
-            c("Yes",
-              "No",
-              "Don't know",
-              "Refused",
-              "Did not purchase a gun since January 1, 2020")
-        )
-    )
-  ) %>% 
-  set_variable_labels(
-    gun2020 = "Have you bought any guns since January 1, 2020?",
-    firstgun2020 = "Did you buy your first gun after January 1, 2020?",
-    racialgun2020 = "Was your purchase after January 1, 2020 motivated by concerns of racial violence?",
-    polgun2020 = "Was your purchase after January 1, 2020 motivated by concerns of political violence?"
-  )
-```
-
-```{r}
-walk(
-  raw %>% select(ends_with("gun2020")) %>% names ,
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
-## Q47_23
-
-Which of the following is your primary reason for owning guns? = `gunreason`
-
-```{r}
-raw %>% tabyl(q47_23)
-raw %>% tabyl(q47_23, gun)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  rename(gunreason = q47_23) %>% 
-  mutate(
-    gunreason = 
-      case_when(
-        is.na(gunreason) & gun == "Non-gun owner" ~ 100,
-        is.na(gunreason) & gun != "Non-gun owner" ~ 99,
-        TRUE ~ gunreason
-      ) %>% 
-      factor(
-        levels = c(1:10, 77, 98:100),
-        labels = 
-            c("For protection from dangerous people or situations when I am at home",
-              "For protection from dangerous people or situations when I am away from home",
-            "For protection at public events, such as sporting events or concerts",
-            "For protection during political activities, such as while voting or listening to speeches",
-            "For protection at demonstrations, rallies, or protests",
-            "For protection against people who do not share my beliefs",
-            "For protection against police violence",
-            "For situations where I think that force or violence is justified to advance an important political objective",
-            "For hunting",
-            "For other recreational activities, such as target shooting",
-            "Don't know",
-            "Skipped on web",
-            "Refused",
-            "Non-gun owner")
-      )
-  ) %>% 
-  set_variable_labels(
-    gunreason = "Which of the following is your primary reason for owning guns? "
-  )
-```
-
-```{r}
-raw %>% tabyl(gunreason)
-```
-
-## Veteran
-
--   `veteran_1` = Have you ever served on active duty in the U.S. Armed Forces, military Reserves, or National Guard? = `vet`
-
--   `veteran2_1` = Are you currently on active duty in the U.S Armed Forces, military Reserves, or National Guard? = `activevet`
-
-```{r}
-raw %>% tabyl(veteran_1, veteran2_1)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  rename(vet = veteran_1, activevet = veteran2_1) %>% 
-  mutate(
-    activevet =
-      case_when(
-        is.na(activevet) ~ vet,
-        TRUE ~ activevet
-      ),
-    across(
-      ends_with("vet"),
-      ~ factor(
-        .x, 
-        levels = c(1:2, 98),
-        labels = c("Yes", "No", "Skipped on web")
-      )
-    )
-  ) %>% 
-  set_variable_labels(
-    activevet = "Are you currently on active duty in the U.S Armed Forces, military Reserves, or National Guard?",
-    vet = "Have you ever served on active duty in the U.S. Armed Forces, military Reserves, or National Guard?"
-  )
-```
-
-```{r}
-raw %>% tabyl(vet, activevet)
-```
-
 ## Political party
 
+To align with the 2023 coding, I group any observations that are either don't know, skipped on web, or refused as "Unknown". I also define `party5` which groups political parties into 5 categories to match 2023.
+
 ```{r}
-raw %>% tabyl(party_id7, party_id5)
+raw %>% tabyl(partyid7)
 ```
 
 ```{r}
 raw <-
   raw %>% 
-  rename(party7 = party_id7, party5 = party_id5) %>% 
+  rename(party7 = partyid7) %>% 
   mutate(
     party7 =
       factor(
         as.numeric(party7), 
-        levels = c(-1, 1:7),
+        levels = c(98, 1:7),
         labels = 
           c("Unknown",
             "Strong Democrat",
@@ -1058,11 +786,19 @@ raw <-
             "Don't Lean/Independent/None",
             "Lean Republican",
             "Not so strong Republican",
-            "Strong Republican")
+            "Strong Republican"
+            )
       ),
     party5 =
+      case_when(
+        grepl("Unknown", party7) ~ -1,
+        grepl("strong demo", party7, ignore.case = T) ~ 1,
+        grepl("lean demo", party7, ignore.case = T) ~ 2,
+        grepl("none", party7, ignore.case = T) ~ 3,
+        grepl("lean repub", party7, ignore.case = T) ~ 4,
+        grepl("strong repub", party7, ignore.case = T) ~ 5
+      ) %>% 
       factor(
-        party5,
         levels = c(-1, 1:5),
         labels = 
           c("Unknown",
@@ -1070,7 +806,8 @@ raw <-
             "Lean Democrat",
             "Don't Lean/Independent/None",
             "Lean Republican",
-            "Republican")
+            "Republican"
+            )
       )
   ) %>% 
   set_variable_labels(
@@ -1081,96 +818,6 @@ raw <-
 
 ```{r}
 raw %>% tabyl(party7, party5)
-```
-
-## Elections
-
--   `qvotediff` = How easy or difficult was it for you to vote in the 2020 election? = `votediff20`
-
--   `q_vote22` = In talking to people about the 2020 election, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you? = `votereason22`
-
--   `qcandi20` = Who did you vote for in the 2020 election = `votecandi20`
-
--   `qvotediff2` = How easy or difficult was it for you to vote in the 2020 election? = `votediff22`
-
-```{r}
-walk(
-  c("qvotediff", "qcandi20", "q_vote22", "qvotediff2"),
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  rename(
-    votediff20 = qvotediff,
-    votereason22 = q_vote22,
-    votecandi20 = qcandi20,
-    votediff22 = qvotediff2
-  ) %>% 
-  mutate(
-    across(
-      starts_with("voted"),
-      ~ case_when(
-        is.na(.x) ~ 100,
-        TRUE ~ .x
-      ) %>% 
-        factor(
-        levels = c(1:5, 77, 98, 100),
-        labels = 
-          c("Very easy",
-            "Easy",
-            "Neither easy or difficult",
-            "Difficult",
-            "Very difficult",
-            "Don't know",
-            "Skipped on web",
-            "Did not vote in this race")
-      )
-    ),
-    votecandi20 =
-      factor(
-        votecandi20, 
-        levels = c(1:4, 98:99),
-        labels = 
-        c("Joe Biden",
-          "Donald Trump",
-          "Someone else",
-          "Did not vote in this race",
-          "Skipped on web",
-          "Refused"
-        )
-      ),
-    votereason22 = 
-      factor(
-        votereason22, 
-        levels = c(1:4, 77, 98:99),
-        labels =
-          c(
-            "I did not vote in the 2022 election",
-            "I thought about voting in the 2022 election, but didn't",
-            "I usually vote, but I didn't in the 2022 election",
-            "I'm sure I voted",
-            "Don't know",
-            "Skipped on web",
-            "Refused"
-          )
-      )
-  ) %>% 
-  set_variable_labels(
-    votediff20 = "How easy or difficult was it for you to vote in the 2020 election?",
-    votereason22 = "In talking to people about elections, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you?",
-    votecandi20 = "Who did you vote for in the 2020 election?",
-    votediff22 = "How easy or difficult was it for you to vote in the 2022 election?"
-  )
-```
-
-```{r}
-walk(
-  raw %>% select(matches("vote")) %>% names,
-  ~ print(raw %>% tabyl(.x))
-)
 ```
 
 ## Household size
@@ -1209,8 +856,8 @@ demovars <-
     "age",
     "hhsize",
     "gender",
-    "racethnicity",
-    "educ5",
+    "raceethnicity",
+    "educ",
     "marital",
     "employ",
     "income",
@@ -1253,7 +900,7 @@ write_rds(
     path_od, 
     "data",
     "clean",
-    "gs-2023.rds"
+    "gs-2021.rds"
     )
   ) 
 ```

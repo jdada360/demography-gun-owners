@@ -1,5 +1,6 @@
 library(ggplot2)
 library(purrr)
+library(conflicted)
 
 path_od <-
   file.path(
@@ -46,3 +47,6 @@ map(
   list.files(file.path(path_git, "code/funs"), full.names = TRUE),
   ~ source(.x)
 )
+
+conflicts_prefer(dplyr::filter)
+conflicts_prefer(dplyr::select)

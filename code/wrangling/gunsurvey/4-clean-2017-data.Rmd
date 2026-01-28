@@ -10,9 +10,11 @@ This script cleans the 2017 survey data.
 
 -   DemographyGunOwners/data/gunsurvey/2017.rds
 
-**Last ran** - 12/13/2025
+**Last ran** 
 
-```{r,  message = FALSE, warning = FALSE}
+- 12/13/2025
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 packages <-
   c(
     "tidyverse",
