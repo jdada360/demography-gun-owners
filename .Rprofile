@@ -15,6 +15,12 @@ path_git <-
     "demography-gun-owners"
   )
 
+path_ol <-
+  file.path(
+    Sys.getenv("OVERLEAF"),
+    "Gun Survey Demographics"
+  )
+
 theme <-
   theme_minimal() +
   theme(

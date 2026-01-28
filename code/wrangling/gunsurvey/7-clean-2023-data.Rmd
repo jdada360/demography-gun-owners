@@ -752,7 +752,7 @@ raw <-
       ownhandgun = "Do you personally own any hanguns?",
       ownrifle = "Do you personally own any rifles?", 
       ownshot = "Do you personally own any shotguns?",
-      ownother = "Do you personally own any other types of guns?",
+      ownother = "Do you personally own any other types of guns?"
     )
 ```
 
@@ -989,7 +989,7 @@ raw <-
       )
   ) %>% 
   set_variable_labels(
-    gunreason = "Which of the following is your primary reason for owning guns? "
+    gunreason = "Which of the following is your primary reason for owning guns?"
   )
 ```
 

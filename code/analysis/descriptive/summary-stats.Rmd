@@ -4,16 +4,17 @@ Survey weights were normalized to the sample size; therefore, population counts 
 
 **Input**
 
--   DemographyGunOwners/data/clean/gunsurvey/...rds
+-   DemographyGunOwners/data/clean/gs-all.rds
 
 **Output**
 
 -   DemographyGunOwners/output
 
-**Last ran** - 12/14/2025
+**Last ran**
+
+-   01/28/26
 
 ```{r,  message = FALSE, warning = FALSE}
-
 packages <-
   c(
     "tidyverse",
@@ -23,7 +24,8 @@ packages <-
     "tidyr",
     "janitor",
     "dplyr",
-    "here"
+    "here",
+    "vtable"
   )
 
 pacman::p_load(
@@ -35,18 +37,16 @@ pacman::p_load(
 ## Import data
 
 ```{r}
-raw <-
+all <-
   read_rds(
      here(
       path_od, 
       "data",
-      "raw",
-      "gunsurvey",
-      "2017.rds"
+      "clean",
+      "gs-all.rds"
       )
   )
 ```
-
 
 ## Set up survey design
 
@@ -55,35 +55,68 @@ This uses the package `survey`.
 ```{r}
 des <- svydesign(
   ids = ~1,                 # no clustering
-  weights = ~ weight1,   # your post-strat weight
-  data = raw
+  weights = ~ weight,   # your post-strat weight
+  data = all
 ) 
 ```
 
-## NRA membership
+### Play around
 
 ```{r}
-raw %>% tabyl(q29)
+svymean(~ gunhome, des)
 ```
-
-```{r}
-svymean(~ q29, des)
-```
-
-
-```{r}
-p <- svymean(~ q29, des)[1]   # weighted proportion
-N <- 258e6                         # US adult population
-owners <- p * N
-```
-
-### By gender
 
 ```{r}
 svyby(
-  ~q29,
+  ~gunhome,
   ~gender,
   des,
   svymean
 )
+```
+
+## Create basic demographics table 
+
+
+```{r}
+demovars <-
+  c(
+    "gunhome",
+    "party7",
+    "age4",
+    "hhsize",
+    "gender",
+    "racethnicity",
+    "educ5",
+    "marital",
+    "employ",
+    "income4",
+    "internet"
+  )
+
+summstats <-
+  c("notNA(x)", "mean(x)", "sd(x)")
+summnames <-
+  c("Observations", "Mean", "SD")
+```
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  all,
+  vars = demovars,
+  group = "year",
+  group.weights = "weight",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Sample characteristics",
+  numformat = "comma",
+  labels =  T,
+  out = "latex",
+  file = 
+    here(
+      path_ol, 
+      "tables",
+      "sample-chars.tex"
+    )
+  )
 ```

@@ -154,6 +154,52 @@ merge %>%
   nrow() == 0
 ```
 
+## Relabel
+
+```{r}
+merge <-
+  merge %>% 
+  set_variable_labels(
+    gender = "Respondent gender",
+    racethnicity = "Combined race/ethnicity",
+    marital = "Marital status",
+    income = "Household income",
+    income4 = "Household income: 4 categories",
+    income9 = "Household income: 9 categories",
+    region4 = "4-level region",
+    region9 = "9-level region",
+    metro = "Metropolitan area flag",
+    internet = "HH internet access via dial-up, DSL, or cable broadband at home",
+    home_type = "Type of building of panelists' residence",
+    phoneservice = "Telephone service for the household",
+    ownhandgun = "Do you personally own any hanguns?",
+    ownrifle = "Do you personally own any rifles?", 
+    ownshot = "Do you personally own any shotguns?",
+    ownother = "Do you personally own any other types of guns?",
+    nraever = "Have you ever been a member of the NRA?",
+    nranow = "Are you a member of the NRA?",
+    goanow = "Are you a member of any other gun rights groups such as Gun Owners of America?",
+    mdanow = "Are you a member of any gun safety groups such as Moms Demand Action or Everytown for Gun Safety?",
+    gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
+    gunhomeper = "Do any of guns or revolvers in your home or garagepersonally belong to you?",
+    gun2020 = "Have you bought any guns since January 1, 2020?",
+    firstgun2020 = "Did you buy your first gun after January 1, 2020?",
+    racialgun2020 = "Was your purchase after January 1, 2020 motivated by concerns of racial violence?",
+    polgun2020 = "Was your purchase after January 1, 2020 motivated by concerns of political violence?",
+    gunreason = "Which of the following is your primary reason for owning guns?",
+    activevet = "Are you currently on active duty in the U.S Armed Forces, military Reserves, or National Guard?",
+    vet = "Have you ever served on active duty in the U.S. Armed Forces, military Reserves, or National Guard?",
+    party7 = "7-level political affiliation",
+    party5 = "5-level political affiliation",
+    votediff20 = "How easy or difficult was it for you to vote in the 2020 election?",
+    votereason22 = "In talking to people about elections, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you?",
+    votecandi20 = "Who did you vote for in the 2020 election?",
+    votediff22 = "How easy or difficult was it for you to vote in the 2022 election?",
+    weight = "Post-stratification weights - 18+ general population (N=2,778)",
+    weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other) (N=2,778)",
+weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=2,778)"
+  )
+```
 
 ## Export data
 
