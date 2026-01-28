@@ -1,0 +1,168 @@
+# Merge survey years
+
+This analysis creates a combined data set of the survey years.
+
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-`i`.rds for `i %in% 2019, 2021, 2023`
+
+**Output**
+
+
+**Last ran** 
+
+-   01/28/26
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+
+cleanfold <-
+  here(
+    path_od, 
+    "data",
+    "clean"
+  )
+```
+
+
+## Import data
+
+```{r}
+years <- c(2019, 2021, 2023)
+```
+
+```{r}
+source <-
+  map_dfr(
+    years, 
+    ~ read_rds(here(cleanfold,paste0("gs-", .x, ".rds"))) %>% 
+      mutate(year = .x)
+  )
+```
+
+## Explore data
+
+```{r}
+source %>% 
+  sample_n(10) %>% 
+  head(10) %>% 
+  kbl(
+    caption = 
+      "Gun Survey Data",
+    align = "c",
+    format = "html",
+    booktabs = TRUE
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+    )  %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+### Summary table
+
+| Name                   | Value                                             |
+|-------------------------|-----------------------------------------------|
+| Number of observations | `r nrow(source)`                                  |
+| Number of unique cases | `r n_distinct(source$case_id)`                    |
+| Sum of weights         | `r sum(source$weight)`                           |
+| Number of variables    | `r length(source)`                                |
+| Variable names         | `r source %>% names() %>% paste(collapse = ", ")` |
+| Years of data          | `r source %>% distinct(year) %>% pull(year) %>% paste(collapse = ", ")` |
+
+## Create unique ID
+
+Within years, the `caseid` is the ID variable. We redefine `caseid` to be unique
+across years.
+
+```{r}
+merge <-
+  source %>% 
+  select(-caseid) %>% 
+  arrange(year, weight) %>% 
+  mutate(caseid = row_number())
+```
+
+## Check that the common columns are all non-missing
+
+Different survey years have different questions, but they key demographic variables
+are the same across years and should not be missing. We also need survey weights to be non-missing.
+
+```{r}
+commonvars <-
+  c(
+    "weight",
+    "caseid",
+    "year",
+    "nranow",
+    "gunhome",
+    "gunhomeper",
+    "party7",
+    "age",
+    "age4",
+    "age7",
+    "hhsize",
+    "gender",
+    "racethnicity",
+    "educ5",
+    "marital",
+    "employ",
+    "income9",
+    "state",
+    "region4",
+    "region9",
+    "metro",
+    "internet",
+    "housing",
+    "home_type",
+    "phoneservice",
+    "hhsize",
+    "hh01",
+    "hh25",
+    "hh612",
+    "hh1317",
+    "hh18ov"
+  )
+```
+
+```{r}
+merge %>% 
+  select(all_of(commonvars)) %>% 
+  filter(if_any(commonvars, is.na)) %>% 
+  nrow() == 0
+```
+
+
+## Export data
+
+```{r}
+write_rds(
+  merge,
+  here(
+    cleanfold,
+    "gs-all.rds"
+  )
+)
+```

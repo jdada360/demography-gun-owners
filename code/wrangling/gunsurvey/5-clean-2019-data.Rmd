@@ -8,11 +8,11 @@ All questions are encoded, so we decode them using the [codebook](https://livejo
 
 **Input**
 
--    DemographyGunOwners/data/raw/gunsurvey/2019.rds
+-   DemographyGunOwners/data/raw/gunsurvey/2019.rds
 
 **Output**
 
--    DemographyGunOwners/data/constructed/
+-   DemographyGunOwners/data/constructed/
 
 **Last ran**
 
@@ -81,7 +81,7 @@ source %>%
 ### Summary table
 
 | Name                   | Value                                             |
-|-------------------------|-----------------------------------------------|
+|------------------------|---------------------------------------------------|
 | Number of observations | `r nrow(source)`                                  |
 | Number of unique cases | `r n_distinct(source$case_id)`                    |
 | Sum of weights         | `r sum(source$weight)`                            |

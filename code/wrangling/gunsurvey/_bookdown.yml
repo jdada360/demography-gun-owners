@@ -6,5 +6,6 @@ rmd_files: [
   "1-import-data.Rmd",
   "5-clean-2019-data.Rmd",
   "6-clean-2021-data.Rmd",
-  "7-clean-2023-data.Rmd"
+  "7-clean-2023-data.Rmd",
+  "8-merge-data.Rmd"
 ]
