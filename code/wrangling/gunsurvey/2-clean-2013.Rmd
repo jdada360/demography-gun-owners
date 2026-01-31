@@ -1,62 +1,62 @@
-# Clean 2021 data
+# Clean 2013 data
+
+This script cleans the 2013 survey data.
 
 **Input**
 
--   DemographyGunOwners/data/raw/gunsurvey/2021.rds
+-   DemographyGunOwners/data/raw/gunsurvey/2013.rds
 
 **Output**
 
--   DemographyGunOwners/data/clean/gs-2021.rds
+-   DemographyGunOwners/data/gunsurvey/2013.rds
 
 **Last ran**
 
--   01/26/26
+-   01/31/26
 
-```{r,  message = FALSE, warning = FALSE}
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+
 packages <-
   c(
     "tidyverse",
     "purrr",
     "haven",
-    "labelled",
     "tidyr",
     "janitor",
-    "weights",
-    "conflicted",
-    "kableExtra",
-    "survey",
     "skimr",
     "psych",
+    "kableExtra",
     "dplyr",
-    "here",
     "vtable",
-    "fixest",
-    "lfe",
-    "broom"
+    "here",
+    "labelled"
   )
 
 pacman::p_load(
   packages,
   character.only = TRUE
 )
-
-conflicts_prefer(dplyr::filter)
 ```
 
 ## Import data
 
 ```{r}
 source <-
-  read_rds(
+  read_dta(
      here(
       path_od, 
       "data",
       "raw",
       "gunsurvey",
-      "2021.rds"
+      "2013.dta"
       )
   ) %>% 
-  clean_names()
+  clean_names() %>% 
+  # many variable names have the pp prefix, so remove it
+  rename_with(
+    ~ str_remove_all(.x, "pp"), 
+    everything()
+  )
 ```
 
 ## Explore data
@@ -67,7 +67,7 @@ source %>%
   head(10) %>% 
   kbl(
     caption = 
-      "Gun Survey 2021 Data",
+      "Gun Survey 2013 Data",
     align = "c",
     format = "html",
     booktabs = TRUE
@@ -82,98 +82,78 @@ source %>%
 ### Summary table
 
 | Name                   | Value                                             |
-|------------------------|---------------------------------------------------|
+|-------------------------|-----------------------------------------------|
 | Number of observations | `r nrow(source)`                                  |
 | Number of unique cases | `r n_distinct(source$case_id)`                    |
-| Sum of weights         | `r sum(source$weight1)`                           |
+| Sum of weights         | `r sum(source$weight)`                            |
 | Number of variables    | `r length(source)`                                |
 | Variable names         | `r source %>% names() %>% paste(collapse = ", ")` |
 
 ## Select variables
 
-All questions are encoded, so we decode them using the [codebook](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/2021%20Documentation/8999_JHU_Gun%20Policy%202021_Codebook.xlsx?d=w75cec2186ce04efd95f19e64b723f885&csf=1&web=1&e=YHbc6U).
-
-We focus on demographic variables and the main variables about gun ownership.
-
 ```{r}
 demovars <-
   c(
     "age",
-    "age4",
-    "age7",
-    "hhsize",
+    "agecat",
+    "agect4",
+    "educ",
+    "educat",
+    "ethm",
     "gender",
-    "racethnicity",
-    "partyid7",
-    "educ5",
-    "marital",
-    "employ",
-    "income",
-    "income4",
-    "income9",
-    "state",
-    "region4",
-    "region9",
-    "metro",
-    "internet",
-    "housing",
-    "home_type",
-    "phoneservice",
+    # Household 
+    "hhhead",
     "hhsize",
-    "hh01",
-    "hh25",
-    "hh612",
-    "hh1317",
-    "hh18ov"
+    "t01",
+    "t25",
+    "t1317",
+    "t18ov",
+    "core_par",
+    "ever_par",
+    "marit",
+    # Region
+    "staten",
+    "reg4",
+    "reg9",
+    "msacat",
+    # House type
+    "house",
+    "rent",
+    # Income
+    "incimp",
+    # Internet
+    "net",
+    # Employment
+    "work",
+    "partyid7"
   )
 
 gun <-
   c(
-    "gun",
-    "q39a",
-    "q39b",
-    "q40",
-    "q41"
+    # Respondent personally owns a gun
+    "xpa0122",
+    # Respondent has a gun in household but is not owner
+    "xpa0117",
+    # Type of gun
+    "pa0118",
+    "pa0119",
+    "pa0121",
+    "pa0128",
+    # NRA
+    "q30",
+    #Victim of gun violence
+    "q31"
   )
 ```
 
 ```{r}
 raw <-
   source %>% 
-  dplyr::select(
-    starts_with(c("caseid", "weight")), 
+  clean_names() %>% 
+  select(
+    starts_with(c("caseid", "weight")),
     all_of(c(demovars, gun))
   )
-```
-
-## Gun
-
-Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes.
-
-```{r}
-raw %>% tabyl(gun)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  mutate(
-    gun = 
-      factor(
-        gun,
-        levels = 1:2,
-        labels = 
-          c("Gun owner",
-            "Non-gun owner")
-      )
-  ) %>% 
-  set_variable_labels(
-    gun = "Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes"
-  )
-```
-
-```{r}
-raw %>% tabyl(gun)
 ```
 
 ## Gender
@@ -186,9 +166,9 @@ raw %>% tabyl(gender)
 raw <-
   raw %>% 
   mutate(
-    gender = 
+    gender =
       factor(
-        gender, 
+        gender,
         levels = 1:2,
         labels = c("Male", "Female")
       )
@@ -205,13 +185,15 @@ raw %>% tabyl(gender)
 ## Age
 
 ```{r}
-raw %>% tabyl(age4)
-raw %>% tabyl(age7)
+raw %>% tabyl(agecat)
+raw %>% tabyl(agect4)
 ```
 
 ```{r}
 raw <-
   raw %>% 
+  rename(age4 = agect4,
+         age7 = agecat) %>% 
   mutate(
     age4 = 
       factor(
@@ -251,25 +233,28 @@ raw %>% tabyl(age7)
 
 ## Race and ethnicity
 
+Note that 2013 data does not include Asian, non-Hispanic as a category.
+
 ```{r}
-raw %>% tabyl(racethnicity)
+raw %>% tabyl(ethm)
 ```
 
 ```{r}
 raw <-
   raw %>% 
+  rename(racethnicity = ethm) %>% 
   mutate(
     racethnicity = 
       factor(
         racethnicity,
-        levels = 1:6,
+        levels = 1:5,
         labels =
           c("White, non-Hispanic",
             "Black, non-Hispanic",
             "Other, non-Hispanic",
             "Hispanic",
-            "2+, non-Hispanic",
-            "Asian, non-Hispanic")
+            "2+, non-Hispanic"
+            )
       )
   ) %>% 
   set_variable_labels(
@@ -284,16 +269,23 @@ raw %>% tabyl(racethnicity)
 ## Education
 
 ```{r}
-raw %>% tabyl(educ5)
+raw %>% tabyl(educ)
+raw %>% tabyl(educat)
 ```
 
 ```{r}
 raw <-
   raw %>% 
   mutate(
-    educ5 = 
+    educ5 =
+      case_when(
+       educ %in% 1:8 ~ 1,
+       educ == 9 ~ 2,
+       educ %in% 10:11 ~ 3,
+       educ == 12 ~ 4,
+       TRUE ~ 5
+       ) %>% 
       factor(
-        educ5,
         levels = 1:5,
         labels = 
           c("Less than HS",
@@ -302,15 +294,50 @@ raw <-
             "Bachelors degree",
             "Post grad study/professional degree"
             )
+      ),
+    educ = 
+      factor(
+        educ,
+        levels = 1:14,
+        labels = 
+          c("No formal education",
+            "1st, 2nd, 3rd, or 4th grade",
+            "5th or 6th grade",
+            "7th or 8th grade",
+            "9th grade",
+            "10th grade",
+            "11th grade",
+            "12th grade (no diploma)",
+            "High school graduate, diploma, or GED",
+            "Some college, no degree",
+            "Associate degree",
+            "Bachelors degree",
+            "Masters degree",
+            "Professional or Doctorate degree")
+      ),
+    educ4 = 
+      factor(
+        educ4, 
+        levels = 1:4,
+        labels = 
+          c("No HS diploma",
+            "HS graduate or equivalent",
+            "Some college",
+            "BA or above")
       )
   ) %>% 
   set_variable_labels(
-    educ5 = "Highest level of education"
+    educ5 = "Highest level of education",
+    educ4 = "4-level highest level of education",
+    educ = "Highest level of education"
   )
 ```
 
 ```{r}
-raw %>% tabyl(educ5)
+walk(
+  c("educ", "educ5","educ4"),
+  ~ print(raw %>% tabyl(.x))
+)
 ```
 
 ## Martial status
@@ -384,16 +411,56 @@ raw %>% tabyl(employ)
 
 ## Income
 
+We construct 2 variables: income4 and income5 to match 2021 and 2023 data.
+
 ```{r}
 raw %>% tabyl(income)
-raw %>% tabyl(income4)
-raw %>% tabyl(income9)
 ```
 
 ```{r}
 raw <-
   raw %>% 
   mutate(
+    income4 = 
+      case_when(
+        income %in% 1:6 ~ 1,
+        income %in% 7:10 ~ 2,
+        income %in% 11:13 ~ 3,
+        TRUE ~ 4
+      ) %>% 
+      factor(
+        levels = 1:4, 
+        labels = 
+          c("Less than $30,000",
+            "$30,000-60,000",
+            "$60,000-100,000",
+            "$100,000 or more")
+      ),
+    income9 = 
+      case_when(
+        income %in% 1:2 ~ 1,
+        income %in% 3:4 ~ 2,
+        income %in% 5:6 ~ 3,
+        income %in% 7:8 ~ 4,
+        income == 9 ~ 5,
+        income %in% 10:11 ~ 6,
+        income %in% 12:13 ~ 7,
+        income %in% 14:15 ~ 8,
+        TRUE ~ 9
+      ) %>% 
+      factor(
+        levels = 1:9, 
+        labels = 
+          c("Under $10,000",
+            "$10,000-20,000",
+            "$20,000-30,000",
+            "$30,000-40,000",
+            "$40,000-50,000",
+            "$50,000-75,000",
+            "$75,000-100,000",
+            "$100,000-150,000",
+            "$150,000 or more")
+      ),
     income = 
       factor(
         income, 
@@ -417,31 +484,6 @@ raw <-
             "$150,000-174,999",
             "$175,000-199,999",
             "$200,000 or more")
-      ),
-    income4 = 
-      factor(
-        income4, 
-        levels = 1:4, 
-        labels = 
-          c("Less than $30,000",
-            "$30,000-60,000",
-            "$60,000-100,000",
-            "$100,000 or more")
-      ),
-    income9 = 
-      factor(
-        income9, 
-        levels = 1:9, 
-        labels = 
-          c("Under $10,000",
-            "$10,000-20,000",
-            "$20,000-30,000",
-            "$30,000-40,000",
-            "$40,000-50,000",
-            "$50,000-75,000",
-            "$75,000-100,000",
-            "$100,000-150,000",
-            "$150,000 or more")
       )
   )  %>% 
   set_variable_labels(
@@ -452,9 +494,10 @@ raw <-
 ```
 
 ```{r}
-raw %>% tabyl(income)
-raw %>% tabyl(income4)
-raw %>% tabyl(income9)
+walk(
+    raw %>% select(starts_with("income")) %>% names,
+  ~ print(raw %>% tabyl(.x))
+)
 ```
 
 ## State
@@ -523,7 +566,7 @@ raw %>% tabyl(region9)
 ## Metropolitan area flag
 
 ```{r}
-raw %>% tabyl(metro)
+raw %>% tabyl(msacat)
 ```
 
 ```{r}
@@ -667,114 +710,21 @@ raw <-
 raw %>% tabyl(phoneservice)
 ```
 
-## Q39a and b
-
-Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
-
-Have you ever been a member of the National Rifle Association--also known as the NRA? = `q39b` = `nraever`
-
-There are `r nrow(filter(raw, q39b =="NA"))` observations with NA hardcoded for `q39b`. This corresponds to people who said in q39a that they are current members of the NRA or skipped/refused to answer q39a.
-
-```{r}
-raw %>% tabyl(q39a)
-raw %>% tabyl(q39b)
-raw %>% tabyl(q39a, q39b)
-```
-
-```{r, warning = F}
-raw <-
-  raw %>% 
-  rename(
-    nranow = q39a,
-    nraever = q39b
-    ) %>% 
-  mutate(
-    nraever = 
-      case_when(
-        nraever == "NA" ~ as.numeric(nranow),
-        TRUE ~ as.numeric(nraever)
-      ),
-    across(
-      starts_with("nra"),
-      ~ factor(
-        as.numeric(.x), 
-        levels = c(1:2, 98:99),
-        labels =
-          c("Yes", "No", "Skipped on web", "Refused")
-      )
-    )
-  ) %>% 
-  set_variable_labels(
-    nraever = "Have you ever been a member of the NRA?",
-    nranow = "Are you a member of the NRA?"
-  )
-```
-
-```{r}
-raw %>% tabyl(nranow, nraever)
-```
-
-## Q40 & 41
-
-Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
-
-Do any of these guns personally belong to you? = `gunhomeper`. There are `r nrow(filter(raw, q41 =="NA"))` observations with NA hardcoded for `q41`. This corresponds to people who said answered no to q40.
-
-```{r}
-raw %>% tabyl(q40)
-raw %>% tabyl(q41)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  rename(
-    gunhome = q40,
-    gunhomeper = q41
-    ) %>% 
-  mutate(
-    gunhomeper = 
-      case_when(
-        gunhomeper == "NA" ~  as.character(gunhome), 
-        TRUE ~ as.character(gunhomeper)
-      ),
-    across(
-      starts_with("gunhome"),
-      ~ factor(
-          as.numeric(.x),
-          levels = c(1:2, 98:99),
-          labels =
-            c("Yes", "No", "Skipped on web", "Refused")
-        )
-      )
-  ) %>% 
-  set_variable_labels(
-    gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
-    gunhomeper = "Do any of guns or revolvers in your home or garagepersonally belong to you?"
-  )
-```
-
-```{r}
-raw %>% tabyl(gunhome, gunhomeper)
-```
-
 ## Political party
 
-To align with the 2023 coding, I group any observations that are either don't know, skipped on web, or refused as "Unknown". I also define `party5` which groups political parties into 5 categories to match 2023.
-
 ```{r}
-raw %>% tabyl(partyid7)
+raw %>% tabyl(p_partyid)
 ```
 
 ```{r}
 raw <-
   raw %>% 
-  rename(party7 = partyid7) %>% 
+  rename(party7 = p_partyid) %>% 
   mutate(
     party7 =
       factor(
         as.numeric(party7), 
-        levels = c(98, 1:7),
+        levels = c(-1, 1:7),
         labels = 
           c("Unknown",
             "Strong Democrat",
@@ -783,39 +733,21 @@ raw <-
             "Don't Lean/Independent/None",
             "Lean Republican",
             "Not so strong Republican",
-            "Strong Republican"
-            )
-      ),
-    party5 =
-      case_when(
-        grepl("Unknown", party7) ~ -1,
-        grepl("strong demo", party7, ignore.case = T) ~ 1,
-        grepl("lean demo", party7, ignore.case = T) ~ 2,
-        grepl("none", party7, ignore.case = T) ~ 3,
-        grepl("lean repub", party7, ignore.case = T) ~ 4,
-        grepl("strong repub", party7, ignore.case = T) ~ 5
-      ) %>% 
-      factor(
-        levels = c(-1, 1:5),
-        labels = 
-          c("Unknown",
-            "Democrat",
-            "Lean Democrat",
-            "Don't Lean/Independent/None",
-            "Lean Republican",
-            "Republican"
-            )
+            "Strong Republican")
       )
   ) %>% 
   set_variable_labels(
-    party7 = "7-level political affiliation",
-    party5 = "5-level political affiliation"
+    party7 = "7-level political affiliation"
   )
 ```
 
 ```{r}
-raw %>% tabyl(party7, party5)
+raw %>% tabyl(party7)
 ```
+
+
+## Are you a member of the National Rifle Association--also known as the NRA?  (q30)
+
 
 ## Household size
 
@@ -834,13 +766,24 @@ raw <-
 
 ## Weights
 
+Notice here that the weight numbering here is different to 2021- waves of the survey
+
+-   `weight1` = Post-Stratification Weight for 18+ US adult gen pop sample
+
+-   `weight2` = Post-Stratification Weight for total sample, 18+ US adults with no guns in HH, gun owners, and guns in HHs
+
+-   `weight3` = Post-Stratification Weight for gun owners
+
+-   `weight4` = Post-Stratification Weight for gun HHs
+
 ```{r}
 clean <-
   raw %>% 
+  rename(weight = weight1) %>% 
   set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population (N=2,778)",
-    weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other) (N=2,778)",
-weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=2,778)"
+    weight = "Post-stratification weights - 18+ general population",
+    weight2 = "Post-Stratification Weight for total sample, 18+ US adults with no guns in HH, gun owners, and guns in HHs",
+weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners)"
   )
 ```
 
@@ -849,18 +792,18 @@ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun o
 ```{r}
 demovars <-
   c(
-    "gun",
     "age",
     "hhsize",
     "gender",
-    "raceethnicity",
-    "educ",
+    "racethnicity",
+    "educ5",
     "marital",
     "employ",
     "income",
     "internet",
     "home_type",
-    "party7"
+    "party7",
+    "gunhome"
   )
 
 summstats <-
@@ -897,7 +840,7 @@ write_rds(
     path_od, 
     "data",
     "clean",
-    "gs-2021.rds"
+    "gs-2017.rds"
     )
   ) 
 ```

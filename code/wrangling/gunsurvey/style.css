@@ -1,5 +1,21 @@
 /* style.css */
-body {
-  font-family: "Cambria"
+
+/* Base body text */
+body, p, li, td {
+  font-family: "Cambria", serif;
 }
-/* You may need to add rules for other elements like h1, h2, etc. */
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cambria", serif;
+}
+
+/* Code blocks (optional) */
+pre, code {
+  font-family: "Cambria", serif;
+}
+
+/* Tables */
+table {
+  font-family: "Cambria", serif;
+}

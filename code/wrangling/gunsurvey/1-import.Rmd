@@ -34,8 +34,8 @@ pacman::p_load(
 ## Import and convert to rds format
 
 ```{r}
-purrr::map(
-  c(2013, 2015, 2017, 2019, 2021, 2023),
+walk(
+  seq(2013, 2025, 2),
   ~ {
     read_dta(
       here(
