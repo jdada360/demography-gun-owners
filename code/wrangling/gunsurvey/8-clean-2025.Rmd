@@ -746,70 +746,8 @@ raw <-
 raw %>% tabyl(phoneservice)
 ```
 
-## Gun ownership type
 
-Do you personally own any of the following types of guns?
-
--   `qguntypea` = handguns
-
--   `qguntypeb` = rifles
-
--   `qguntypec` = shotguns
-
--   `qguntyped` = other
-
-```{r}
-walk(
-  c("qguntypea", "qguntypeb", "qguntypec", "qguntyped"),
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
-```{r}
-raw <- 
-  raw %>% 
-  rename(
-    ownhandgun = qguntypea,
-    ownrifle = qguntypeb, 
-    ownshot = qguntypec,
-    ownother = qguntyped
-  ) %>% 
-  mutate(
-    across(
-      starts_with("own"),
-      ~ case_when(
-        is.na(.x) ~ 100,
-        TRUE ~ .x
-      ) %>% 
-        factor(
-          levels = c(1:2, 77, 98:100),
-          labels =
-            c("Yes", 
-              "No",
-              "Don't know",
-              "Skipped on web",
-              "Refused",
-              "Non-gun owner")
-        )
-    )
-  ) %>% 
-    set_variable_labels(
-      ownhandgun = "Do you personally own any hanguns?",
-      ownrifle = "Do you personally own any rifles?", 
-      ownshot = "Do you personally own any shotguns?",
-      ownother = "Do you personally own any other types of guns?"
-    )
-```
-
-```{r}
-walk(
-    raw %>% select(starts_with("own")) %>% names(),
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
-
-## Q39a and b
+## Are you a member of the National Rifle Association (Q39a and b)
 
 Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
 
@@ -858,7 +796,8 @@ raw <-
 raw %>% tabyl(nranow, nraever)
 ```
 
-## Q40 & 41
+
+## Gun ownership (Q40 & 41)
 
 Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
 
@@ -904,6 +843,69 @@ raw <-
 ```{r}
 raw %>% tabyl(gunhome, gunhomeper)
 ```
+
+
+## Type of gun ownership
+
+Do you personally own any of the following types of guns?
+
+-   `qguntypea` = handguns
+
+-   `qguntypeb` = rifles
+
+-   `qguntypec` = shotguns
+
+-   `qguntyped` = other
+
+```{r}
+walk(
+  c("qguntypea", "qguntypeb", "qguntypec", "qguntyped"),
+  ~ print(raw %>% tabyl(.x))
+)
+```
+
+```{r}
+raw <- 
+  raw %>% 
+  rename(
+    ownhandgun = qguntypea,
+    ownrifle = qguntypeb, 
+    ownshot = qguntypec,
+    ownother = qguntyped
+  ) %>% 
+  mutate(
+    across(
+      starts_with("own"),
+      ~ case_when(
+        is.na(.x) ~ 100,
+        .x %in% c(77, 98:99) ~ 77,
+        TRUE ~ .x
+      ) %>% 
+        factor(
+          levels = c(1:2, 77, 100),
+          labels =
+            c("Yes", 
+              "No",
+              "Unknown",
+              "Non-gun owner")
+        )
+    )
+  ) %>% 
+    set_variable_labels(
+      ownhandgun = "Do you personally own any hanguns?",
+      ownrifle = "Do you personally own any rifles?", 
+      ownshot = "Do you personally own any shotguns?",
+      ownother = "Do you personally own any other types of guns?"
+    )
+```
+
+```{r}
+walk(
+    raw %>% select(starts_with("own")) %>% names(),
+  ~ print(raw %>% tabyl(.x))
+)
+```
+
 
 ## Veteran
 
@@ -1059,10 +1061,10 @@ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun o
 
 ## Explore demographic variables
 
+### Gun owners
 ```{r}
 demovars <-
   c(
-    "gun",
     "age",
     "hhsize",
     "gender",
@@ -1084,9 +1086,9 @@ summnames <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean,
+  clean %>% filter(gunhomeper == "Yes"),
   vars = demovars,
-  group.weights = "weight",
+  group.weights = "weight3",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary",
@@ -1100,6 +1102,47 @@ st(
   ) %>% 
   scroll_box(width = "800px", height = "500px")
 ```
+
+### Full sample
+
+```{r}
+demovars <-
+  c(
+    "gunhomeper",
+    "age",
+    "hhsize",
+    "gender",
+    "racethnicity",
+    "educ5",
+    "marital",
+    "employ",
+    "income",
+    "internet",
+    "home_type",
+    "party7"
+  )
+```
+
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  clean,
+  vars = demovars,
+  group.weights = "weight2",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary among full sample",
+  out = "kable",
+  numformat = "comma",
+  labels =  T
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
 
 ## Export data
 

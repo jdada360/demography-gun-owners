@@ -1,6 +1,6 @@
-# Clean 2013 data
+# Clean 2015 data
 
-This script cleans the 2013 survey data.
+This script cleans the 2015 survey data.
 
 List of variables are different/not available in comparison to later survey years:
 

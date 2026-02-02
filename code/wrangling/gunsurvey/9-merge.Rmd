@@ -154,6 +154,12 @@ merge %>%
   nrow() == 0
 ```
 
+## Create household size grouping variables
+
+`hh06` = age 0-6
+
+`hh18un` = Under 18
+
 ## Relabel
 
 ```{r}

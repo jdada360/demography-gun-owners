@@ -1,7 +1,7 @@
 --- 
 title: "Gun Survey Data Cleaning"
 author: "Joy Dada"
-date: 'Wednesday January 28 2026'
+date: 'Monday, February 02, 2026'
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 documentclass: book
@@ -12,3 +12,9 @@ documentclass: book
 The code in this books cleans the gun survey data. 
 
 
+``` r
+knitr::opts_chunk$set(
+  warning = FALSE,
+  meassage = FALSE
+  )
+```

@@ -14,26 +14,10 @@ This script imports the survey data and converts into the R formats.
 
 -   12/14/2025
 
-```{r 1-import-data, message=FALSE, warning=FALSE, echo = FALSE}
 
-packages <-
-  c(
-    "tidyverse",
-    "purrr",
-    "haven",
-    "tidyr",
-    "janitor",
-    "dplyr",
-    "here"
-  )
 
-pacman::p_load(
-  packages,
-  character.only = TRUE
-)
-```
 
-```{r}
+``` r
 walk(
   seq(2013, 2025, 2),
   ~ {

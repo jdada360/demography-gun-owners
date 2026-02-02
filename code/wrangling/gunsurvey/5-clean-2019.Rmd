@@ -725,7 +725,7 @@ raw <-
 raw %>% tabyl(party7)
 ```
 
-## Q31
+## Are you a member of the National Rifle Association--also known as the NRA? (Q31)
 
 Are you a member of the National Rifle Association--also known as the NRA? = `q31` = `nranow`
 
@@ -755,7 +755,7 @@ raw <-
 raw %>% tabyl(nranow)
 ```
 
-## Q32 & 33
+##  Do you happen to have in your home or garage any guns or revolvers? (Q32 & 33)
 
 -   Do you happen to have in your home or garage any guns or revolvers? = `q32` = `gunhome`
 

@@ -1,6 +1,6 @@
 # Clean 2023 data
 
-We use this [codebook.](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/9558_JHU%20Gun%20Policy%202023_codebook.xlsx?d=w551a28b764fc4672a2bfc152b24b6e04&csf=1&web=1&e=4Jb9Vt).
+We use this [codebook](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal/jdada3_jh_edu/Documents/Research/DemographyGunOwners/documentation/9558_JHU%20Gun%20Policy%202023_codebook.xlsx?d=w551a28b764fc4672a2bfc152b24b6e04&csf=1&web=1&e=4Jb9Vt).
 
 Note that all of the demographic variables are the same as the 2021 survey.
 
@@ -763,7 +763,7 @@ walk(
 )
 ```
 
-## Q39a and b
+## Are you a member of the National Rifle Association (Q39a and b)
 
 -   Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
 
@@ -816,7 +816,7 @@ raw <-
 raw %>% tabyl(nranow, nraever)
 ```
 
-## Q40_23, Q41_23
+## Are you a member of any other gun rights groups (Q40_23, Q41_23)
 
 `Q40_23`= Are you a member of any other gun rights groups such as Gun Owners of America? = `goanow` i.e., GOA = gun owners of america
 
@@ -852,7 +852,7 @@ raw %>% tabyl(goanow)
 raw %>% tabyl(mdanow)
 ```
 
-## Q40 & 41
+## Gun ownership (Q40 & 41)
 
 -   Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
 
@@ -901,7 +901,7 @@ raw <-
 raw %>% tabyl(gunhome, gunhomeper)
 ```
 
-## Q42_23, Q43_23a-c
+##  Have you bought any guns since January 1, 2020? (Q42_23, Q43_23a-c)
 
 -   `q42_23` = Have you bought any guns since January 1, 2020? = `gun2020`
 
@@ -962,7 +962,7 @@ walk(
 )
 ```
 
-## Q47_23
+## Which of the following is your primary reason for owning guns? (Q47_23)
 
 Which of the following is your primary reason for owning guns? = `gunreason`
 

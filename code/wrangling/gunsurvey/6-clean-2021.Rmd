@@ -1,5 +1,9 @@
 # Clean 2021 data
 
+Differences with other survey years
+
+-   No variables on the type of gun a respondent owns
+
 **Input**
 
 -   DemographyGunOwners/data/raw/gunsurvey/2021.rds
@@ -82,7 +86,7 @@ source %>%
 ### Summary table
 
 | Name                   | Value                                             |
-|------------------------|---------------------------------------------------|
+|-----------------------|------------------------------------------------|
 | Number of observations | `r nrow(source)`                                  |
 | Number of unique cases | `r n_distinct(source$case_id)`                    |
 | Sum of weights         | `r sum(source$weight1)`                           |
@@ -667,7 +671,7 @@ raw <-
 raw %>% tabyl(phoneservice)
 ```
 
-## Q39a and b
+## Are you a member of the National Rifle Association--also known as the NRA? (Q39a and b)
 
 Are you a member of the National Rifle Association--also known as the NRA? = `q39a` = `nranow`
 
@@ -717,7 +721,7 @@ raw <-
 raw %>% tabyl(nranow, nraever)
 ```
 
-## Q40 & 41
+## Gun ownership (Q40 & 41)
 
 Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
 
@@ -752,7 +756,7 @@ raw <-
   ) %>% 
   set_variable_labels(
     gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
-    gunhomeper = "Do any of guns or revolvers in your home or garagepersonally belong to you?"
+    gunhomeper = "Do any of guns or revolvers in your home or garage personally belong to you?"
   )
 ```
 
