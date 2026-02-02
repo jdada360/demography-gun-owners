@@ -295,7 +295,7 @@ raw %>% tabyl(racethnicity)
 
 ## Education
 
-We drop `educ` because it corresponds to 4 levels of education, but in order to match later survery years, we define education using 5 levels.
+We drop `educ` because it corresponds to 4 levels of education, but in order to match later survey years, we define education using 5 levels.
 
 ```{r}
 raw %>% tabyl(educ)
@@ -675,7 +675,10 @@ raw <-
         labels =
            c("Yes", "No", "Unknown")
       )
-    )
+    ) %>% 
+  set_variable_labels(
+    nranow = "Are you a member of the NRA?"
+  )
 ```
 
 ```{r}
