@@ -302,7 +302,7 @@ raw <-
             "Black, non-Hispanic",
             "Other, non-Hispanic",
             "Hispanic",
-            "2+, non-Hispanic",
+            "2+ Races, non-Hispanic",
             "Asian, non-Hispanic")
       )
   ) %>% 
@@ -1207,9 +1207,9 @@ raw <-
 clean <-
   raw %>% 
   set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population (N=2,778)",
-    weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other) (N=2,778)",
-weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=2,778)"
+    weight = "Post-stratification weights - 18+ general population (N=3,096)",
+    weight2 = "Post-stratified weights - scaled to 4 race groups (NH-Black, Hispanic, AAPI, NH-All Other) (N=3,096)",
+weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=3,096)"
   )
 ```
 

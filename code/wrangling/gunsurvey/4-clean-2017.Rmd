@@ -194,7 +194,18 @@ raw %>% tabyl(racethnicity)
 raw <-
   raw %>% 
   mutate(
-    racethnicity = droplevels(as_factor(racethnicity))
+    racethnicity = 
+      factor(
+        racethnicity,
+        levels = 1:5,
+        labels =
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Other, non-Hispanic",
+            "Hispanic",
+            "2+ Races, non-Hispanic"
+            )
+      )
   ) %>% 
   set_variable_labels(
     racethnicity = "Combined race/ethnicity"
@@ -718,7 +729,7 @@ clean <-
   raw %>% 
   rename(weight3 = weight1) %>% 
   set_variable_labels(
-    weight3 = "Post-stratification weights - 18+ general population (gun owner augment) (N=2,124)"
+    weight3 = "Post-stratification weights - 18+ general population (N=2,124)"
   )
 ```
 

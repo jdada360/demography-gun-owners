@@ -276,11 +276,11 @@ raw <-
         racethnicity,
         levels = 1:5,
         labels =
-          c("White, non-Hispanic",
-            "Black, non-Hispanic",
-            "Other, non-Hispanic",
+          c("White, Non-Hispanic",
+            "Black, Non-Hispanic",
+            "Other, Non-Hispanic",
             "Hispanic",
-            "2+, non-Hispanic"
+            "2+ Races, non-Hispanic"
             )
       )
   ) %>% 
@@ -817,7 +817,8 @@ raw <-
       ownrifle = "Do you personally own any rifles?", 
       ownshot = "Do you personally own any shotguns?",
       ownother = "Do you personally own any other types of guns?"
-    )
+    ) %>% 
+  select(-pa0128)
 ```
 
 ```{r}

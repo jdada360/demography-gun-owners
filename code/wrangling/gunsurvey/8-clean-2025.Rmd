@@ -660,7 +660,7 @@ Are you a member of the National Rifle Association--also known as the NRA? = `q3
 
 Have you ever been a member of the National Rifle Association--also known as the NRA? = `q39b` = `nraever`
 
-There are `r nrow(filter(raw, q39b =="NA"))` observations with NA hardcoded for `q39b`. This corresponds to people who said in `q39a` that they are current members of the NRA or skipped/refused to answer `q39a`.
+There are some observations with NA hardcoded for `q39b`. This corresponds to people who said in `q39a` that they are current members of the NRA or skipped/refused to answer `q39a`.
 
 I group together  "Skipped on web", "Refused" as "Unknown"
 
@@ -708,7 +708,7 @@ raw %>% tabyl(nranow, nraever)
 
 Do you happen to have in your home or garage any guns or revolvers? = `q40` = `gunhome`
 
-Do any of these guns personally belong to you? = `gunhomeper`. There are `r nrow(filter(raw, q41 =="NA"))` observations with NA hardcoded for `q41`. This corresponds to people who said answered no to q40.
+Do any of these guns personally belong to you? = `gunhomeper`. There are some observations with NA hardcoded for `q41`. This corresponds to people who said answered no to q40.
 
 ```{r}
 raw %>% tabyl(q40)
@@ -930,8 +930,7 @@ raw <-
       )
   ) %>% 
   set_variable_labels(
-    firstgun7 = "At what age did you buy your first gun? 7 categories",
-    firstgun = "At what age did you buy your first gun?"
+    
   )
 ```
 
