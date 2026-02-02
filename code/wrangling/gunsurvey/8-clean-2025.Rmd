@@ -14,7 +14,7 @@ Note that all of the demographic variables are the same as the 2021 survey.
 
 **Last ran**
 
--   01/31/26
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
 
 ```{r,  message = FALSE, warning = FALSE}
 packages <-
@@ -396,21 +396,8 @@ raw %>% tabyl(marital)
 raw <-
   raw %>% 
   mutate(
-    marital = 
-      factor(
-        marital, 
-        levels = 1:6,
-        labels = 
-          c(
-            "Married",
-            "Widowed",
-            "Divorced",
-            "Separated",
-            "Never married",
-            "Living with partner"
-          )
-      )
-  )  %>% 
+    marital = droplevels(as_factor(marital))
+    ) %>% 
   set_variable_labels(
     marital = "Marital status"
   )
@@ -430,21 +417,7 @@ raw %>% tabyl(employ)
 raw <-
   raw %>% 
   mutate(
-    employ = 
-      factor(
-        employ, 
-        levels = 1:7, 
-        labels = 
-          c(
-            "Working - as a paid employee",
-            "Working - self-employed",
-            "Not working - on temporary layoff from a job",
-            "Not working - looking for work",
-            "Not working - retired",
-            "Not working - disabled",
-            "Not working - other"
-          )
-      )
+    employ = droplevels(as_factor(employ))
   )   %>% 
   set_variable_labels(
     employ = "Current employment status"
@@ -557,34 +530,10 @@ walk(
 
 ```{r}
 raw <-
-  raw %>% 
+  raw %>%  
   mutate(
-    region4 = 
-      factor(
-        region4, 
-        levels = 1:4,
-        labels =
-          c("Northeast",
-            "Midwest",
-            "South",
-            "West")
-      ),
-    region9 = 
-      factor(
-        region9, 
-        levels = 1:9,
-        labels =
-          c("New England",
-            "Mid-Atlantic",
-            "East North Central",
-            "West North Central",
-            "South Atlantic",
-            "East South Central",
-            "West South Central",
-            "Mountain",
-            "Pacific")
-      )
-  )  %>% 
+    across(starts_with("region"), ~ droplevels(as_factor(.x)))
+    )  %>% 
   set_variable_labels(
     region4 = "4-level region",
     region9 = "9-level region"
@@ -608,12 +557,7 @@ raw %>% tabyl(metro)
 raw <-
   raw %>% 
   mutate(
-    metro = 
-      factor(
-        metro, 
-        levels = 0:1, 
-        labels = c("Non-Metro Area", "Metro Area")
-      )
+    metro = droplevels(as_factor(metro)) 
   ) %>% 
   set_variable_labels(
     metro = "Metropolitan area flag"
@@ -634,13 +578,7 @@ raw %>% tabyl(internet)
 raw <-
   raw %>% 
   mutate(
-    internet = 
-      factor(
-        internet,
-        levels = 0:1,
-        labels = c("Non-internet household",
-                   "Internet household")
-      )
+    internet = droplevels(as_factor(internet)) 
   ) %>% 
   set_variable_labels(
     internet = "HH internet access via dial-up, DSL, or cable broadband at home"
@@ -661,17 +599,7 @@ raw %>% tabyl(housing)
 raw <-
   raw %>% 
   mutate(
-    housing = 
-      factor(
-        housing, 
-        levels = 1:3,
-        labels = 
-            c(
-              "Owned or being bought by you or someone in your household",
-              "Rented for cash",
-              "Occupied without payment of cash rent"
-              )
-      )
+    housing = droplevels(as_factor(housing))
   ) %>% 
   set_variable_labels(
     housing = "Home ownership"
@@ -692,17 +620,7 @@ raw %>% tabyl(home_type)
 raw <- 
   raw %>% 
   mutate(
-    home_type = 
-      factor(
-        home_type, 
-        levels = 1:5, 
-        labels = 
-          c("A one-family house detached from any other house",
-            "A one-family house attached to one or more houses",
-            "A building with 2 or more apartments",
-            "A mobile home or trailer",
-            "Boat, RV, van, etc")
-      )
+    home_type = as_factor(home_type)
   ) %>% 
   set_variable_labels(
     home_type = "Type of building of panelists' residence"
@@ -724,18 +642,7 @@ raw %>% tabyl(phoneservice)
 raw <-
   raw %>% 
   mutate(
-    phoneservice = 
-      factor(
-        phoneservice,
-        levels = 1:5,
-        labels = 
-          c("Landline telephone only",
-            "Have a landline, but mostly use cellphone",
-            "Have cellphone, but mostly use landline",
-            "Cellphone only",
-            "No telephone service"
-            )
-      )
+    phoneservice = as_factor(phoneservice)
   ) %>% 
   set_variable_labels(
     phoneservice = "Telephone service for the household"
@@ -1062,6 +969,7 @@ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun o
 ## Explore demographic variables
 
 ### Gun owners
+
 ```{r}
 demovars <-
   c(

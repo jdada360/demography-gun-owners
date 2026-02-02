@@ -14,7 +14,7 @@ Note that all of the demographic variables are the same as the 2021 survey.
 
 **Last ran**
 
--   01/27/26
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
 
 ```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 packages <-

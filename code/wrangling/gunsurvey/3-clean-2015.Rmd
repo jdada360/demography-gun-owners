@@ -44,7 +44,7 @@ List of variables are different/not available in comparison to later survey year
 
 **Last ran**
 
--   02/02/26
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
 
 ```{r,  message = FALSE, warning = FALSE, echo = FALSE}
 
@@ -499,7 +499,6 @@ raw <-
     region4 = "4-level region",
     region9 = "9-level region"
   )
-
 ```
 
 ```{r}
@@ -518,7 +517,7 @@ raw <-
   raw %>% 
   rename(metro = msacat) %>% 
   mutate(
-    metro = droplevels(as_factor(metro)) 
+    metro = as_factor(metro)
   ) %>% 
   set_variable_labels(
     metro = "Metropolitan area flag"
@@ -752,7 +751,7 @@ All respondents (general population and gun owner augment) were weighted togethe
 
     -   **We use this when looking at gun owners.**
     
-There are 25 rows with missing data on `weight3`. According to the documentation, the sample size of the total respondents is the number of observations in the data set (`r nrow(clean)`) minus 25 = 1326. So we drop these observations.
+There are 25 rows with missing data on `weight3`. According to the documentation, the sample size of the total respondents is the number of observations in the data set minus 25 = 1326. So we drop these observations.
 
 ```{r}
 clean <-
