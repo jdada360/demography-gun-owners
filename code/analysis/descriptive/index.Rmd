@@ -1,7 +1,7 @@
 --- 
-title: "Gun Survey Data Cleaning"
+title: "Descriptive Analysis"
 author: "Joy Dada"
-date: '`r format(Sys.Date(), format = "%A %B %d %Y")`'
+date: '`r format(Sys.Date(), format = "%A, %B %d, %Y")`'
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 documentclass: book

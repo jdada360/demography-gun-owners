@@ -1,0 +1,93 @@
+# Gum Ownership Over Time
+
+This chapter creates a descriptive table and figure that focuses on how the "percentage of US adults that are gun owners" changes from 2013 to 2025. We use `weight` for this analysis, which is the General population weight.
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-all.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "janitor",
+    "dplyr",
+    "here",
+    "vtable"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+all <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "clean",
+      "gs-all.rds"
+      )
+  )
+```
+
+
+## Table
+
+```{r}
+demovars <-
+  c(
+    "gunowner",
+    "gender",
+    "age4",
+    "race",
+    "educ5",
+    "employ",
+    "income4",
+    "hhsize4",
+    "marital",
+    "region4"
+  )
+
+summstats <-
+  c("notNA(x)", "mean(x)")
+summnames <-
+  c("Observations", "Mean")
+```
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  gun %>% filter(year > 2019 | year < 2017),
+  vars = demovars,
+  group.weights = "weight",
+  group = "year",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary",
+  out = "kable",
+  numformat = "comma",
+  labels =  T
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
+```
