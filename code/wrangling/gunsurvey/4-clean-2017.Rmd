@@ -135,6 +135,39 @@ raw <-
   )
 ```
 
+##  Sample
+
+In 2017, there is not an explicit variable for this so we define it based on `q31`.
+
+```{r}
+raw %>% tabyl(q31)
+```
+
+```{r}
+raw <- 
+  raw %>% 
+  mutate(
+    sample = 
+      case_when(
+        q31 == 1 ~ 2,
+        TRUE ~ 1
+      ) %>% 
+      factor(
+        levels = 1:2,
+        labels = 
+          c("General population", "Gun Owner")
+        )
+    )%>% 
+  set_variable_labels(
+    sample = "Type of Respondents"
+  )
+```
+
+```{r}
+raw %>% tabyl(sample)
+```
+
+
 ## Gender
 
 ```{r}
@@ -727,9 +760,10 @@ I am unsure if this can be used for analysis among gun owners.
 ```{r}
 clean <-
   raw %>% 
-  rename(weight3 = weight1) %>% 
   set_variable_labels(
-    weight3 = "Post-stratification weights - 18+ general population (N=2,124)"
+   weight1 = "Post-stratification weights - 18+ general population",
+    weight2 = "Post-Stratification Weight for total sample, 18+ US adults with no guns in HH, gun owners, and guns in HHs",
+weight3 = "Post-stratified weights for gun owners"
   )
 ```
 
@@ -766,9 +800,9 @@ summnames <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean %>% filter(gunhomeper == "Yes"),
+  clean %>% filter(sample == "Gun Owners"),
   vars = demovars,
-  group.weights = "weight3",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among gun owners",
@@ -804,9 +838,9 @@ demovars <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean,
+  clean %>% filter(sample == "General population"),
   vars = demovars,
-  group.weights = "weight3",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among full sample",

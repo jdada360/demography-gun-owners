@@ -163,20 +163,51 @@ gun <-
     # Respondent personally owns a gun
     "xpa0122",
     # NRA
-    "q23",
-    # Gun sample (main or augment)
-    "xgun"
+    "q23"
   )
 ```
 
 ```{r}
 raw <-
   source %>% 
-  rename(caseid = case_id) %>% 
+  rename(
+    caseid = case_id,
+    # used to select general population sample
+    sample = xgun 
+    ) %>%
   select(
-    starts_with(c("caseid", "weight")),
+    starts_with(c("caseid", "weight", "sample")),
     all_of(c(demovars, gun))
   )
+```
+
+##  Sample
+
+This variable is used to restrict the sample to the general population sample or the gun augment sample. We use the first when we are making general population inference.
+
+```{r}
+raw %>% tabyl(sample)
+```
+
+```{r}
+raw <- 
+  raw %>% 
+  mutate(
+    sample = 
+      factor(
+        sample,
+        levels = 1:2,
+        labels = 
+          c("General population",
+            "Gun Owners")
+      )) %>% 
+  set_variable_labels(
+    sample = "Type of Respondents"
+  )
+```
+
+```{r}
+raw %>% tabyl(sample)
 ```
 
 ## Gender
@@ -243,7 +274,18 @@ raw <-
   raw %>% 
   rename(racethnicity = ethm) %>% 
   mutate(
-    racethnicity = droplevels(as_factor(racethnicity))
+    racethnicity = 
+      factor(
+        racethnicity,
+        levels = 1:5,
+        labels =
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Other, non-Hispanic",
+            "Hispanic",
+            "2+ Races, non-Hispanic"
+            )
+      )
   ) %>% 
   set_variable_labels(
     racethnicity = "Combined race/ethnicity"
@@ -632,11 +674,8 @@ raw %>% tabyl(nranow)
 
 -   Respondent personally owns a gun (`xpa0122`)
 
-- `gun` = gun sample (augment, or main)
-
 ```{r}
 raw %>% tabyl(xpa0122)
-raw %>% tabyl(xgun)
 ```
 
 ```{r}
@@ -644,7 +683,6 @@ raw <-
   raw %>% 
   rename(
     gunhomeper = xpa0122,
-    gun = xgun
     ) %>% 
   mutate(
     gunhomeper = 
@@ -653,12 +691,10 @@ raw <-
         levels = c(1:2),
         labels =
           c("Yes", "No")
-        ),
-    gun = as_factor(gun)
+        )
     ) %>% 
   set_variable_labels(
-    gunhomeper = "Respondent personally owns a gun",
-    gun = "Gun sample"
+    gunhomeper = "Respondent personally owns a gun"
     ) 
 ```
 
@@ -756,12 +792,8 @@ There are 25 rows with missing data on `weight3`. According to the documentation
 ```{r}
 clean <-
   raw %>% 
-  filter(!is.na(weight3)) %>% 
-  rename(
-    weight = weight1
-    ) %>% 
   set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population",
+    weight1 = "Post-stratification weights - 18+ general population",
     weight2 = "Post-Stratification Weight for total sample, 18+ US adults with no guns in HH, gun owners, and guns in HHs",
 weight3 = "Post-stratified weights for gun owners"
   )
@@ -781,13 +813,12 @@ colSums(is.na(clean))
 demovars <-
   c(
     "age4",
-    "hhsize",
     "gender",
     "racethnicity",
     "educ5",
     "marital",
     "employ",
-    "income",
+    "income9",
     "internet",
     "home_type"
   )
@@ -800,7 +831,7 @@ summnames <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean %>% filter(gunhomeper == "Yes"),
+  filter(clean, sample == "Gun Owners"),
   vars = demovars,
   group.weights = "weight3",
   summ = summstats,
@@ -823,14 +854,12 @@ st(
 demovars <-
   c(
     "gunhomeper",
-    "age4",
-    "hhsize",
     "gender",
     "racethnicity",
     "educ5",
     "marital",
     "employ",
-    "income",
+    "income9",
     "internet",
     "home_type"
   )
@@ -838,9 +867,9 @@ demovars <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean,
+  filter(clean, sample == "General population"),
   vars = demovars,
-  group.weights = "weight",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among full sample",
@@ -867,4 +896,8 @@ write_rds(
     "gs-2015.rds"
     )
   ) 
+```
+
+```{r}
+nrow(clean)
 ```

@@ -177,10 +177,35 @@ gun <-
 raw <-
   source %>% 
   clean_names() %>% 
+  rename(
+    # used to select general population sample
+    sample = xsample 
+  ) %>% 
   select(
-    starts_with(c("caseid", "weight")),
+    starts_with(c("caseid", "weight", "sample")),
     all_of(c(demovars, gun))
   )
+```
+
+##  Sample
+
+This variable is used to restrict the sample to the general population sample or the gun augment sample. We use the first when we are making general population inference.
+
+```{r}
+raw %>% tabyl(sample)
+```
+
+```{r}
+raw <- 
+  raw %>% 
+  mutate(sample = as_factor(sample)) %>% 
+  set_variable_labels(
+    sample = "Type of Respondents"
+  )
+```
+
+```{r}
+raw %>% tabyl(sample)
 ```
 
 ## Gender
@@ -193,12 +218,7 @@ raw %>% tabyl(gender)
 raw <-
   raw %>% 
   mutate(
-    gender =
-      factor(
-        gender,
-        levels = 1:2,
-        labels = c("Male", "Female")
-      )
+    gender = droplevels(as_factor(gender))
   ) %>% 
   set_variable_labels(
     gender = "Respondent gender"
@@ -222,29 +242,10 @@ raw <-
   rename(age4 = agect4,
          age7 = agecat) %>% 
   mutate(
-    age4 = 
-      factor(
-        age4,
-        levels = 1:4,
-        labels =
-          c("18-29",
-            "30-44",
-            "45-59",
-            "60+")
-      ),
-    age7 = 
-      factor(
-        age7,
-        levels = 1:7,
-        labels =
-          c("18-24",
-            "25-34",
-            "35-44",
-            "45-54",
-            "55-64",
-            "65-74",
-            "75+")
-      )
+    across(
+      c("age4", "age7"),
+      ~ droplevels(as_factor(.x))
+    )
   ) %>% 
   set_variable_labels(
     age = "Age",
@@ -276,9 +277,9 @@ raw <-
         racethnicity,
         levels = 1:5,
         labels =
-          c("White, Non-Hispanic",
-            "Black, Non-Hispanic",
-            "Other, Non-Hispanic",
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Other, non-Hispanic",
             "Hispanic",
             "2+ Races, non-Hispanic"
             )
@@ -391,23 +392,7 @@ raw %>% tabyl(work)
 raw <-
   raw %>% 
   rename(employ = work) %>% 
-  mutate(
-    employ = 
-      factor(
-        employ, 
-        levels = 1:7, 
-        labels = 
-          c(
-            "Working - as a paid employee",
-            "Working - self-employed",
-            "Not working - on temporary layoff from a job",
-            "Not working - looking for work",
-            "Not working - retired",
-            "Not working - disabled",
-            "Not working - other"
-          )
-      )
-  )   %>% 
+  mutate(employ = droplevels(as_factor(employ))) %>% 
   set_variable_labels(
     employ = "Current employment status"
   )
@@ -421,7 +406,7 @@ raw %>% tabyl(employ)
 
 We construct 2 variables: `income4` and `income5` to match 2021 and 2023 data.
 
-Note that in later years, the income variable splits 175-199,999 and then 200,000 + but here it is 175,000+. We leave this as is because we will likely never use this variable, rather we will use the income4 or income9 variables. This income variable also splits the sample into different categories as the later years. We attempt to harmonize it as much as possible.
+Note that in later years, the income variable splits 175-199,999 and then 200,000+ but here it is 175,000+. We leave this as is because we will likely never use this variable, rather we will use the income4 or income9 variables. This income variable also splits the sample into different categories as the later years. We attempt to harmonize it as much as possible.
 
 ```{r}
 raw %>% tabyl(incimp)
@@ -731,9 +716,9 @@ raw %>% tabyl(party7, party5)
 
 ## Gun ownership
 
--   Respondent personally owns a gun (xpa0122)
+-   Respondent personally owns a gun (`xpa0122`)
 
--   Respondent has a gun in household but is not owner (xpa0117)
+-   Respondent has a gun in household but is not owner (`xpa0117`)
 
 In the later survey years, this corresponds to
 
@@ -921,8 +906,15 @@ raw <-
     everpar = ever_par
   ) %>% 
   mutate(
-    across(all_of(vname), ~ droplevels(as_factor(.x))),
-    corepar = fct_na_value_to_level(corepar, level = "Unknown")
+    across(
+      all_of(vname), 
+      ~ droplevels(as_factor(.x))
+      ),
+    corepar = 
+      fct_na_value_to_level(
+        corepar, 
+        level = "Unknown"
+        )
   ) %>% 
   set_variable_labels(
     corepar = "Is respondent a parent or legal guardian?",
@@ -964,11 +956,8 @@ Notice here that the weight numbering here is different to 2021- waves of the su
 ```{r}
 clean <-
   raw %>% 
-  rename(
-    weight = weight1
-    ) %>% 
   set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population",
+    weight1 = "Post-stratification weights - 18+ general population",
     weight2 = "Post-Stratification Weight for total sample, 18+ US adults with no guns in HH, gun owners, and guns in HHs",
 weight3 = "Post-stratified weights for gun owners",
 weight4 = "Post-stratified weights for gun households"
@@ -986,30 +975,36 @@ colSums(is.na(clean))
 ### Gun owners
 
 ```{r}
+clean %>% tabyl(sample, gunhomeper)
+```
+
+```{r}
 demovars <-
   c(
-    "age",
-    "hhsize",
+    "age4",
     "gender",
     "racethnicity",
     "educ5",
     "marital",
     "employ",
-    "income",
+    "income4",
     "internet",
     "home_type",
     "party7"
   )
 
 summstats <-
-  c("notNA(x)", "mean(x)", "sd(x)")
+  c("notNA(x)", "mean(x)")
 summnames <-
-  c("Observations", "Mean", "SD")
+  c("Observations", "Mean")
 ```
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean %>% filter(gunhomeper == "Yes"),
+  filter(
+    clean,
+    sample == "Gun Owners",
+    ),
   vars = demovars,
   group.weights = "weight3",
   summ = summstats,
@@ -1025,20 +1020,20 @@ st(
   ) %>% 
   scroll_box(width = "800px", height = "500px")
 ```
+
 ### Full sample
 
 ```{r}
 demovars <-
   c(
     "gunhomeper",
-    "age",
-    "hhsize",
+    "age4",
     "gender",
     "racethnicity",
     "educ5",
     "marital",
     "employ",
-    "income",
+    "income4",
     "internet",
     "home_type",
     "party7"
@@ -1048,9 +1043,9 @@ demovars <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean,
+  filter(clean, sample == "General population"),
   vars = demovars,
-  group.weights = "weight2",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among full sample",
