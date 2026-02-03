@@ -453,7 +453,7 @@ summnames <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  gun %>% filter(year > 2019),
+  gun %>% filter(year > 2019 | year < 2017),
   vars = demovars,
   group.weights = "weight",
   group = "year",

@@ -840,7 +840,7 @@ demovars <-
 st(
   clean,
   vars = demovars,
-  group.weights = "weight2",
+  group.weights = "weight",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among full sample",
