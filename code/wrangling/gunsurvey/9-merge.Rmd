@@ -98,7 +98,7 @@ Within years, the `caseid` is the ID variable. We redefine `caseid` to be unique
 merge <-
   source %>% 
   select(-caseid) %>% 
-  arrange(year, weight) %>% 
+  arrange(year) %>% 
   mutate(caseid = row_number())
 ```
 
@@ -106,16 +106,16 @@ merge <-
 
 We save 2 data sets: gun owners, and all US citizens.
 
-We use `gunhomeper` and we rename it to `gunowner`
+We use `gunhomeper` and we rename it to `gun`
 
 ```{r}
 merge %>% tabyl(gunhomeper) 
 ```
 
 ```{r}
-gun <-
+merge <-
   merge %>% 
-  rename(gunowner = gunhomeper)
+  rename(gun = gunhomeper)
 ```
 
 ## Check that the common columns are all non-missing
@@ -125,10 +125,9 @@ Different survey years have different questions, but they key demographic variab
 ```{r}
 commonvars <-
   c(
-    "weight3",
     "caseid",
     "year",
-    "gunowner",
+    "gun",
     "age4",
     "gender",
     "racethnicity",
@@ -138,7 +137,6 @@ commonvars <-
     "income9",
     "state",
     "region4",
-    "region9",
     "metro",
     "internet",
     "housing",
@@ -147,10 +145,10 @@ commonvars <-
 ```
 
 ```{r}
-gun %>% 
+merge %>% 
   select(all_of(commonvars)) %>% 
   filter(
-    gunowner == "Yes",
+    gun == "Yes",
     if_any(commonvars, is.na)
     ) %>% 
   nrow() == 0
@@ -163,16 +161,16 @@ gun %>%
 -   `hhsize4` = categorical = weighted by weight3 - gun owner
 
 ```{r}
-gun %>% tabyl(hhsize)
+merge %>% tabyl(hhsize)
 ```
 
 ```{r}
-gun <-
-  gun %>%  
+merge <-
+  merge %>%  
   mutate( 
     hh18un = hhsize - hh18ov, 
     hhsize4 = 
-      xtile(hhsize, wt = weight3, n = 3) %>% 
+      xtile(hhsize, wt = weight1, n = 3) %>% 
       factor(
         levels = 1:3,
         labels = c("Small", "Medium", "Large")
@@ -181,7 +179,7 @@ gun <-
 ```
 
 ```{r}
-gun %>% tabyl(hhsize4)
+merge %>% tabyl(hhsize4)
 ```
 
 ## Do not group Asian, non-Hispanic into other non-Hispanic
@@ -190,80 +188,27 @@ Note that Asian, non-Hispanic only became a category later on. We choose not to 
 in gun ownership in this group.
 
 ```{r}
-gun %>% tabyl(racethnicity)
+merge %>% tabyl(racethnicity)
 ```
-
-```{r}
-gun <-
-  gun %>% 
-  mutate(
-    racethnicity =
-      case_when(
-        grepl("White", racethnicity) ~ "White, non-Hispanic",
-        grepl("Black", racethnicity) ~ "Black, non-Hispanic",
-        grepl("2", racethnicity) ~ "2+ races, non-Hispanic",
-        grepl("Other", racethnicity)  ~ "Other, non-Hispanic",
-        TRUE ~ racethnicity
-      ) %>% 
-      factor
-  ) %>% 
-  rename(race = racethnicity)
-```
-
-```{r}
-gun %>% tabyl(race)
-```
-
-## Fix weight
-
-For 2017 and 2019, there are no gun owner/non-gun owner specific weight (i.e., normalised within groups), so we have to use the gen pop weights for the analysis of gun owners. If we want to compare gun owners to non-gunowners, we have to use the gen-pop weights. So we fill `weight` with `weight3` for those years.
-
-There will be missing values for weight for years < 2019 because it does not include the gun owner augment (which creates a weight that is non-missing for all observations, i.e., `weight2`, and then scales that weight to be used for within gun-owner analysis, i.e., `weight3`)
-
-```{r}
-gun %>% 
-  filter(is.na(weight)) %>% 
-  tabyl(year)
-```
-
-```{r}
-gun <-
-  gun %>% 
-  mutate(
-    weight =
-      case_when(
-        year %in% 2017:2019 ~ weight3,
-        TRUE ~ weight
-      )
-  )
-```
-
-```{r}
-gun %>% 
-  filter(is.na(weight)) %>% 
-  tabyl(year)
-```
-
-Note that missing values for `weight` in 2013 and 2015 are normal.
 
 ## Relabel variables
 
 ```{r}
-gun <-
-  gun %>% 
+merge <-
+  merge %>% 
   set_variable_labels(
     year = "Year",
-    gender = "Respondent gender",
-    gender_as = "Respondent gender, assigned at birth",
-    gender_tr = "Respondent transgender identity",
-    lgbt = "Respondent sexual identity",
+    gender = "Gender",
+    gender_as = "Gender, assigned at birth",
+    gender_tr = "Transgender identity",
+    lgbt = "Sexual identity",
     age = "Age",
     age4 = "Age",
     age7 = "Age",
     educ5 = "Highest level of education",
     educ = "Highest level of education",
     employ = "Current employment status",
-    race = "Combined race and ethnicity",
+    racethnicity = "Race and ethnicity",
     marital = "Marital status",
     income = "Household income",
     income4 = "Household income",
@@ -297,7 +242,7 @@ gun <-
     goanow = "Are you a member of any other gun rights groups such as Gun Owners of America?",
     mdanow = "Are you a member of any gun safety groups such as Moms Demand Action or Everytown for Gun Safety?",
     gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
-    gunowner = "Gun owner",
+    gun = "Gun owner",
     gun2020 = "Have you bought any guns since January 1, 2020?",
     firstgun2020 = "Did you buy your first gun after January 1, 2020?",
     racialgun2020 = "Was your purchase after January 1, 2020 motivated by concerns of racial violence?",
@@ -311,13 +256,12 @@ gun <-
     votereason22 = "In talking to people about elections, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you?",
     votecandi20 = "Who did you vote for in the 2020 election?",
     votediff22 = "How easy or difficult was it for you to vote in the 2022 election?",
-    weight = "Post-stratification weights - 18+ general population",
+    weight1 = "Post-stratification weights - 18+ general population",
     weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other)",
-weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners)",
+ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners)",
   weight4 = "Post-stratified weights for gun households",
-  gun = "Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes",
   firstgun7 = "At what age did you buy your first gun? 7 categories",
-    firstgun = "At what age did you buy your first gun?",
+  firstgun = "At what age did you buy your first gun?",
   victim = "Have you ever been the victim of a crime involving a gun?"
   )
 ```
@@ -326,9 +270,17 @@ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun o
 
 We remove variables that are redundant because other variables cover them or they are only available for 1 year.
 
+We have ownership by the type of gun in 2013, 2023, and 2025.
+
 ```{r}
-gun <-
-  gun %>% 
+merge %>% 
+  filter(if_any(starts_with("own"), ~ !is.na(.x))) %>% 
+  tabyl(year)
+```
+
+```{r}
+merge <-
+  merge %>% 
   select(
     -c(
       educ4
@@ -336,19 +288,176 @@ gun <-
   )
 ```
 
-## Missing values
 
-## Check for missing values
+## Create general population sample
+
+For 2013, 2015 we restrict to gen pop sample and then merge with all other years.
+
+We keep only weight1 for this analysis. If weight1 is missing, we drop.
+
+```{r}
+gen <-
+  merge %>% 
+  filter(
+    !(year %in%  2013:2015 & is.na(weight1)),
+    !is.na(weight1)
+    ) %>% 
+  select(-c(weight2, weight3)) %>% 
+  rename(weight = weight1)
+```
+
+### Export data
+
+```{r}
+skim(gen, c(caseid, weight, hhsize, age, gun, income9, educ5))
+```
+
+```{r}
+gen <-
+  gen %>% 
+  select(
+    caseid, year,
+    starts_with("weight"),
+    starts_with("gun"),
+    starts_with("age"),
+    everything()
+  )
+```
+
+```{r}
+write_rds(
+  gen,
+  here(
+    cleanfold,
+    "gs-gen-pop.rds"
+  )
+)
+```
+
+## Create gun owner sample
+
+For 2013 and 2015, we must restrict the sample to gun-owners
+
+```{r}
+gun <-
+  merge %>% 
+  filter(
+    !(year %in% 2013:2015 & sample != "Gun Owners")
+    ) 
+```
 
 ```{r}
 colSums(is.na(gun))
-``` 
+```
 
+### Fix weight
 
-## Export data
+For 2017 and 2019, there are no gun owner/non-gun owner specific weight (i.e., normalized within groups), so we have to use the gen pop weights for the analysis of gun owners. If we want to compare gun owners to non-gun owners, we have to use the gen-pop weights. So we fill `weight1` with `weight3` for those years.
+
+In 2015, there are 4 observations that are gun owners but have missing values for all weights. We drop them.
+
+After the weight is fixed, we drop any missing values for `weight3.`
 
 ```{r}
-final <-
+gun %>% 
+  filter(is.na(weight3)) %>% 
+  tabyl(year)
+```
+
+```{r}
+gun <-
+  gun %>% 
+  mutate(
+    weight =
+      case_when(
+        year %in% 2017:2019 ~ weight1,
+        TRUE ~ weight3
+      )
+  ) %>% 
+  filter(!is.na(weight)) %>% 
+  select(-c(sample, weight1, weight2, weight3, weight4))
+```
+
+```{r}
+gun %>% filter(is.na(weight)) %>% nrow() == 0
+```
+
+
+```{r}
+gun %>% tabyl(year)
+```
+
+### Restrict to gun owners
+
+```{r}
+gun %>% tabyl(gun)
+```
+
+```{r}
+gun <-
+  gun %>%
+  filter(gun == "Yes") 
+```
+
+```{r}
+gun %>% tabyl(year)
+```
+
+### Harmonize gun ownership variables
+
+If a gun owner refuses to answer to the question about what kind of gun they own in the years the question is asked, we code this as saying that they own another type 
+of gun.
+
+In the years that the question is not asked, we code this as "Question not asked".
+
+```{r}
+gun %>% tabyl(gun, ownrifle)
+```
+
+```{r}
+gun <-
+  gun %>% 
+  mutate(
+    ownother =
+      case_when(
+        if_all(
+          c(ownhandgun, ownrifle, ownshot),
+          ~ .x == "Unknown"
+          ) ~ "Yes",
+        TRUE ~ ownother
+      )
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    across(
+      starts_with("own"),
+      ~ fct_na_value_to_level(.x, level = "Question not asked") 
+    )
+  )
+```
+
+```{r}
+walk(
+    gun %>% select(starts_with("own")) %>% names(),
+  ~ print(gun %>% tabyl(.x))
+)
+```
+
+### Harmonize gender
+
+```{r}
+
+```
+
+### Export data
+
+```{r}
+skim(gun, c(caseid, weight, hhsize, age, gun, income9, educ5, ownshot))
+```
+
+
+```{r}
+gun <-
   gun %>% 
   select(
     caseid, year,
@@ -361,6 +470,17 @@ final <-
 
 ```{r}
 write_rds(
+  gun,
+  here(
+    cleanfold,
+    "gs-gun-owners.rds"
+  )
+)
+```
+
+
+```{r}
+write_rds(
   final,
   here(
     cleanfold,
@@ -368,27 +488,6 @@ write_rds(
   )
 )
 ```
-
-
-## Split into gun owners
-
-```{r}
-gunonly <-
-  final %>% 
-  filter(gunowner == "Yes")
-```
-
-
-```{r}
-write_rds(
-  gunonly,
-  here(
-    cleanfold,
-    "gs-gun.rds"
-  )
-)
-```
-
 
 ## Explore demographics
 
@@ -399,7 +498,7 @@ demovars <-
   c(
     "gender",
     "age4",
-    "race",
+    "racethnicity",
     "educ5",
     "employ",
     "income4",
@@ -416,9 +515,9 @@ summnames <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  gunonly %>% filter(year > 2019),
+  gun,
   vars = demovars,
-  group.weights = "weight3",
+  group.weights = "weight",
   group = "year",
   summ = summstats,
   summ.names = summnames,
@@ -437,13 +536,21 @@ st(
 
 ### Full sample
 
+Online sources suggest gun ownership should be around 29\% in 2019 but it is around 36% in this data.
+
+2017 matches online sources at around 30\%.
+
+2013 is a lot lower than online sources at around 33\% so perhaps restricting to remove missing values from weight 1 is enough.
+
+Allegedly This data is supposed to give a personal gun ownership of ~39–40\% in 2017
+
 ```{r}
 demovars <-
   c(
-    "gunowner",
+    "gun",
     "gender",
     "age4",
-    "race",
+    "racethnicity",
     "educ5",
     "employ",
     "income4",
@@ -460,7 +567,7 @@ summnames <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  gun %>% filter(year > 2019 | year < 2017),
+  gen,
   vars = demovars,
   group.weights = "weight",
   group = "year",

@@ -785,15 +785,18 @@ raw <-
     across(
         starts_with("own"),
         ~ case_when(
-          is.na(.x) ~ 100,
+          is.na(.x) & gunhomeper != "Yes" ~ 100,
+          is.na(.x) ~ 99,
           TRUE ~ .x
         ) %>% 
           factor(
-            levels = c(1, 0, 100),
+            levels = c(1, 0, 99:100),
             labels =
               c("Yes", 
                 "No",
-                "Non-gun owner")
+                "Unknown",
+                "Non-gun owner"
+                )
           )
     )
   )  %>% 
@@ -1072,4 +1075,8 @@ write_rds(
     "gs-2013.rds"
     )
   ) 
+```
+
+```{r}
+nrow(clean)
 ```

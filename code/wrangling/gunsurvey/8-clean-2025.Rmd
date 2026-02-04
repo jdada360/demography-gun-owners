@@ -140,7 +140,6 @@ demovars <-
 
 gun <-
   c(
-    "gun",
     "q39a",
     "q39b",
     "q40",
@@ -162,36 +161,6 @@ raw <-
     all_of(c(demovars, gun))
   ) %>% 
   rename(caseid = case_id)
-```
-
-## Gun
-
-Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes.
-
-```{r}
-raw %>% tabyl(gun)
-```
-
-```{r}
-raw <-
-  raw %>% 
-  mutate(
-    gun = 
-      factor(
-        gun,
-        levels = 1:2,
-        labels = 
-          c("Gun owner",
-            "Non-gun owner")
-      )
-  ) %>% 
-  set_variable_labels(
-    gun = "Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes"
-  )
-```
-
-```{r}
-raw %>% tabyl(gun)
 ```
 
 ## Gender and sexuality
@@ -341,7 +310,7 @@ raw <-
             "Black, non-Hispanic",
             "Other, non-Hispanic",
             "Hispanic",
-            "2+, non-Hispanic",
+            "2+ Races, non-Hispanic",
             "Asian, non-Hispanic")
       )
   ) %>% 
@@ -784,12 +753,12 @@ raw <-
     across(
       starts_with("own"),
       ~ case_when(
-        is.na(.x) ~ 100,
-        .x %in% c(77, 98:99) ~ 77,
+        is.na(.x) & gunhomeper == "No" ~ 100,
+        is.na(.x) | .x == 77 | .x %in% 98:99 ~ 99,
         TRUE ~ .x
       ) %>% 
         factor(
-          levels = c(1:2, 77, 100),
+          levels = c(1:2, 99:100),
           labels =
             c("Yes", 
               "No",
@@ -954,12 +923,14 @@ raw <-
 
 ## Weights
 
+`weight1` = general population analysis
+`weight3` = gun owner specific analysis
+
 ```{r}
 clean <-
   raw %>% 
-  rename(weight = weight1) %>% 
   set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population",
+    weight1 = "Post-stratification weights - 18+ general population",
     weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other)",
 weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners)"
   )
@@ -972,33 +943,32 @@ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun o
 ```{r}
 demovars <-
   c(
-    "age",
+    "age4",
     "hhsize",
     "gender",
-    "raceethnicity",
-    "educ",
+    "racethnicity",
+    "educ5",
     "marital",
     "employ",
     "income",
     "internet",
-    "home_type",
-    "party7"
+    "home_type"
   )
 
 summstats <-
-  c("notNA(x)", "mean(x)", "sd(x)")
+  c("notNA(x)", "mean(x)")
 summnames <-
-  c("Observations", "Mean", "SD")
+  c("Observations", "Mean")
 ```
 
 ```{r, results = "asis", warning = F, message = F}
 st(
   clean %>% filter(gunhomeper == "Yes"),
   vars = demovars,
-  group.weights = "weight3",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
-  title = "Weighted demographic summary",
+  title = "Weighted demographic summary among gun owners",
   out = "kable",
   numformat = "comma",
   labels =  T
@@ -1013,29 +983,14 @@ st(
 ### Full sample
 
 ```{r}
-demovars <-
-  c(
-    "gunhomeper",
-    "age",
-    "hhsize",
-    "gender",
-    "racethnicity",
-    "educ5",
-    "marital",
-    "employ",
-    "income",
-    "internet",
-    "home_type",
-    "party7"
-  )
+demovars <- c("gunhomeper", demovars)
 ```
-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
   clean,
   vars = demovars,
-  group.weights = "weight",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among full sample",
@@ -1050,7 +1005,6 @@ st(
   scroll_box(width = "800px", height = "500px")
 ```
 
-
 ## Export data
 
 ```{r}
@@ -1063,4 +1017,8 @@ write_rds(
     "gs-2025.rds"
     )
   ) 
+```
+
+```{r}
+nrow(clean)
 ```

@@ -135,39 +135,6 @@ raw <-
   )
 ```
 
-##  Sample
-
-In 2017, there is not an explicit variable for this so we define it based on `q31`.
-
-```{r}
-raw %>% tabyl(q31)
-```
-
-```{r}
-raw <- 
-  raw %>% 
-  mutate(
-    sample = 
-      case_when(
-        q31 == 1 ~ 2,
-        TRUE ~ 1
-      ) %>% 
-      factor(
-        levels = 1:2,
-        labels = 
-          c("General population", "Gun Owner")
-        )
-    )%>% 
-  set_variable_labels(
-    sample = "Type of Respondents"
-  )
-```
-
-```{r}
-raw %>% tabyl(sample)
-```
-
-
 ## Gender
 
 ```{r}
@@ -727,7 +694,7 @@ raw <-
   ) %>% 
   set_variable_labels(
     gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
-    gunhomeper = "Do any of guns or revolvers in your home or garagepersonally belong to you?"
+    gunhomeper = "Do any of guns or revolvers in your home or garage personally belong to you?"
   )
 ```
 
@@ -751,7 +718,7 @@ raw <-
 
 ## Weights
 
-Unlike 2021, and 2023, the only weight available is "Post-stratification weights - 18+ general population (N=2,124)". 
+The only weight available is "Post-stratification weights - 18+ general population (N=2,124)". 
 
 I am unsure if this can be used for analysis among gun owners.
 
@@ -761,9 +728,7 @@ I am unsure if this can be used for analysis among gun owners.
 clean <-
   raw %>% 
   set_variable_labels(
-   weight1 = "Post-stratification weights - 18+ general population",
-    weight2 = "Post-Stratification Weight for total sample, 18+ US adults with no guns in HH, gun owners, and guns in HHs",
-weight3 = "Post-stratified weights for gun owners"
+   weight1 = "Post-stratification weights - 18+ general"
   )
 ```
 
@@ -787,7 +752,7 @@ demovars <-
     "educ5",
     "marital",
     "employ",
-    "income",
+    "income9",
     "internet",
     "home_type"
   )
@@ -800,7 +765,7 @@ summnames <-
 
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean %>% filter(sample == "Gun Owners"),
+  clean,
   vars = demovars,
   group.weights = "weight1",
   summ = summstats,
@@ -830,15 +795,17 @@ demovars <-
     "educ5",
     "marital",
     "employ",
-    "income",
+    "income9",
     "internet",
     "home_type"
   )
 ```
 
+28\% seems high.
+
 ```{r, results = "asis", warning = F, message = F}
 st(
-  clean %>% filter(sample == "General population"),
+  clean,
   vars = demovars,
   group.weights = "weight1",
   summ = summstats,
@@ -870,5 +837,8 @@ write_rds(
 ```
 
 
+```{r}
+nrow(clean)
+```
 
 

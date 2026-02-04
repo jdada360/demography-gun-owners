@@ -217,7 +217,18 @@ raw %>% tabyl(racethnicity)
 raw <-
   raw %>% 
   mutate(
-    racethnicity = as_factor(racethnicity)
+    racethnicity = 
+      factor(
+        racethnicity,
+        levels = 1:6,
+        labels =
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Other, non-Hispanic",
+            "Hispanic",
+            "2+ Races, non-Hispanic",
+            "Asian, non-Hispanic")
+      ) 
   ) %>% 
   set_variable_labels(
     racethnicity = "Combined race/ethnicity"
@@ -736,14 +747,14 @@ raw <-
 
 ## Weights
 
-Unlike 2021, and 2023, the only weight available is "Post-stratification weights - 18+ general population (gun owner augment) (N=1,680)". This says that gun owners were over sampled. This is equivalent to the "Post-stratification weight - 18+ general population" in the other data, so we use it accordingly.
+The only weight available is "Post-stratification weights - 18+ general population (gun owner augment) (N=1,680)"
 
 ```{r}
 clean <-
   raw %>% 
-  rename(weight3 = weight) %>% 
+  rename(weight1 = weight) %>% 
   set_variable_labels(
-    weight3 = "Post-stratification weights - 18+ general population (gun owner augment) (N=1,680)"
+    weight1 = "Post-stratification weights - 18+ general population (gun owner augment) (N=1,680)"
   )
 ```
 
@@ -773,16 +784,16 @@ demovars <-
   )
 
 summstats <-
-  c("notNA(x)", "mean(x)", "sd(x)")
+  c("notNA(x)", "mean(x)")
 summnames <-
-  c("Observations", "Mean", "SD")
+  c("Observations", "Mean")
 ```
 
 ```{r, results = "asis", warning = F, message = F}
 st(
   clean %>% filter(gunhomeper == "Yes"),
   vars = demovars,
-  group.weights = "weight3",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among gun owners",
@@ -820,7 +831,7 @@ demovars <-
 st(
   clean,
   vars = demovars,
-  group.weights = "weight3",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary among full sample",

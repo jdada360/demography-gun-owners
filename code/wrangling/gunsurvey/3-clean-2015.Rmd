@@ -700,7 +700,6 @@ raw <-
 
 ```{r}
 raw %>% tabyl(gunhomeper)
-raw %>% tabyl(gun)
 ```
 
 ## Household variables

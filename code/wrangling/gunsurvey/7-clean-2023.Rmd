@@ -181,8 +181,8 @@ raw <-
 ```
 
 ## Gun
-
-Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes.
+Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes, however, all people who are gunowners (i.e., `gunhomper == 1`) are also identified as gun owners here. So we drop this variable
+to remove confusion.
 
 ```{r}
 raw %>% tabyl(gun)
@@ -191,23 +191,7 @@ raw %>% tabyl(gun)
 ```{r}
 raw <-
   raw %>% 
-  mutate(
-    gun = 
-      factor(
-        gun,
-        levels = 1:2,
-        labels = 
-          c("Gun owner",
-            "Non-gun owner")
-      )
-  ) %>% 
-  set_variable_labels(
-    gun = "Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes"
-  )
-```
-
-```{r}
-raw %>% tabyl(gun)
+  select(-gun)
 ```
 
 ## Gender
@@ -701,67 +685,6 @@ raw <-
 raw %>% tabyl(phoneservice)
 ```
 
-## Gun ownership type
-
-Do you personally own any of the following types of guns?
-
--   `qguntypea` = handguns
-
--   `qguntypeb` = rifles
-
--   `qguntypec` = shotguns
-
--   `qguntyped` = other
-
-```{r}
-walk(
-  c("qguntypea", "qguntypeb", "qguntypec", "qguntyped"),
-  ~ print(raw %>% tabyl(.x))
-)
-```
-
-```{r}
-raw <- 
-  raw %>% 
-  rename(
-    ownhandgun = qguntypea,
-    ownrifle = qguntypeb, 
-    ownshot = qguntypec,
-    ownother = qguntyped
-  ) %>% 
-  mutate(
-    across(
-      starts_with("own"),
-      ~ case_when(
-        is.na(.x) ~ 100,
-        TRUE ~ .x
-      ) %>% 
-        factor(
-          levels = c(1:2, 77, 98:100),
-          labels =
-            c("Yes", 
-              "No",
-              "Don't know",
-              "Skipped on web",
-              "Refused",
-              "Non-gun owner")
-        )
-    )
-  ) %>% 
-    set_variable_labels(
-      ownhandgun = "Do you personally own any hanguns?",
-      ownrifle = "Do you personally own any rifles?", 
-      ownshot = "Do you personally own any shotguns?",
-      ownother = "Do you personally own any other types of guns?"
-    )
-```
-
-```{r}
-walk(
-    raw %>% select(starts_with("own")) %>% names(),
-  ~ print(raw %>% tabyl(.x))
-)
-```
 
 ## Are you a member of the National Rifle Association (Q39a and b)
 
@@ -901,6 +824,69 @@ raw <-
 raw %>% tabyl(gunhome, gunhomeper)
 ```
 
+## Type of gun ownership
+
+Do you personally own any of the following types of guns?
+
+-   `qguntypea` = handguns
+
+-   `qguntypeb` = rifles
+
+-   `qguntypec` = shotguns
+
+-   `qguntyped` = other
+
+```{r}
+walk(
+  c("qguntypea", "qguntypeb", "qguntypec", "qguntyped"),
+  ~ print(raw %>% tabyl(.x))
+)
+```
+
+```{r}
+raw <- 
+  raw %>% 
+  rename(
+    ownhandgun = qguntypea,
+    ownrifle = qguntypeb, 
+    ownshot = qguntypec,
+    ownother = qguntyped
+  ) %>% 
+  mutate(
+    across(
+      starts_with("own"),
+      ~ case_when(
+        is.na(.x) & gunhomeper == "No" ~ 100,
+        is.na(.x) | .x == 77 | .x %in% 98:99 ~ 99,
+        TRUE ~ .x
+      ) %>% 
+        factor(
+          levels = c(1:2, 99:100),
+          labels =
+            c("Yes", 
+              "No",
+              "Unknown",
+              "Non-gun owner")
+        )
+    )
+  ) %>% 
+    set_variable_labels(
+      ownhandgun = "Do you personally own any hanguns?",
+      ownrifle = "Do you personally own any rifles?", 
+      ownshot = "Do you personally own any shotguns?",
+      ownother = "Do you personally own any other types of guns?"
+    )
+```
+
+```{r}
+walk(
+    raw %>% select(starts_with("own")) %>% names(),
+  ~ print(raw %>% tabyl(.x))
+)
+```
+
+
+
 ##  Have you bought any guns since January 1, 2020? (Q42_23, Q43_23a-c)
 
 -   `q42_23` = Have you bought any guns since January 1, 2020? = `gun2020`
@@ -970,7 +956,7 @@ Don't know, Skipped on web, and Refused grouped as unknown.
 
 ```{r}
 raw %>% tabyl(q47_23)
-raw %>% tabyl(q47_23, gun)
+raw %>% tabyl(q47_23)
 ```
 
 ```{r}
@@ -1203,23 +1189,34 @@ raw <-
 
 ## Weights
 
+`weight1` = general population analysis
+`weight3` = gun owner specific analysis
+
 ```{r}
 clean <-
   raw %>% 
+  rename(weight1 = weight) %>% 
   set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population (N=3,096)",
+    weight1 = "Post-stratification weights - 18+ general population (N=3,096)",
     weight2 = "Post-stratified weights - scaled to 4 race groups (NH-Black, Hispanic, AAPI, NH-All Other) (N=3,096)",
 weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=3,096)"
   )
 ```
 
+## Check for missing values
+
+```{r}
+colSums(is.na(clean))
+```
+
 ## Explore demographic variables
+
+### Gun owners
 
 ```{r}
 demovars <-
   c(
-    "gun",
-    "age",
+    "age4",
     "hhsize",
     "gender",
     "racethnicity",
@@ -1228,24 +1225,48 @@ demovars <-
     "employ",
     "income",
     "internet",
-    "home_type",
-    "party7"
+    "home_type"
   )
 
 summstats <-
-  c("notNA(x)", "mean(x)", "sd(x)")
+  c("notNA(x)", "mean(x)")
 summnames <-
-  c("Observations", "Mean", "SD")
+  c("Observations", "Mean")
+```
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  clean %>% filter(gunhomeper == "Yes"),
+  vars = demovars,
+  group.weights = "weight1",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary among gun owners",
+  out = "kable",
+  numformat = "comma",
+  labels =  T
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+### Full sample
+
+```{r}
+demovars <- c("gunhomeper", demovars)
 ```
 
 ```{r, results = "asis", warning = F, message = F}
 st(
   clean,
   vars = demovars,
-  group.weights = "weight",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
-  title = "Weighted demographic summary",
+  title = "Weighted demographic summary among full sample",
   out = "kable",
   numformat = "comma",
   labels =  T
@@ -1269,4 +1290,8 @@ write_rds(
     "gs-2023.rds"
     )
   ) 
+```
+
+```{r}
+nrow(clean)
 ```

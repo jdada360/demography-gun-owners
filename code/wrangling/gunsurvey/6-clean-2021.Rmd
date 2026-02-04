@@ -152,7 +152,8 @@ raw <-
 
 ## Gun
 
-Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes.
+Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes, however, all people who are gunowners (i.e., `gunhomper == 1`) are also identified as gun owners here. So we drop this variable
+to remove confusion.
 
 ```{r}
 raw %>% tabyl(gun)
@@ -161,23 +162,7 @@ raw %>% tabyl(gun)
 ```{r}
 raw <-
   raw %>% 
-  mutate(
-    gun = 
-      factor(
-        gun,
-        levels = 1:2,
-        labels = 
-          c("Gun owner",
-            "Non-gun owner")
-      )
-  ) %>% 
-  set_variable_labels(
-    gun = "Proportion-based simple random imputation used to determine gun ownership for those with missing data. Used for weighting purposes"
-  )
-```
-
-```{r}
-raw %>% tabyl(gun)
+  select(-gun)
 ```
 
 ## Gender
@@ -272,9 +257,9 @@ raw <-
             "Black, non-Hispanic",
             "Other, non-Hispanic",
             "Hispanic",
-            "2+, non-Hispanic",
+            "2+ Races, non-Hispanic",
             "Asian, non-Hispanic")
-      )
+      ) 
   ) %>% 
   set_variable_labels(
     racethnicity = "Combined race/ethnicity"
@@ -840,46 +825,90 @@ raw <-
 
 ## Weights
 
+`weight1` = general population analysis
+`weight3` = gun owner specific analysis
+
 ```{r}
 clean <-
   raw %>% 
+  rename(weight1 = weight) %>% 
   set_variable_labels(
-    weight = "Post-stratification weights - 18+ general population (N=2,778)",
+    weight1 = "Post-stratification weights - 18+ general population (N=2,778)",
     weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other) (N=2,778)",
 weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners) (N=2,778)"
   )
 ```
 
+## Check for missing variables
+
+```{r}
+clean %>% filter(if_any(everything(), is.na)) %>% nrow() == 0
+```
+
 ## Explore demographic variables
+
+### Gun owners
 
 ```{r}
 demovars <-
   c(
-    "gun",
-    "age",
-    "hhsize",
+    "age4",
     "gender",
-    "raceethnicity",
-    "educ",
+    "racethnicity",
+    "educ5",
     "marital",
     "employ",
-    "income",
-    "internet",
-    "home_type",
+    "income4",
     "party7"
   )
 
 summstats <-
-  c("notNA(x)", "mean(x)", "sd(x)")
+  c("notNA(x)", "mean(x)")
 summnames <-
-  c("Observations", "Mean", "SD")
+  c("Observations", "Mean")
+```
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  clean %>% filter(gunhomeper == "Yes"),
+  vars = demovars,
+  group.weights = "weight3",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary",
+  out = "kable",
+  numformat = "comma",
+  labels =  T
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+### General population
+
+```{r}
+demovars <-
+  c(
+    "gunhomeper",
+    "age4",
+    "gender",
+    "racethnicity",
+    "educ5",
+    "marital",
+    "employ",
+    "income4",
+    "party7"
+  )
 ```
 
 ```{r, results = "asis", warning = F, message = F}
 st(
   clean,
   vars = demovars,
-  group.weights = "weight",
+  group.weights = "weight1",
   summ = summstats,
   summ.names = summnames,
   title = "Weighted demographic summary",
