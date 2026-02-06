@@ -1,0 +1,88 @@
+## 2023
+
+[Pew Research Center](https://www.pewresearch.org/short-reads/2024/07/24/key-facts-about-americans-and-guns/) says 32%.
+
+[Gun center page](https://publichealth.jhu.edu/center-for-gun-violence-solutions/americans-agree-on-effective-gun-policy-more-than-were-led-to-believe) says
+
+-   N = 3,096, N = 1,002 gun owners, N = 2,094 non-gun owners.
+
+-   730 Republicans, 1,199 Democrats, and 1,163 Independents
+
+Cass' paper [Political violence, racial violence, and new gun ownership: results from the 2023 National Survey of Gun Policy](https://link-springer-com.proxy1.library.jhu.edu/article/10.1186/s40621-024-00527-z)
+
+-   11% of respondents reported purchasing a gun since 1/1/20, 35% for the first time.
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Load data
+
+```{r}
+data <-
+  read_rds(
+   here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2023.rds"
+    )
+  )
+```
+
+## National prevalence
+
+```{r}
+data %>% tabyl(gunhomeper) %>% adorn_totals("row")
+```
+
+```{r}
+data %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1"), 
+      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
+    )
+  )
+```
+
+```{r}
+filter(data, is.na(weight2)) %>% nrow() == 0
+```
+
+```{r}
+data %>% 
+  filter(sample == "General population") %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1", "weight2"), 
+      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
+    )
+  )
+
+```

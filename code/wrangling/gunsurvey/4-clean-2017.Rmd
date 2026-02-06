@@ -668,6 +668,7 @@ Do any of these guns personally belong to you? = `gunhomeper`  = `q31`
 raw %>% tabyl(q30)
 raw %>% tabyl(q31)
 ```
+This cleaning of `gunhomeper` is done manually to match the counts reported by the [gun center](https://publichealth.jhu.edu/2018/little-difference-between-gun-owners-non-owners-on-key-gun-policies-survey-finds) using this same survey data. 
 
 ```{r}
 raw <-
@@ -679,18 +680,21 @@ raw <-
   mutate(
     gunhomeper = 
       case_when(
-       is.na(gunhomeper) ~  as.character(gunhome), 
-        TRUE ~ as.character(gunhomeper)
-      ) %>% as.numeric,
-    across(
-      starts_with("gunhome"),
-      ~ ifelse(.x > 2, 99, .x) %>% 
-        factor(
-          levels = c(1:2, 99),
+        gunhomeper > 2 | is.na(gunhomeper) ~ 2,
+        TRUE ~ gunhomeper
+      )  %>% 
+      factor(
+          levels = c(1:2),
           labels =
-            c("Yes", "No", "Unknown")
+            c("Yes", "No")
+        ),
+    gunhome = 
+      ifelse(gunhome > 2, 99, gunhome) %>% 
+      factor(
+        levels = c(1:2, 99),
+        labels =
+          c("Yes", "No", "Unknown")
         )
-      )
   ) %>% 
   set_variable_labels(
     gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
@@ -699,7 +703,7 @@ raw <-
 ```
 
 ```{r}
-raw %>% tabyl(gunhome, gunhomeper)
+raw %>% tabyl(gunhome, gunhomeper) %>%  adorn_totals("row")
 ```
 ## Household size
 
@@ -801,7 +805,7 @@ demovars <-
   )
 ```
 
-28\% seems high.
+28\% seems high. 
 
 ```{r, results = "asis", warning = F, message = F}
 st(

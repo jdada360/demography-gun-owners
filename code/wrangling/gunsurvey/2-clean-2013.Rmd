@@ -732,8 +732,16 @@ In the later survey years, this corresponds to
 
 For the purpose of our analysis, we will only be using `gunhomeper` because we just care about people who personally own guns. So we will drop the variable `xpa0117` to minimize confusion. Also in 2015, the only variable they have is "Respondent personally owns a gun", so although we have the variable `gunhome` for later years, it doesn't appear in 2015, so we can't use it for the longitudinal analysis, so we don't lose anything from dropping it.
 
+In the [Barry paper](https://www.sciencedirect.com/science/article/pii/S0091743515001668?via=ihub), they consider "non-gun owners" as people who answer no to being a gun owner but have a gun in their home (N=843). For the purposes of our analysis just looking at gun owners, it doesnt matter. But for the sake of comparing national prevalence estimates across years to check the quality of my data cleaning, it is useful to know why it may differ. However, in 2013, my estimate of 22\% matches Barry's.
+
 ```{r}
 raw %>% tabyl(xpa0122, xpa0117)
+```
+
+```{r} 
+raw %>%
+  filter(xpa0122 == 2 & xpa0117 == 1) %>% 
+  nrow() == 843
 ```
 
 ```{r}
@@ -750,7 +758,7 @@ raw <-
 ```
 
 ```{r}
-raw %>% tabyl(gunhomeper)
+tabyl(raw, gunhomeper)
 ```
 
 ## Type of gun ownership
@@ -967,6 +975,27 @@ weight4 = "Post-stratified weights for gun households"
   )
 ```
 
+Based on [the Barry paper](https://www.sciencedirect.com/science/article/pii/S0091743515001668?via=ihub), we should have 2703 in total, with 843 non-gunowners and 947 gun owners.
+
+```{r}
+clean %>% tabyl(gunhomeper) %>% adorn_totals("row")
+```
+
+We have more non-gun than the paper.
+
+It looks like they are using the gun owner vs non-gun owner weights to compare gun owners to non gun owners, but the full weight to explore the whole sample.
+
+We can see that by restrict the sample to only the observations with non missing values for the gun owner weight (weight3) and non-gun owner weight (weight4). This matches the numbers in Table 1 of the Barry paper.
+
+```{r}
+clean %>%
+  filter(
+    !is.na(weight3) | !is.na(weight4)
+  ) %>% 
+  tabyl(gunhomeper) %>% 
+  adorn_totals("row")
+```
+
 ## Check for missing values
 
 ```{r}
@@ -974,6 +1003,19 @@ colSums(is.na(clean))
 ```
 
 ## Explore demographic variables
+
+```{r}
+clean %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1", "weight2"), 
+      ~ (sum(g*.x, na.rm = T)/sum(.x, na.rm = T)) %>%  round(2) *100
+    )
+  ) 
+```
 
 ### Gun owners
 

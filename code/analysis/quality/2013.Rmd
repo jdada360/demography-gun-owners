@@ -1,0 +1,74 @@
+## 2013
+
+
+22\% from the same data, according to [Barry et al. 2013](https://www-nejm-org.proxy1.library.jhu.edu/doi/full/10.1056/NEJMp1300512?query=featured_home).
+
+Similarly, [Pew Research Center](https://www.pewresearch.org/politics/2013/03/12/section-3-gun-ownership-trends-and-demographics) analysed the General Social Survey (GSS)^[conducted roughly every two years by NORC] and found that 2012, 22% owned a gun.
+
+
+[Hopkins Gun Center 2013 report on the same data](https://publichealth.jhu.edu/2013/Barry-Majority-of-Americans-Support-Policies-to-Strengthen-Gun-Laws)
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+
+## Load data
+
+```{r}
+data <-
+  read_rds(
+   here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2013.rds"
+    )
+  )
+```
+
+## National prevalence
+
+```{r}
+data %>% tabyl(sample, gunhomeper)
+```
+
+
+
+Weight 1 gives 23\% whilst weight2 gives 22\%. I think `weight2` is correct because it includes weights for the whole sample.
+
+```{r}
+data %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1", "weight2"), 
+      ~ (sum(g*.x, na.rm = T)/sum(.x, na.rm = T)) %>%  round(2) *100
+    )
+  ) 
+```
+
+```{r}
+filter(data, is.na(weight2)) %>% nrow() == 0
+```

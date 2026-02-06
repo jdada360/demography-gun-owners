@@ -1,0 +1,85 @@
+## 2019
+
+[JHU page on 2019 survey results](https://publichealth.jhu.edu/2019/majority-of-americans-including-gun-owners-support-a-variety-of-gun-policies) says "the 2019 survey includes 1,680 respondents including 610 gun owners and 1,070 non-gun owners." Our data match perfectly.
+
+
+[Public opinion on laws regulating public gun carrying](https://pmc.ncbi.nlm.nih.gov/articles/PMC11578283/) is 
+another one of Cass' papers on this survey. This paper says 27% in 2019 and we
+get 27\%!!!
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+
+## Load data
+
+```{r}
+data <-
+  read_rds(
+   here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2019.rds"
+    )
+  )
+```
+
+
+## National prevalence
+
+
+```{r}
+data %>% tabyl(gunhomeper) %>% adorn_totals("row")
+```
+
+```{r}
+data %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1"), 
+       ~ (sum(g*.x, na.rm = T)/sum(.x, na.rm = T)) %>%  round(2) *100
+    )
+  )
+```
+
+```{r}
+filter(data, is.na(weight2)) %>% nrow() == 0
+```
+
+```{r}
+data %>% 
+  filter(sample == "General population") %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1", "weight2"), 
+      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
+    )
+  )
+```

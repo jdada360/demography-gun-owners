@@ -4,6 +4,8 @@ We use this [codebook](https://livejohnshopkins-my.sharepoint.com/:x:/r/personal
 
 Note that all of the demographic variables are the same as the 2021 survey.
 
+According to this [source](https://www.pewresearch.org/short-reads/2024/07/24/key-facts-about-americans-and-guns/), 32\% national gun ownership rates.
+
 **Input**
 
 -   DemographyGunOwners/data/raw/gunsurvey/2023.rds
@@ -781,7 +783,7 @@ raw %>% tabyl(mdanow)
 
 Do any of these guns personally belong to you? = `gunhomeper`. There are some observations with NA hardcoded for `q41`. This corresponds to people who said answered no to q40.
 
-I group together  "Skipped on web", "Refused" as "Unknown"
+I group together  "Skipped on web", "Refused" as "No" for the definition of gun ownership, which matches what the [Gun center reported](https://publichealth.jhu.edu/center-for-gun-violence-solutions/americans-agree-on-effective-gun-policy-more-than-were-led-to-believe).
 
 ```{r}
 raw %>% tabyl(q40)
@@ -798,21 +800,21 @@ raw <-
   mutate(
     gunhomeper = 
       case_when(
-       is.na(gunhomeper) ~  as.character(gunhome), 
-        TRUE ~ as.character(gunhomeper)
-      ) %>% as.numeric,
-    across(
-      starts_with("gunhome"),
-      ~ case_when(
-          .x == 98 ~ 99,
-          TRUE ~ .x
-          ) %>%  
-        factor(
-          levels = c(1:2, 99),
+        gunhomeper > 2 | is.na(gunhomeper) ~ 2,
+        TRUE ~ gunhomeper
+      )  %>% 
+      factor(
+          levels = c(1:2),
           labels =
-            c("Yes", "No", "Unknown")
+            c("Yes", "No")
+        ),
+    gunhome = 
+      ifelse(gunhome > 2, 99, gunhome) %>% 
+      factor(
+        levels = c(1:2, 99),
+        labels =
+          c("Yes", "No", "Unknown")
         )
-      )
   ) %>% 
   set_variable_labels(
     gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
@@ -821,7 +823,7 @@ raw <-
 ```
 
 ```{r}
-raw %>% tabyl(gunhome, gunhomeper)
+raw %>% tabyl(gunhome, gunhomeper) %>% adorn_totals("row")
 ```
 
 ## Type of gun ownership
@@ -1209,7 +1211,19 @@ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun o
 colSums(is.na(clean))
 ```
 
+
 ## Explore demographic variables
+
+
+```{r}
+des <- svydesign(
+  id = ~caseid, 
+  weights = ~ weight1, 
+  data = clean
+  )
+
+svymean(~gunhomeper, design = des) 
+```
 
 ### Gun owners
 

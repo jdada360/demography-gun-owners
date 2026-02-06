@@ -291,19 +291,93 @@ merge <-
 
 ## Create general population sample
 
-For 2013, 2015 we restrict to gen pop sample and then merge with all other years.
+For 2013 and 2015, weight2 is the correct full sample weights.
 
-We keep only weight1 for this analysis. If weight1 is missing, we drop.
+For 2017 and 2019, only weight1 is available, which we use.
+
+For 2021-, weight1 is the correct full sample weight.
+
+```{r}
+merge %>% 
+  filter(is.na(weight2)) %>% 
+  tabyl(year)
+```
 
 ```{r}
 gen <-
   merge %>% 
-  filter(
-    !(year %in%  2013:2015 & is.na(weight1)),
-    !is.na(weight1)
-    ) %>% 
-  select(-c(weight2, weight3)) %>% 
-  rename(weight = weight1)
+  mutate(
+    weight = 
+      case_when(
+        year == 2013:2015 ~ weight2,
+        
+      )
+  ) %>% 
+  filter(!is.na(weight)) %>%  
+  select(-c(weight1, weight2, weight3, weight4, keep))
+```
+
+
+### Estimate gun ownership
+
+```{r}
+gen %>% 
+  mutate(
+    g = as.numeric(gun == "Yes")
+  ) %>% 
+  group_by(year) %>% 
+  summarise(
+    rate = sum(g*weight, na.rm = T)/sum(weight, na.rm = T)
+  )
+```
+
+Online sources suggest gun ownership should be around 29\% in 2019 but it is around 36% in this data.
+
+2017 matches online sources at around 30\%.
+
+2013 is a lot lower than online sources at around 33\% so perhaps restricting to remove missing values from weight 1 is enough.
+
+Allegedly This data is supposed to give a personal gun ownership of ~39–40\% in 2017
+
+```{r}
+demovars <-
+  c(
+    "gun",
+    "gender",
+    "age4",
+    "racethnicity",
+    "educ5",
+    "employ",
+    "income4",
+    "hhsize4",
+    "marital",
+    "region4"
+  )
+
+summstats <-
+  c("notNA(x)", "mean(x)")
+summnames <-
+  c("Observations", "Mean")
+```
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  gen,
+  vars = demovars,
+  group.weights = "weight",
+  group = "year",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary",
+  out = "kable",
+  numformat = "comma",
+  labels =  T
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
 ```
 
 ### Export data

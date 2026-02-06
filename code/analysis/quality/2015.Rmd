@@ -1,0 +1,80 @@
+## 2015
+
+No data on 2015
+
+The only reasonable output for 2015 in this data is 19.8\% using `weight2`.
+This implies that gun ownership decreased from 2013 and 2015. 
+
+[JHU Gun Center 2015 Survey Results](https://publichealth.jhu.edu/2015/large-majority-of-americans-includin-gun-owners-support-stronger-gun-safety-policies)
+
+[Barry paper on 2015 Survey](https://www.sciencedirect.com/science/article/pii/S0091743515001668?via=ihub).
+
+The sample counts of gun owners and non-gun owners match the Barry paper. The Barry paper does not include an estimate for the percentage of US gun owners but because the sample
+counts are the same, I am more confident that this is accurate.
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+
+## Load data
+
+```{r}
+data <-
+  read_rds(
+   here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2015.rds"
+    )
+  )
+```
+
+This matches exactly.
+
+```{r}
+data %>%  tabyl(sample, gunhomeper) %>% adorn_totals("row")
+```
+
+## National prevalence
+
+```{r}
+data %>% tabyl(sample, gunhomeper)
+```
+
+```{r}
+data %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1", "weight2", "weight3"), 
+      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T) %>%  round(2) *100
+    )
+  )
+```
+
+```{r}
+filter(data, is.na(weight2)) %>% nrow() == 0
+```

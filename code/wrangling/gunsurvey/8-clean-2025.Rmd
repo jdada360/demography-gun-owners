@@ -692,23 +692,26 @@ raw <-
     gunhomeper = q41
     ) %>% 
   mutate(
+    across(
+      starts_with("gunhomeper"), as.numeric
+    ),
     gunhomeper = 
       case_when(
-       is.na(gunhomeper) ~  as.character(gunhome), 
-        TRUE ~ as.character(gunhomeper)
-      ) %>% as.numeric,
-    across(
-      starts_with("gunhome"),
-      ~ case_when(
-          .x == 98 ~ 99,
-          TRUE ~ .x
-          ) %>%  
-        factor(
-          levels = c(1:2, 99),
+        gunhomeper > 2 | is.na(gunhomeper) ~ 2,
+        TRUE ~ gunhomeper
+      )  %>% 
+      factor(
+          levels = c(1:2),
           labels =
-            c("Yes", "No", "Unknown")
+            c("Yes", "No")
+        ),
+    gunhome = 
+      ifelse(gunhome > 2, 99, gunhome) %>% 
+      factor(
+        levels = c(1:2, 99),
+        labels =
+          c("Yes", "No", "Unknown")
         )
-      )
   ) %>% 
   set_variable_labels(
     gunhome = "Do you happen to have in your home or garage any guns or revolvers?",

@@ -1,0 +1,71 @@
+## 2025
+
+[Gun Center survey results summary](https://publichealth.jhu.edu/center-for-gun-violence-solutions/data/national-survey-of-gun-policy) says:
+
+-    2,977 respondents, 1,001 gun owners and 1,976 non-gun owners
+
+-    959 Republicans and 1,419 Democrats
+
+Doesn't look like they have published a paper on this yet, but our counts match!
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Load data
+
+```{r}
+data <-
+  read_rds(
+   here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2025.rds"
+    )
+  )
+```
+
+## National prevalence
+
+```{r}
+data %>% tabyl(gunhomeper) %>% adorn_totals("row")
+```
+
+`weight1` is correct here.
+
+```{r}
+data %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      starts_with("weight"), 
+      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
+    )
+  )
+```
+
+```{r}
+filter(data, is.na(weight1)) %>% nrow() == 0
+```

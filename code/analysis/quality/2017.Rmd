@@ -1,0 +1,84 @@
+## 2017
+
+[Barry & Cass 2017 paper on survey](https://ajph.aphapublications.org/doi/10.2105/AJPH.2018.304432?url_ver=Z39.88-2003&rfr_id=ori%3Arid%3Acrossref.org&rfr_dat=cr_pub++0pubmed).
+
+According to the paper, N = 2124, 602 gun owners, 1,522 non-gun owners.
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+
+## Load data
+
+```{r}
+data <-
+  read_rds(
+   here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2017.rds"
+    )
+  )
+```
+
+
+## National prevalence
+
+Aim 30\%
+
+```{r}
+data %>% tabyl(gunhomeper) %>% adorn_totals("row")
+```
+
+```{r}
+data %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1"), 
+      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
+    )
+  )
+```
+
+```{r}
+filter(data, is.na(weight2)) %>% nrow() == 0
+```
+
+```{r}
+data %>% 
+  filter(sample == "General population") %>% 
+  mutate(
+    g = as.numeric(gunhomeper == "Yes")
+  ) %>% 
+  summarise(
+    across(
+      c("weight1", "weight2"), 
+      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
+    )
+  )
+
+```
