@@ -62,7 +62,7 @@ data %>%
   ) %>% 
   summarise(
     across(
-      c("weight1"), 
+      starts_with("weight"),
       ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
     )
   )
@@ -70,19 +70,4 @@ data %>%
 
 ```{r}
 filter(data, is.na(weight2)) %>% nrow() == 0
-```
-
-```{r}
-data %>% 
-  filter(sample == "General population") %>% 
-  mutate(
-    g = as.numeric(gunhomeper == "Yes")
-  ) %>% 
-  summarise(
-    across(
-      c("weight1", "weight2"), 
-      ~ sum(g*.x, na.rm = T)/sum(.x, na.rm = T)
-    )
-  )
-
 ```

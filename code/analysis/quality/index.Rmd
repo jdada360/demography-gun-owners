@@ -1,0 +1,24 @@
+--- 
+title: "Gun Survey Data Cleaning Quality Checks"
+author: "Joy Dada"
+date: '`r format(Sys.Date(), format = "%A, %B %d, %Y")`'
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+---
+
+# Introduction {-}
+
+The code in this books checks that the gun survey cleaning gives estimates 
+of the national prevalence of gun ownership that roughly matches online sources.
+We care most about whether our estimates match the papers from Cass and Colleen Barry
+that analyze this exact data set.
+
+The Gun Center has compiled links to the [survey reports](https://publichealth.jhu.edu/center-for-gun-violence-solutions/data/national-survey-of-gun-policy?). We use the papers and these reports to verify the correctness of the cleaning. 
+
+```{r, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  meassage = FALSE
+  )
+```

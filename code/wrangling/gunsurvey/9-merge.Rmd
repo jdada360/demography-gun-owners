@@ -293,13 +293,11 @@ merge <-
 
 For 2013 and 2015, weight2 is the correct full sample weights.
 
-For 2017 and 2019, only weight1 is available, which we use.
-
-For 2021-, weight1 is the correct full sample weight.
+For all other years we use weight1.
 
 ```{r}
 merge %>% 
-  filter(is.na(weight2)) %>% 
+  filter(is.na(weight1)) %>% 
   tabyl(year)
 ```
 
@@ -309,12 +307,11 @@ gen <-
   mutate(
     weight = 
       case_when(
-        year == 2013:2015 ~ weight2,
-        
+        year %in% 2013:2015 ~ weight2,
+        TRUE ~ weight1
       )
   ) %>% 
-  filter(!is.na(weight)) %>%  
-  select(-c(weight1, weight2, weight3, weight4, keep))
+  select(-c(weight1, weight2, weight3, weight4))
 ```
 
 
@@ -327,7 +324,7 @@ gen %>%
   ) %>% 
   group_by(year) %>% 
   summarise(
-    rate = sum(g*weight, na.rm = T)/sum(weight, na.rm = T)
+    rate = sum(g*weight, na.rm = T)/sum(weight, na.rm = T) %>%  round(2) *100
   )
 ```
 

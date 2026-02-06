@@ -45,7 +45,6 @@ data <-
 
 ## National prevalence
 
-Aim 30\%
 
 ```{r}
 data %>% tabyl(gunhomeper) %>% adorn_totals("row")

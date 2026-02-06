@@ -5,7 +5,6 @@
 
 Similarly, [Pew Research Center](https://www.pewresearch.org/politics/2013/03/12/section-3-gun-ownership-trends-and-demographics) analysed the General Social Survey (GSS)^[conducted roughly every two years by NORC] and found that 2012, 22% owned a gun.
 
-
 [Hopkins Gun Center 2013 report on the same data](https://publichealth.jhu.edu/2013/Barry-Majority-of-Americans-Support-Policies-to-Strengthen-Gun-Laws)
 
 ```{r,  message = FALSE, warning = FALSE, echo = FALSE}
