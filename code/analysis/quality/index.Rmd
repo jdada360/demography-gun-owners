@@ -16,6 +16,13 @@ that analyze this exact data set.
 
 The Gun Center has compiled links to the [survey reports](https://publichealth.jhu.edu/center-for-gun-violence-solutions/data/national-survey-of-gun-policy?). We use the papers and these reports to verify the correctness of the cleaning. 
 
+There is not a good estimate of gun ownership in 2017.
+
+
+Also in 2023, if I use weight3 (which is the weight that is scaled to gun owners and 
+non gun owners) I get close to the 
+[Pew Research Center](https://www.pewresearch.org/short-reads/2024/07/24/key-facts-about-americans-and-guns/) estimate of 32\% but if I use the "correct" weight `weight`, my estimate is close to 26\%.
+
 ```{r, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(
   warning = FALSE,

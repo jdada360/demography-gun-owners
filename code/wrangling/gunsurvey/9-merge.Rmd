@@ -175,12 +175,80 @@ merge <-
         levels = 1:3,
         labels = c("Small", "Medium", "Large")
       )
-  )
+  ) 
 ```
 
 ```{r}
 merge %>% tabyl(hhsize4)
 ```
+## Define simplified political party variable
+
+Group into republican, democrat and independent.
+
+```{r}
+merge %>% tabyl(party5)
+```
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    party3 = 
+      case_when(
+        grepl("Demo", party5) ~ 1,
+        grepl("Rep", party5) ~ 2,
+        !is.na(party5) ~ 3,
+        # In survey years where political party was not collected
+        TRUE ~ 4
+      ) %>% 
+      factor(
+        levels = 1:4,
+        labels = 
+          c("Democrat",
+            "Republican",
+            "Independent",
+            "Question not asked")
+      )
+  ) 
+```
+
+```{r}
+merge %>% tabyl(party3)
+```
+
+```{r}
+merge %>% 
+  filter(party3 == "Question not asked") %>% 
+  tabyl(year)
+```
+
+## Harmonize gender
+
+```{r}
+merge %>% tabyl(gender)
+```
+
+We group everything other than male and female into other.
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    gender = 
+      case_when(
+       ! (gender %in% c("Male", "Female")) ~ "Other",
+       TRUE ~ gender
+      ) %>% 
+      factor(
+        levels = c("Male", "Female", "Other")
+      )
+  ) 
+```
+
+```{r}
+merge %>% tabyl(gender)
+```
+
 
 ## Do not group Asian, non-Hispanic into other non-Hispanic
 
@@ -252,6 +320,7 @@ merge <-
     vet = "Have you ever served on active duty in the U.S. Armed Forces, military Reserves, or National Guard?",
     party7 = "7-level political affiliation",
     party5 = "5-level political affiliation",
+    party3 = "Political affiliation",
     votediff20 = "How easy or difficult was it for you to vote in the 2020 election?",
     votereason22 = "In talking to people about elections, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you?",
     votecandi20 = "Who did you vote for in the 2020 election?",
@@ -314,7 +383,6 @@ gen <-
   select(-c(weight1, weight2, weight3, weight4))
 ```
 
-
 ### Estimate gun ownership
 
 ```{r}
@@ -328,13 +396,7 @@ gen %>%
   )
 ```
 
-Online sources suggest gun ownership should be around 29\% in 2019 but it is around 36% in this data.
-
-2017 matches online sources at around 30\%.
-
-2013 is a lot lower than online sources at around 33\% so perhaps restricting to remove missing values from weight 1 is enough.
-
-Allegedly This data is supposed to give a personal gun ownership of ~39–40\% in 2017
+### Summary table
 
 ```{r}
 demovars <-
@@ -407,14 +469,18 @@ write_rds(
 
 ## Create gun owner sample
 
-For 2013 and 2015, we must restrict the sample to gun-owners
+Restrict to gun onwers.
 
 ```{r}
-gun <-
-  merge %>% 
-  filter(
-    !(year %in% 2013:2015 & sample != "Gun Owners")
-    ) 
+merge %>% tabyl(gun) %>% adorn_totals("row")
+```
+
+```{f}
+merge %>% tabyl(gun, year) %>% adorn_totals()
+```
+
+```{r}
+gun <- filter(merge, gun == "Yes") 
 ```
 
 ```{r}
@@ -423,11 +489,9 @@ colSums(is.na(gun))
 
 ### Fix weight
 
-For 2017 and 2019, there are no gun owner/non-gun owner specific weight (i.e., normalized within groups), so we have to use the gen pop weights for the analysis of gun owners. If we want to compare gun owners to non-gun owners, we have to use the gen-pop weights. So we fill `weight1` with `weight3` for those years.
+For all years other than 2017 and 2019, we use weight3.
 
-In 2015, there are 4 observations that are gun owners but have missing values for all weights. We drop them.
-
-After the weight is fixed, we drop any missing values for `weight3.`
+For 2017 and 2019, there are no gun owner/non-gun owner specific weight (i.e., normalized within groups), so we have to use the gen pop weights for the analysis of gun owners.
 
 ```{r}
 gun %>% 
@@ -445,7 +509,6 @@ gun <-
         TRUE ~ weight3
       )
   ) %>% 
-  filter(!is.na(weight)) %>% 
   select(-c(sample, weight1, weight2, weight3, weight4))
 ```
 
@@ -457,27 +520,9 @@ gun %>% filter(is.na(weight)) %>% nrow() == 0
 ```{r}
 gun %>% tabyl(year)
 ```
-
-### Restrict to gun owners
-
-```{r}
-gun %>% tabyl(gun)
-```
-
-```{r}
-gun <-
-  gun %>%
-  filter(gun == "Yes") 
-```
-
-```{r}
-gun %>% tabyl(year)
-```
-
 ### Harmonize gun ownership variables
 
-If a gun owner refuses to answer to the question about what kind of gun they own in the years the question is asked, we code this as saying that they own another type 
-of gun.
+If a gun owner refuses to answer to the question about what kind of gun they own in the years the question is asked, we code this as saying that they own another typeof gun.
 
 In the years that the question is not asked, we code this as "Question not asked".
 
@@ -502,7 +547,8 @@ gun <-
   mutate(
     across(
       starts_with("own"),
-      ~ fct_na_value_to_level(.x, level = "Question not asked") 
+      ~ fct_na_value_to_level(.x, level = "Question not asked") %>% 
+        droplevels()
     )
   )
 ```
@@ -512,12 +558,6 @@ walk(
     gun %>% select(starts_with("own")) %>% names(),
   ~ print(gun %>% tabyl(.x))
 )
-```
-
-### Harmonize gender
-
-```{r}
-
 ```
 
 ### Export data
@@ -549,112 +589,6 @@ write_rds(
 )
 ```
 
-
 ```{r}
-write_rds(
-  final,
-  here(
-    cleanfold,
-    "gs-all.rds"
-  )
-)
+nrow(gun)
 ```
-
-## Explore demographics
-
-### Gun owners
-
-```{r}
-demovars <-
-  c(
-    "gender",
-    "age4",
-    "racethnicity",
-    "educ5",
-    "employ",
-    "income4",
-    "hhsize4",
-    "marital",
-    "region4"
-  )
-
-summstats <-
-  c("notNA(x)", "mean(x)")
-summnames <-
-  c("Observations", "Mean")
-```
-
-```{r, results = "asis", warning = F, message = F}
-st(
-  gun,
-  vars = demovars,
-  group.weights = "weight",
-  group = "year",
-  summ = summstats,
-  summ.names = summnames,
-  title = "Weighted demographic summary",
-  out = "kable",
-  numformat = "comma",
-  labels =  T
-  ) %>% 
-  kable_classic(
-    full_width = FALSE,
-    html_font = "Cambria"
-  ) %>% 
-  scroll_box(width = "800px", height = "500px")
-```
-
-
-### Full sample
-
-Online sources suggest gun ownership should be around 29\% in 2019 but it is around 36% in this data.
-
-2017 matches online sources at around 30\%.
-
-2013 is a lot lower than online sources at around 33\% so perhaps restricting to remove missing values from weight 1 is enough.
-
-Allegedly This data is supposed to give a personal gun ownership of ~39–40\% in 2017
-
-```{r}
-demovars <-
-  c(
-    "gun",
-    "gender",
-    "age4",
-    "racethnicity",
-    "educ5",
-    "employ",
-    "income4",
-    "hhsize4",
-    "marital",
-    "region4"
-  )
-
-summstats <-
-  c("notNA(x)", "mean(x)")
-summnames <-
-  c("Observations", "Mean")
-```
-
-```{r, results = "asis", warning = F, message = F}
-st(
-  gen,
-  vars = demovars,
-  group.weights = "weight",
-  group = "year",
-  summ = summstats,
-  summ.names = summnames,
-  title = "Weighted demographic summary",
-  out = "kable",
-  numformat = "comma",
-  labels =  T
-  ) %>% 
-  kable_classic(
-    full_width = FALSE,
-    html_font = "Cambria"
-  ) %>% 
-  scroll_box(width = "800px", height = "500px")
-```
-
-
-
