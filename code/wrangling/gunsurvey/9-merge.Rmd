@@ -181,6 +181,7 @@ merge <-
 ```{r}
 merge %>% tabyl(hhsize4)
 ```
+
 ## Define simplified political party variable
 
 Group into republican, democrat and independent.
@@ -222,7 +223,36 @@ merge %>%
   tabyl(year)
 ```
 
-## Harmonize gender
+
+## Employment
+
+Paid employee, self-employed, retired, unemployed
+
+```{r}
+tabyl(merge, employ)
+```
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    employ = 
+      case_when(
+        grepl("paid", employ) ~ "Paid employee",
+        grepl("self", employ) ~ "Self-employed",
+        grepl("retired", employ) ~ "Retired",
+        TRUE ~ "Unemployed"
+      )
+  )
+```
+
+
+```{r}
+tabyl(merge, employ)
+```
+
+
+## Gender
 
 ```{r}
 merge %>% tabyl(gender)

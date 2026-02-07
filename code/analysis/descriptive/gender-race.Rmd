@@ -1,0 +1,167 @@
+# Gender and Racial composition
+
+This chapter focuses on exploring the gender and racial composition of US gun owners
+using figures.
+
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gun-owners.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "dplyr",
+    "here",
+    "vtable",
+    "fastDummies"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "clean",
+      "gs-gun-owners.rds"
+      )
+  )
+```
+
+
+## Race by gender
+
+
+```{r}
+rg <-
+  gun %>% 
+  select( 
+    year, 
+    weight,
+    racethnicity,
+    gender
+    ) %>% 
+  mutate(
+    rg = paste0(racethnicity, " x ", gender) %>% factor
+  ) %>% 
+  dummy_cols("rg") %>% 
+  clean_names() %>% 
+  mutate(
+    across(
+      starts_with("rg_"), ~ .x * weight
+    )
+  ) %>% 
+  group_by(year) %>% 
+  summarize(
+    across(
+      starts_with("rg_"), ~ (sum(.x)/sum(weight))*100
+    )
+  )
+```
+
+```{r}
+long <-
+  rg %>% 
+  pivot_longer(
+    cols = -"year"
+  ) %>% 
+  mutate(
+    gender = 
+      case_when(
+        str_detect(name, "female") ~ 2,
+        str_detect(name, "male") ~ 1,
+        TRUE ~ 3) %>% 
+      factor(
+        levels = 1:3, 
+        labels = c("Male", "Female", "Other")
+      ),
+    race = case_when(
+      str_detect(name, "white") ~ 1,
+      str_detect(name, "black") ~ 2,
+      str_detect(name, "asian") ~ 3,
+      str_detect(name, "other") ~ 4,
+      str_detect(name, "races") ~ 5,
+      str_detect(name, "rg_hispanic") ~ 6
+    ) %>% 
+      factor(
+        levels = 1:6,
+        labels = 
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Asian, non-Hispanic",
+            "Other, non-Hispanic",
+            "2+ Races, non-Hispanic",
+            "Hispanic"
+            )
+      )
+  ) %>% 
+  filter(!is.na(value))
+```
+
+```{r}
+long %>% tabyl(race, gender)
+```
+
+```{r}
+long %>% tabyl(name, year)
+```
+
+
+
+```{r}
+long %>% 
+  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic") %>% 
+  ggplot(
+    aes(x = year, y = value, group = race, color = race)
+  ) +
+  geom_point() +
+  geom_line() +
+  theme +
+  theme(
+    legend.title = element_blank()
+  ) +
+  scale_color_viridis_d() +
+  scale_x_continuous(breaks = seq(2013, 2025, 2)) +
+  scale_y_continuous(
+    breaks = seq(0, 7, 1),
+    limits = c(0, 7)
+    ) +
+  labs(
+    x = "Year",
+    y = "Percent of U.S. gun owners"
+  )
+
+ggsave(
+  height = 6,
+  width = 8, 
+  here(
+    path_ol, 
+    "figures/non-white-female.jpeg"
+  )
+)
+```
+
+

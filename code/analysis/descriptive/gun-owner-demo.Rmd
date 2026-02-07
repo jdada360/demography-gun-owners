@@ -50,8 +50,7 @@ gun <-
   )
 ```
 
-
-## Table
+## Demographic Table
 
 ```{r}
 demovars <-
@@ -63,7 +62,6 @@ demovars <-
     "educ5",
     "employ",
     "income4",
-    "hhsize4",
     "marital",
     "region4"
   )

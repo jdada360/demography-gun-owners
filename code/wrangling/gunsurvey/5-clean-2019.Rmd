@@ -265,7 +265,7 @@ raw <-
         labels = 
           c("Less than HS",
             "HS graduate",
-            "Vocational/tech school/some college/ associates",
+            "Some college/associates degree",
             "Bachelors degree",
             "Post grad study/professional degree"
             )
