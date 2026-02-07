@@ -95,10 +95,3 @@ st(
   fit.page = '\\textwidth'
   )
 ```
-
-## Try other options
-
-```{r}
-
-
-````
