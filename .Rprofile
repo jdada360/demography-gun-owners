@@ -54,6 +54,8 @@ map(
   ~ source(.x)
 )
 
+kbl.format = list(big.mark = ",", scientific = FALSE)
+
 conflicts_prefer(dplyr::filter)
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::group_rows)

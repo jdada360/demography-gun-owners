@@ -248,8 +248,6 @@ cap <-
   )
 ```
 
-### `survey`
-
 ```{r}
 woc <-
   long %>% 
@@ -287,114 +285,83 @@ ggsave(
 )
 ```
 
-
-
-### Manual
+### Table with confidence intervals
 
 ```{r}
-long <-
-  rg %>% 
-  pivot_longer(
-    cols = -"year"
-  ) %>% 
-  mutate(
-    gender = 
-      case_when(
-        str_detect(name, "female") ~ 2,
-        str_detect(name, "male") ~ 1,
-        TRUE ~ 3) %>% 
-      factor(
-        levels = 1:3, 
-        labels = c("Male", "Female", "Other")
-      ),
-    race = case_when(
-      str_detect(name, "white") ~ 1,
-      str_detect(name, "black") ~ 2,
-      str_detect(name, "asian") ~ 3,
-      str_detect(name, "other") ~ 4,
-      str_detect(name, "races") ~ 5,
-      str_detect(name, "rg_hispanic") ~ 6
-    ) %>% 
-      factor(
-        levels = 1:6,
-        labels = 
-          c("White, non-Hispanic",
-            "Black, non-Hispanic",
-            "Asian, non-Hispanic",
-            "Other, non-Hispanic",
-            "2+ Races, non-Hispanic",
-            "Hispanic"
-            )
-      )
-  ) %>% 
-  filter(!is.na(value))
-
-```
-
-
-```{r}
-woc <-
+tab <- 
   long %>% 
-  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic" )
+  filter(gender == "Female") %>% 
+  mutate(
+      across(pct:ci_u, ~ round(.x, 1) %>% as.character())  
+    ) %>% 
+  transmute(
+    Year = factor(year),
+    race = 
+      race %>% 
+      factor(
+      labels = 
+        c("White, non-Hispanic",
+          "Black, non-Hispanic",
+          "Hispanic",
+          "Asian, non-Hispanic",
+          "2+ Races, non-Hispanic",
+          "Other, non-Hispanic"
+          )
+      ),
+      pct = paste0(
+        pct, " (", ci_l, ", ", ci_u, ")"
+      )
+    ) %>% 
+  arrange(race) %>% 
+  pivot_wider(names_from = "race", values_from = "pct")
 ```
 
+
 ```{r}
-cap <-
+note <-
   paste0(
-    "This figure plots non-White female-identifying U.S. gun-owner adults as a ",
+    "Note: This table shows female-identifying U.S. gun-owner adults stratified by ",
+    "racial ethnic group as a ",
     "percent of all U.S. gun-owners (N=",
      nrow(gun),") from seven waves of the National Survey of Gun Policy, ",
-    "spanning 2013 to 2025.",
-    " For reference, during the same period, ",
-    "White non-Hispanic women composed roughly ",
-    mean(filter(long, name == "rg_white_non_hispanic_x_female")$value) %>% 
-      round(0),
-    " percent of U.S. gun owners, and White non-Hispanic women composed roughly ",
-    mean(filter(long, name == "rg_white_non_hispanic_x_male")$value) %>% 
-      round(0),
-    " percent of U.S. gun owners."
+    "spanning 2013 to 2025."
   )
 ```
 
 ```{r}
-woc %>%  
-  mutate(year = factor(year)) %>%  
-  ggplot(
-    aes(x = year, y = value, group = race, color = race)
-  ) +
-  geom_point() +
-  geom_line() +
-  theme +
-  theme(
-    legend.title = element_blank()
-  ) +
-  scale_color_viridis_d() +
-  scale_y_continuous(
-    breaks = seq(0, 7, 1),
-    limits = c(0, 7)
-    ) +
-  labs(
-    x = "Survey Year",
-    y = "Percent of U.S. gun owners"
-  )
+out <-
+  tab %>% 
+    kable(
+      format = "latex",
+      booktabs = TRUE,
+      align = "lcccccc",
+      caption = "Female-identifying U.S. gun-owner adults stratified by racial ethnic group  as percent (95 \\% CI) of all U.S. gun-owners, 2013-2025",
+      label = "FemaleRace",
+      escape = FALSE
+    ) %>%
+    kable_styling(
+      latex_options = c("hold_position", "scale_down"),
+      position = "center"
+    ) %>% 
+  row_spec(0, bold = TRUE) %>% 
+  column_spec(1, bold = TRUE) %>% 
+  footnote(
+    general = note,
+    general_title = "",
+    threeparttable = TRUE,
+    escape = FALSE
+    )
+```
 
-ggsave(
-  height = 6,
-  width = 8, 
-  here(
-    path_ol, 
-    "figures/non-white-female.jpeg"
-  )
+```{r}
+save_kable(
+  out,
+  file = 
+    here(
+      path_ol,
+      "tables/female-race.tex"
+    )
 )
 ```
 
-
 ## Gap in gun ownership rate within races across genders 
-
-```{r}
-
-```
-
-
-
-
