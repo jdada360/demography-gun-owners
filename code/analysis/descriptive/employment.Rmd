@@ -1,0 +1,201 @@
+# Employment
+
+This chapter focuses time trends in employment
+
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gun-owners.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "dplyr",
+    "here",
+    "vtable",
+    "paletteer",
+    "fastDummies"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "clean",
+      "gs-gun-owners.rds"
+      )
+  )
+```
+
+
+## Estimates with CIs
+
+```{r}
+gun %>% tabyl(employ)
+```
+
+```{r}
+des <- svydesign(
+  ids = ~1,         
+  weights = ~weight,
+  data = gun
+)
+
+employ <- 
+  svyby(
+    ~employ,
+    ~year,
+    des,
+    svymean,
+    vartype = c("se", "ci"),
+    level = 0.95
+    ) %>% 
+  clean_names() %>% 
+  mutate(across(-year, ~ .x * 100))
+
+
+long <-
+  employ %>%
+  pivot_longer(
+    cols = -year,
+    names_to = "name",
+    values_to = "value"
+  ) %>%
+  mutate(
+    stat = case_when(
+      str_starts(name, "se_")   ~ "se",
+      str_starts(name, "ci_l_") ~ "ci_l",
+      str_starts(name, "ci_u_") ~ "ci_u",
+      TRUE                      ~ "pct"
+    ),
+    group = name %>%
+      str_remove("^se_") %>%
+      str_remove("^ci_l_") %>%
+      str_remove("^ci_u_")
+  ) %>%
+  select(year, group, stat, value) %>%
+  pivot_wider(
+    names_from = stat,
+    values_from = value
+  ) %>% 
+   mutate(
+    employ = 
+      case_when(
+        str_detect(group, "paid") ~ 1,
+        str_detect(group, "self") ~ 2,
+        str_detect(group, "retir") ~ 3,
+        TRUE ~ 4) %>% 
+      factor(
+        levels = 1:4, 
+        labels = 
+          c("Paid employee", "Self-employed", "Retired", "Unemployed")
+      ),
+    # lower CI at least 0
+    ci_l = ifelse(ci_l < 0, 0, ci_l)
+  ) %>% 
+  filter(!is.na(pct)) 
+```
+
+
+## Gun ownership by income overtime
+
+
+```{r}
+cap <-
+  paste0(
+    "This figure plots percent of U.S. gun-owner adults (N=",
+     nrow(gun),") stratified by employment status from seven waves of the National ",
+    "Survey of Gun Policy, spanning 2013 to 2025."
+  )
+```
+
+```{r}
+long %>% 
+  mutate(year = factor(year)) %>%  
+  ggplot(
+    aes(x = year, y = pct, group = employ, color = employ, fill = employ)
+  ) +
+  geom_col() +
+  theme +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10, hjust = .5)
+  ) +
+  guides(color = "none") +
+  scale_color_paletteer_d("MoMAColors::Althoff") +
+  scale_fill_paletteer_d("MoMAColors::Althoff") +
+  labs(
+    x = "Survey Year",
+    y = "Percent of U.S. gun owners",
+    fill = "Employment Status"
+  ) 
+
+ggsave(
+  height = 6,
+  width = 8, 
+  here(
+    path_ol, 
+    "figures/employ.jpeg"
+  )
+)
+```
+
+## Table
+
+```{r}
+tbl <-
+  employ %>% 
+  mutate(
+    across(
+      c(employ_paid_employee,
+        employ_retired, 
+        employ_self_employed,
+        employ_unemployed
+        ),
+      ~ {
+        l <- get(paste0("ci_l_", cur_column())) %>% round(1)
+        u <- get(paste0("ci_u_", cur_column())) %>% round(1)
+        
+        paste0(
+          round(.x, 1), " (", l, ", ", u, ")"
+        )
+      }
+    )
+  ) %>% 
+  select(
+    year,
+    starts_with("employ")
+  )
+```
+
+```{r}
+
+```

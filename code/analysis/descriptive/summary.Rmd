@@ -1,0 +1,318 @@
+# Basic Demographics of Gun Owners
+
+This chapter creates a descriptive table that shows the demographics of US 
+gun owners from 2013 to 2025.
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gun-owners.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "dplyr",
+    "here",
+    "vtable"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "clean",
+      "gs-gun-owners.rds"
+      )
+  )
+```
+
+## Demographic Table
+
+```{r}
+demovars <-
+  c(
+    "gender",
+    "age4",
+    "racethnicity",
+    "party3",
+    "educ",
+    "employ",
+    "income4",
+    "marital",
+    "region4"
+  )
+
+summstats <-
+  c("notNA(x)", "mean(x)")
+summnames <-
+  c("Observations", "Mean")
+```
+
+Solid table, not perfect so I replace with the tables below
+
+```{r, results = "asis", warning = F, message = F}
+# st(
+#   gun,
+#   vars = demovars,
+#   group = "year",
+#   group.weights = "weight",
+#   summ = summstats,
+#   summ.names = summnames,
+#   title = "Demographic characteristics of US gun owners between 2013 and 2025",
+#   out = "latex",
+#   factor.counts = TRUE,
+#   numformat = "comma",
+#   labels = T,
+#   file =  here(path_ol, "tables/gun-own-chars"),
+#   digits = 2,
+#   anchor = "tab:GunOwnChars",
+#   fit.page = '\\textwidth'
+#   )
+```
+
+
+```{r}
+nrow(gun)
+```
+
+
+## Full sample summary
+
+```{r}
+ds <- survey::svydesign(~ 1, data = gun, weights = ~ weight) 
+```
+
+```{r}
+# overview <-
+#   ds %>%
+#   tbl_svysummary(
+#     include = demovars,
+#     statistic = list(all_categorical() ~ "{p}%")
+#   )
+# 
+# overview %>% 
+#   as_gt() %>%
+#   tab_options(
+#     table.layout = "fixed",
+#     latex.tbl.pos = "h",
+#     data_row.padding = gt::px(2),
+#     row_group.padding = gt::px(3),
+#     summary_row.padding = gt::px(2)
+#   ) %>%
+#   tab_caption(
+#     "Demographic characteristics of US gun owners, 2013 and 2025"
+#   ) %>% 
+#   gtsave(filename = here(path_ol, "tables/summary.tex")
+#   )
+
+# Replace \fontsize{12.0pt}{14.0pt}\selectfont = \fontsize{10.5pt}{12.5pt}\selectfont with 
+# And add \label{tab:Summary}
+```
+
+```{r}
+overview <-
+  ds %>%
+  tbl_svysummary(
+    include = demovars,
+    statistic = list(all_categorical() ~ "{p}%")
+  )
+```
+
+```{r}
+overview_tbl <-
+  overview %>%
+  modify_header(
+    label ~ "Characteristic",
+    all_stat_cols() ~ "Overall"
+  ) %>%
+  modify_table_body(
+    ~ .x %>%
+      mutate(
+        label = ifelse(
+          row_type == "level",
+          paste0("  ", label),
+          label
+        )
+      )
+  ) %>%
+  modify_footnote(all_stat_cols() ~ NA_character_) %>% 
+  as_kable_extra(
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE,
+    label = "Summary"
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    font_size = 9
+  ) %>%
+  column_spec(1, width = "6cm") %>%
+  column_spec(2, width = "2cm") %>% 
+  footnote(
+    general = "Values are weighted percentages describing the demographic composition of U.S. gun owners between 2013 and 2025.",
+    threeparttable = TRUE,
+    escape = FALSE
+  )
+
+save_kable(
+  overview_tbl,
+  file = here(path_ol, "tables/summary.tex")
+)
+```
+
+
+```{r}
+overview <-
+  ds %>%
+  tbl_svysummary(
+    include = demovars,
+    statistic = list(all_categorical() ~ "{p}%")
+  )
+
+overview_tbl <-
+  overview %>%
+  modify_header(
+    label ~ "Characteristic",
+    all_stat_cols() ~ "Overall"
+  ) %>%
+  modify_table_body(
+    ~ .x %>%
+      mutate(
+        label = ifelse(row_type == "level", paste0("  ", label), label)
+      )
+  ) %>%
+  as_kable_extra(
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position"),   # ← removed scale_down
+    font_size = 9,
+    position = "center"
+  ) %>%
+  column_spec(1, width = "0.65\\textwidth") %>%  # ← expand stub
+  column_spec(2, width = "0.25\\textwidth") %>%  # ← expand data col
+  footnote(
+    general =
+      "Values are weighted percentages describing the demographic composition of U.S. gun owners between 2013 and 2025.",
+    threeparttable = TRUE,
+    escape = FALSE
+  )
+
+save_kable(
+  overview_tbl,
+  file = here(path_ol, "tables/summary.tex")
+)
+
+
+
+```
+
+## By year
+
+```{r}
+year <-
+  ds %>%
+  tbl_svysummary(
+    by = year,
+    include = demovars,
+    missing = "no",
+    statistic = all_categorical() ~ "{p}%"
+  )
+
+
+year %>% 
+  as_gt() %>%
+  tab_options(
+    table.layout = "fixed",
+    latex.tbl.pos = "h",
+    data_row.padding = gt::px(2),
+    row_group.padding = gt::px(3),
+    summary_row.padding = gt::px(2)
+  ) %>% 
+  tab_caption("Demographic characteristics of US gun owners by year, 2013 and 2025") %>% 
+  
+  gtsave(filename = here(path_ol, "tables/summary-year.tex"))
+
+# Replace \fontsize{12.0pt}{14.0pt}\selectfont = \fontsize{10.5pt}{12.5pt}\selectfont with 
+# And add \label{tab:SummaryYear}
+```
+
+
+```{r}
+year_tbl <-
+  ds %>%
+  tbl_svysummary(
+    by = year,
+    include = demovars,
+    missing = "no",
+    statistic = all_categorical() ~ "{p}%"
+  ) %>%
+  modify_header(
+    label ~ "Characteristic",
+    stat_1 ~ "2013 (N = 947)",
+    stat_2 ~ "2015 (N = 524)",
+    stat_3 ~ "2017 (N = 530)",
+    stat_4 ~ "2019 (N = 445)",
+    stat_5 ~ "2021 (N = 807)",
+    stat_6 ~ "2023 (N = 997)",
+    stat_7 ~ "2025 (N = 1,002)"
+  ) %>%
+  modify_table_body(
+    ~ .x %>%
+      mutate(
+        label = ifelse(
+          row_type == "level",
+          paste0("  ", label),
+          label
+        )
+      )
+  ) %>%
+  as_kable_extra(
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE,
+    label = "SummaryYear"
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    font_size = 9
+  ) %>%
+  column_spec(1, width = "4cm") %>%
+  column_spec(2:8, width = "1.3cm") %>% 
+  footnote(
+    general = "Values are weighted percentages describing the demographic composition of U.S. gun owners by survey year.",
+    threeparttable = TRUE,
+    escape = FALSE
+  )
+
+save_kable(
+  year_tbl,
+  file = here(path_ol, "tables/summary-year.tex")
+)
+```

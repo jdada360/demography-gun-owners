@@ -289,6 +289,38 @@ in gun ownership in this group.
 merge %>% tabyl(racethnicity)
 ```
 
+## Education
+
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    educ = 
+      case_when(
+        grepl("Less", educ5) ~ "Less than high school",
+        grepl("HS", educ5) ~ "High school graduate",
+        grepl("Some|Voc", educ5) ~ "Some college, or associates degree",
+        grepl("Post", educ5) ~ "Graduate study",
+        TRUE ~ educ5
+      ) %>% 
+      factor(
+        levels = 
+          c(
+            "Less than high school",
+            "High school graduate",
+            "Some college, or associates degree",
+            "Bachelors degree",
+            "Graduate study"
+          )
+      )
+  )
+```
+
+```{r}
+merge %>% tabyl(educ)
+```
+
 ## Relabel variables
 
 ```{r}
@@ -400,6 +432,7 @@ merge %>%
   tabyl(year)
 ```
 
+
 ```{r}
 gen <-
   merge %>% 
@@ -422,7 +455,9 @@ gen %>%
   ) %>% 
   group_by(year) %>% 
   summarise(
-    rate = sum(g*weight, na.rm = T)/sum(weight, na.rm = T) %>%  round(2) *100
+    rate = 
+      sum(g*weight, na.rm = T)/sum(weight, na.rm = T) %>%  
+      round(2) *100
   )
 ```
 
@@ -550,6 +585,7 @@ gun %>% filter(is.na(weight)) %>% nrow() == 0
 ```{r}
 gun %>% tabyl(year)
 ```
+
 ### Harmonize gun ownership variables
 
 If a gun owner refuses to answer to the question about what kind of gun they own in the years the question is asked, we code this as saying that they own another typeof gun.

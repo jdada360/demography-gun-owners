@@ -49,27 +49,7 @@ gun <-
       "clean",
       "gs-gun-owners.rds"
       )
-  ) %>% 
-  mutate(
-    educ = 
-      case_when(
-        grepl("Less", educ5) ~ "Less than high school",
-        grepl("HS", educ5) ~ "High school graduate",
-        grepl("Some|Voc", educ5) ~ "Some college, or associates degree",
-        grepl("Post", educ5) ~ "Graduate study",
-        TRUE ~ educ5
-      ) %>% 
-      factor(
-        levels = 
-          c(
-            "Less than high school",
-            "High school graduate",
-            "Some college, or associates degree",
-            "Bachelors degree",
-            "Graduate study"
-          )
-      )
-  )
+  ) 
 ```
 
 
@@ -312,7 +292,7 @@ save_kable(
 )
 ```
 
-## Educational status among black women
+## Political affiliation among black women
 
 ```{r}
 des <- svydesign(
@@ -323,12 +303,12 @@ des <- svydesign(
 
 des <- update(
   des,
-  rge = interaction(racethnicity, gender, educ, sep = " x ")
+  int = interaction(racethnicity, gender, party3, sep = " x ")
 )
 
-rge_ci <- 
+ci <- 
   svyby(
-    ~rge,
+    ~int,
     ~year,
     des,
     svymean,
@@ -340,7 +320,7 @@ rge_ci <-
 
 
 long <-
-  rge_ci %>%
+  ci %>%
   pivot_longer(
     cols = -year,
     names_to = "name",
@@ -379,7 +359,7 @@ long <-
       str_detect(group, "asian") ~ 3,
       str_detect(group, "other") ~ 4,
       str_detect(group, "races") ~ 5,
-      str_detect(group, "rge_hispanic") ~ 6
+      str_detect(group, "int_hispanic") ~ 6
     ) %>% 
       factor(
         levels = 1:6,
@@ -392,23 +372,19 @@ long <-
             "Hispanic"
             )
       ),
-    educ = 
+    party = 
       case_when(
-        grepl("less", group) ~ 1,
-        grepl("high_sch", group) ~ 2,
-        grepl("som", group) ~ 3,
-        grepl("post", group) ~ 5,
-        TRUE ~ 4
+        grepl("rep", group) ~ 1,
+        grepl("dem", group) ~ 2,
+        TRUE ~ 3
       ) %>% 
       factor(
-        levels = 1:5, 
+        levels = 1:3, 
         labels = 
           c(
-            "Less than high school",
-            "High school graduate",
-            "Some college, or associates degree",
-            "Bachelors degree",
-            "Graduate study"
+            "Republican",
+            "Democrat",
+            "Independent"
           )
       ),
     # lower CI at least 0
@@ -416,8 +392,6 @@ long <-
   ) %>% 
   filter(!is.na(pct)) 
 ```
-
-
 
 ## Look at black women
 
@@ -431,90 +405,232 @@ bw <-
   mutate(tot = sum(pct)) %>% 
   ungroup() %>% 
   transmute(
-    year,
+    year = factor(year),
     gender,
     race,
-    educ,
+    party,
     prop = (pct/tot)*100
     ) 
 ```
 
-## Plot education level of black women gun owners
+## Plot political affiliation of black women gun owners
+
 
 ```{r}
-label_data <- bw %>%
-  filter(year == max(year)) %>%
-  mutate(
-    label = if_else(
-      educ == "Some college, or associates degree",
-      stringr::str_wrap(educ, width = 20),
-      educ
-    )
+bw %>% 
+  ggplot(
+    aes(
+      x = year,
+      y = prop,
+      group = party,
+      color = party,
+      fill = party
+      )
+    ) +
+    geom_col() +
+    scale_y_continuous(
+        breaks = seq(0, 50, 5),
+        limits = c(0, 50)
+    ) +
+    scale_color_paletteer_d("MoMAColors::Althoff") +
+    theme +
+    theme(
+        legend.position = "none",
+        text = element_text(
+            family = "Times New Roman",
+            size = 12
+        ),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12),
+        plot.margin = margin(10, 90, 10, 10),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = "grey95"),
+        panel.grid.minor = element_line(color = "grey100")
+    ) +
+    labs(
+        x = "Survey Year",
+        y = "Percent of Black, non-Hispanic Gun Owners"
+        ) +
+  coord_cartesian(clip = "off")
+
+
+ggsave(
+  height = 6,
+  width = 8,
+  here(
+    path_ol,
+    "figures/bw-political.jpeg"
   )
+)
 ```
 
 
+
+
+## Age mong black women
+
 ```{r}
-# ggplot(
-#     bw ,
-#     aes(
-#       x = year,
-#       y = prop,
-#       group = educ, 
-#       color = educ,
-#       fill = educ
-#       )
-#     ) +
-#     geom_col() +
-#     geom_text(
-#         data = label_data,
-#         aes(
-#             x = year,
-#             y = prop,
-#             label = label,
-#             color = educ
-#         ),
-#         family = "Times New Roman",
-#         fontface = "bold",
-#         size = 3.5,
-#         hjust = -0.05
-#     ) +
-#     scale_x_continuous(
-#         breaks = unique(plot_data$year),
-#         limits = c(min(plot_data$year), max(plot_data$year) + 1.2)
-#     ) +
-#     scale_y_continuous(
-#         breaks = seq(0, 50, 5),
-#         limits = c(0, 50)
-#     ) +
-#     scale_color_paletteer_d("MoMAColors::Althoff") +
-#     theme +
-#     theme(
-#         legend.position = "none",
-#         text = element_text(
-#             family = "Times New Roman",
-#             size = 12
-#         ),
-#         axis.title = element_text(size = 12),
-#         axis.text = element_text(size = 12),
-#         plot.margin = margin(10, 90, 10, 10),
-#         panel.border = element_blank(),
-#         panel.grid.major = element_line(color = "grey95"),
-#         panel.grid.minor = element_line(color = "grey100") 
-#     ) +
-#     labs(
-#         x = "Survey Year",
-#         y = "Percent of Black, non-Hispanic Gun Owners"
-#         ) + 
-#   coord_cartesian(clip = "off") 
-# 
-# 
-# ggsave(
-#   height = 6,
-#   width = 8, 
-#   here(
-#     path_ol, 
-#     "figures/bw-educ.jpeg"
-#   )
-# )
+des <- svydesign(
+  ids = ~1,          # no clustering info
+  weights = ~weight,
+  data = gun
+)
+
+des <- update(
+  des,
+  int = interaction(racethnicity, gender, age4, sep = " x ")
+)
+
+ci <- 
+  svyby(
+    ~int,
+    ~year,
+    des,
+    svymean,
+    vartype = c("se", "ci"),
+    level = 0.95
+    ) %>% 
+  clean_names() %>% 
+  mutate(across(-year, ~ .x * 100))
+
+
+long <-
+  ci %>%
+  pivot_longer(
+    cols = -year,
+    names_to = "name",
+    values_to = "value"
+  ) %>%
+  mutate(
+    stat = case_when(
+      str_starts(name, "se_")   ~ "se",
+      str_starts(name, "ci_l_") ~ "ci_l",
+      str_starts(name, "ci_u_") ~ "ci_u",
+      TRUE                      ~ "pct"
+    ),
+    group = name %>%
+      str_remove("^se_") %>%
+      str_remove("^ci_l_") %>%
+      str_remove("^ci_u_")
+  ) %>%
+  select(year, group, stat, value) %>%
+  pivot_wider(
+    names_from = stat,
+    values_from = value
+  ) %>% 
+   mutate(
+    gender = 
+      case_when(
+        str_detect(group, "female") ~ 2,
+        str_detect(group, "male") ~ 1,
+        TRUE ~ 3) %>% 
+      factor(
+        levels = 1:3, 
+        labels = c("Male", "Female", "Other")
+      ),
+    race = case_when(
+      str_detect(group, "white") ~ 1,
+      str_detect(group, "black") ~ 2,
+      str_detect(group, "asian") ~ 3,
+      str_detect(group, "other") ~ 4,
+      str_detect(group, "races") ~ 5,
+      str_detect(group, "int_hispanic") ~ 6
+    ) %>% 
+      factor(
+        levels = 1:6,
+        labels = 
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Asian, non-Hispanic",
+            "Other, non-Hispanic",
+            "2+ Races, non-Hispanic",
+            "Hispanic"
+            )
+      ),
+    age = 
+      case_when(
+        grepl("18_29", group) ~ 1,
+        grepl("30_44", group) ~ 2,
+        grepl("45_59", group) ~ 3,
+        TRUE ~ 4
+      ) %>% 
+      factor(
+        levels = 1:4, 
+        labels = 
+          c(
+            "18-29",
+            "30-44",
+            "45-59",
+            "60+"
+          )
+      ),
+    # lower CI at least 0
+    ci_l = ifelse(ci_l < 0, 0, ci_l)
+  )
+```
+
+## Look at black women
+
+Calculate the percentage among black women
+
+```{r}
+bw <-
+  long %>% 
+  filter(gender == "Female" & grepl("Black", race))  %>% 
+  group_by(year) %>% 
+  mutate(tot = sum(pct)) %>% 
+  ungroup() %>% 
+  transmute(
+    year = factor(year),
+    gender,
+    race,
+    age,
+    prop = (pct/tot)*100
+    ) 
+```
+
+## Plot age of black women gun owners
+
+Weights in 2017 and 2019 are not gun owners specific and lead to erroneous inference.
+
+```{r}
+bw %>% 
+  filter(!(year %in% as.character(2017:2019))) %>% 
+  ggplot(
+    aes(
+      x = year,
+      y = prop,
+      group = age,
+      color = age,
+      fill = age
+      )
+    ) +
+    geom_col() +
+    scale_color_paletteer_d("MoMAColors::Althoff") +
+    scale_fill_paletteer_d("MoMAColors::Althoff") +
+    guides(color = "none") +
+    theme +
+    theme(
+      legend.position = "top",
+      legend.direction = "horizontal",
+      legend.background = element_blank(),
+      legend.key = element_blank(),
+      legend.text = element_text(size = 8),
+      legend.title = element_text(size = 10, hjust = .5)
+      ) +
+    labs(
+      x = "Survey Year",
+      y = "Percent of Black non-Hispanic Female Gun Owners",
+      fill = "Age (years)"
+      )
+
+
+ggsave(
+  height = 6,
+  width = 8,
+  here(
+    path_ol,
+    "figures/bw-age.jpeg"
+  )
+)
 ```
