@@ -128,9 +128,9 @@ long <-
 cap <-
   paste0(
     "This figure plots percent of U.S. gun-owner adults (N=",
-     nrow(filter(gun , year == 2015)),") stratified by political affiliation ",
+     nrow(filter(gun , year != 2015)),") stratified by political affiliation ",
      "from seven waves of the National ",
-    "Survey of Gun Policy, spanning 2013 to 2025. 2015 is excluded because of missing data"
+    "Survey of Gun Policy, spanning 2013 to 2025. 2015 is excluded because of missing data."
   )
 ```
 
