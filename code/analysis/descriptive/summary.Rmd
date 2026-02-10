@@ -159,24 +159,18 @@ overview_tbl <-
         )
       )
   ) %>%
-  modify_footnote(all_stat_cols() ~ NA_character_) %>% 
+  modify_footnote(all_stat_cols() ~ NA_character_) %>%
   as_kable_extra(
     format = "latex",
     booktabs = TRUE,
-    escape = FALSE,
-    label = "Summary"
+    escape = FALSE
   ) %>%
   kable_styling(
     latex_options = c("hold_position", "scale_down"),
     font_size = 9
   ) %>%
-  column_spec(1, width = "6cm") %>%
-  column_spec(2, width = "2cm") %>% 
-  footnote(
-    general = "Values are weighted percentages describing the demographic composition of U.S. gun owners between 2013 and 2025.",
-    threeparttable = TRUE,
-    escape = FALSE
-  )
+  column_spec(1, width = "4cm") %>%
+  column_spec(2, width = "2cm")
 
 save_kable(
   overview_tbl,
