@@ -93,3 +93,8 @@ st(
   fit.page = '\\textwidth'
   )
 ```
+
+
+```{r}
+nrow(gun)
+```

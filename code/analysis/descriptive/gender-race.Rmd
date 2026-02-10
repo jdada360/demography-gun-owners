@@ -28,6 +28,7 @@ packages <-
     "dplyr",
     "here",
     "vtable",
+    "paletteer",
     "fastDummies"
   )
 
@@ -54,6 +55,15 @@ gun <-
 
 ## Race by gender
 
+### `survey`
+
+```{r}
+
+
+```
+
+
+### Manual
 
 ```{r}
 rg <-
@@ -78,7 +88,8 @@ rg <-
   summarize(
     across(
       starts_with("rg_"), ~ (sum(.x)/sum(weight))*100
-    )
+    ),
+    n = n()
   )
 ```
 
@@ -130,27 +141,139 @@ long %>% tabyl(name, year)
 ```
 
 
+## Use `survey` package
 
 ```{r}
-long %>% 
-  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic") %>% 
+des <- svydesign(
+  ids = ~1,          # no clustering info
+  weights = ~weight,
+  data = gun
+)
+
+des <- update(
+  des,
+  rg = interaction(racethnicity, gender, sep = " x ")
+)
+
+rg_ci <- 
+  svyby(
+    ~rg,
+    ~year,
+    des,
+    svymean,
+    vartype = c("se", "ci"),
+    level = 0.95
+    ) %>% 
+  clean_names() %>% 
+  mutate(across(-year, ~ .x * 100))
+
+
+long <-
+  rg_ci %>%
+  pivot_longer(
+    cols = -year,
+    names_to = "name",
+    values_to = "value"
+  ) %>%
+  mutate(
+    stat = case_when(
+      str_starts(name, "se_")   ~ "se",
+      str_starts(name, "ci_l_") ~ "ci_l",
+      str_starts(name, "ci_u_") ~ "ci_u",
+      TRUE                      ~ "pct"
+    ),
+    group = name %>%
+      str_remove("^se_") %>%
+      str_remove("^ci_l_") %>%
+      str_remove("^ci_u_")
+  ) %>%
+  select(year, group, stat, value) %>%
+  pivot_wider(
+    names_from = stat,
+    values_from = value
+  ) %>% 
+   mutate(
+    gender = 
+      case_when(
+        str_detect(group, "female") ~ 2,
+        str_detect(group, "male") ~ 1,
+        TRUE ~ 3) %>% 
+      factor(
+        levels = 1:3, 
+        labels = c("Male", "Female", "Other")
+      ),
+    race = case_when(
+      str_detect(group, "white") ~ 1,
+      str_detect(group, "black") ~ 2,
+      str_detect(group, "asian") ~ 3,
+      str_detect(group, "other") ~ 4,
+      str_detect(group, "races") ~ 5,
+      str_detect(group, "rg_hispanic") ~ 6
+    ) %>% 
+      factor(
+        levels = 1:6,
+        labels = 
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Asian, non-Hispanic",
+            "Other, non-Hispanic",
+            "2+ Races, non-Hispanic",
+            "Hispanic"
+            )
+      ),
+    # lower CI at least 0
+    ci_l = ifelse(ci_l < 0, 0, ci_l)
+  ) %>% 
+  filter(!is.na(pct)) 
+```
+
+
+## Percentage of U.S. Gun Owners that are Women of Color
+
+```{r}
+cap <-
+  paste0(
+    "This figure plots non-White female-identifying U.S. gun-owner adults as a ",
+    "percent of all U.S. gun-owners (N=",
+     nrow(gun),") from seven waves of the National Survey of Gun Policy, ",
+    "spanning 2013 to 2025.",
+    " For reference, during the same period, ",
+    "White non-Hispanic women composed roughly ",
+    mean(filter(long, name == "rg_white_non_hispanic_x_female")$value) %>% 
+      round(0),
+    " percent of U.S. gun owners, and White non-Hispanic women composed roughly ",
+    mean(filter(long, name == "rg_white_non_hispanic_x_male")$value) %>% 
+      round(0),
+    " percent of U.S. gun owners."
+  )
+```
+
+### `survey`
+
+```{r}
+woc <-
+  long %>% 
+  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic" )
+```
+
+```{r}
+woc %>%  
+  mutate(year = factor(year)) %>%  
   ggplot(
-    aes(x = year, y = value, group = race, color = race)
+    aes(x = year, y = pct, group = race, color = race)
   ) +
-  geom_point() +
-  geom_line() +
+  geom_line(linewidth = 1.25) +
   theme +
   theme(
     legend.title = element_blank()
   ) +
-  scale_color_viridis_d() +
-  scale_x_continuous(breaks = seq(2013, 2025, 2)) +
+  scale_color_paletteer_d("nationalparkcolors::DeathValley") +
   scale_y_continuous(
     breaks = seq(0, 7, 1),
     limits = c(0, 7)
     ) +
   labs(
-    x = "Year",
+    x = "Survey Year",
     y = "Percent of U.S. gun owners"
   )
 
@@ -163,5 +286,115 @@ ggsave(
   )
 )
 ```
+
+
+
+### Manual
+
+```{r}
+long <-
+  rg %>% 
+  pivot_longer(
+    cols = -"year"
+  ) %>% 
+  mutate(
+    gender = 
+      case_when(
+        str_detect(name, "female") ~ 2,
+        str_detect(name, "male") ~ 1,
+        TRUE ~ 3) %>% 
+      factor(
+        levels = 1:3, 
+        labels = c("Male", "Female", "Other")
+      ),
+    race = case_when(
+      str_detect(name, "white") ~ 1,
+      str_detect(name, "black") ~ 2,
+      str_detect(name, "asian") ~ 3,
+      str_detect(name, "other") ~ 4,
+      str_detect(name, "races") ~ 5,
+      str_detect(name, "rg_hispanic") ~ 6
+    ) %>% 
+      factor(
+        levels = 1:6,
+        labels = 
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Asian, non-Hispanic",
+            "Other, non-Hispanic",
+            "2+ Races, non-Hispanic",
+            "Hispanic"
+            )
+      )
+  ) %>% 
+  filter(!is.na(value))
+
+```
+
+
+```{r}
+woc <-
+  long %>% 
+  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic" )
+```
+
+```{r}
+cap <-
+  paste0(
+    "This figure plots non-White female-identifying U.S. gun-owner adults as a ",
+    "percent of all U.S. gun-owners (N=",
+     nrow(gun),") from seven waves of the National Survey of Gun Policy, ",
+    "spanning 2013 to 2025.",
+    " For reference, during the same period, ",
+    "White non-Hispanic women composed roughly ",
+    mean(filter(long, name == "rg_white_non_hispanic_x_female")$value) %>% 
+      round(0),
+    " percent of U.S. gun owners, and White non-Hispanic women composed roughly ",
+    mean(filter(long, name == "rg_white_non_hispanic_x_male")$value) %>% 
+      round(0),
+    " percent of U.S. gun owners."
+  )
+```
+
+```{r}
+woc %>%  
+  mutate(year = factor(year)) %>%  
+  ggplot(
+    aes(x = year, y = value, group = race, color = race)
+  ) +
+  geom_point() +
+  geom_line() +
+  theme +
+  theme(
+    legend.title = element_blank()
+  ) +
+  scale_color_viridis_d() +
+  scale_y_continuous(
+    breaks = seq(0, 7, 1),
+    limits = c(0, 7)
+    ) +
+  labs(
+    x = "Survey Year",
+    y = "Percent of U.S. gun owners"
+  )
+
+ggsave(
+  height = 6,
+  width = 8, 
+  here(
+    path_ol, 
+    "figures/non-white-female.jpeg"
+  )
+)
+```
+
+
+## Gap in gun ownership rate within races across genders 
+
+```{r}
+
+```
+
+
 
 

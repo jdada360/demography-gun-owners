@@ -242,7 +242,7 @@ merge <-
         grepl("self", employ) ~ "Self-employed",
         grepl("retired", employ) ~ "Retired",
         TRUE ~ "Unemployed"
-      )
+      ) %>% factor
   )
 ```
 
