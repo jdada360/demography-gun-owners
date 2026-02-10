@@ -1,0 +1,256 @@
+# Education
+
+This chapter focuses time trends in education
+
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gun-owners.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "ggrepel",
+    "stringr",
+    "dplyr",
+    "here",
+    "vtable",
+    "paletteer",
+    "fastDummies"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "clean",
+      "gs-gun-owners.rds"
+      )
+  )
+```
+
+```{r}
+gun %>% tabyl(educ5)
+```
+
+## Harmonize education
+
+```{r}
+harmon <-
+  gun %>% 
+  mutate(
+    educ = 
+      case_when(
+        grepl("Less", educ5) ~ "Less than high school",
+        grepl("HS", educ5) ~ "High school graduate",
+        grepl("Some|Voc", educ5) ~ "Some college, or associates degree",
+        grepl("Post", educ5) ~ "Graduate study",
+        TRUE ~ educ5
+      ) %>% 
+      factor(
+        levels = 
+          c(
+            "Less than high school",
+            "High school graduate",
+            "Some college, or associates degree",
+            "Bachelors degree",
+            "Graduate study"
+          )
+      )
+  )
+```
+
+```{r}
+harmon %>% tabyl(educ)
+```
+
+## Estimates with CIs
+
+
+```{r}
+des <- svydesign(
+  ids = ~1,          # no clustering info
+  weights = ~weight,
+  data = harmon
+)
+
+educ <- 
+  svyby(
+    ~educ,
+    ~year,
+    des,
+    svymean,
+    vartype = c("se", "ci"),
+    level = 0.95
+    ) %>% 
+  clean_names() %>% 
+  mutate(across(-year, ~ .x * 100))
+```
+
+
+```{r}
+long <-
+  educ %>%
+  pivot_longer(
+    cols = -year,
+    names_to = "name",
+    values_to = "value"
+  ) %>%
+  mutate(
+    stat = case_when(
+      str_starts(name, "se_")   ~ "se",
+      str_starts(name, "ci_l_") ~ "ci_l",
+      str_starts(name, "ci_u_") ~ "ci_u",
+      TRUE                      ~ "pct"
+    ),
+    group = name %>%
+      str_remove("^se_") %>%
+      str_remove("^ci_l_") %>%
+      str_remove("^ci_u_")
+  ) %>%
+  select(year, group, stat, value) %>%
+  pivot_wider(
+    names_from = stat,
+    values_from = value
+  ) %>% 
+   mutate(
+    educ = 
+      case_when(
+        str_detect(group, "less_than") ~ 1,
+         str_detect(group, "high_school") ~ 2,
+        str_detect(group, "some") ~ 3,
+        str_detect(group, "bach") ~ 4,
+        TRUE ~ 5) %>% 
+      factor(
+        levels = 1:5, 
+        labels = 
+          c(
+            "Less than high school",
+            "High school graduate",
+            "Some college, or associates degree",
+            "Bachelors degree",
+            "Graduate study"
+          ) %>% str_wrap(80)
+      ),
+    # lower CI at least 0
+    ci_l = ifelse(ci_l < 0, 0, ci_l)
+  ) %>% 
+  filter(!is.na(pct)) 
+```
+
+
+## Gun ownership by education
+
+```{r}
+cap <-
+  paste0(
+    "This figure plots percent of U.S. gun-owner adults (N=",
+     nrow(gun),") stratified by their highest level of education ",
+    "from seven waves of the National ",
+    "Survey of Gun Policy, spanning 2013 to 2025."
+  )
+```
+
+
+```{r}
+plot_data <- long %>%
+    mutate(year = as.numeric(as.character(year)))
+
+label_data <- plot_data %>%
+  filter(year == max(year)) %>%
+  mutate(
+    label = if_else(
+      educ == "Some college, or associates degree",
+      stringr::str_wrap(educ, width = 20),
+      educ
+    )
+  )
+```
+
+```{r}
+ggplot(
+    plot_data,
+    aes(
+      x = year,
+      y = pct,
+      group = educ, 
+      color = educ
+      )
+    ) +
+    geom_line(linewidth = 1.25) +
+    geom_text(
+        data = label_data,
+        aes(
+            x = year,
+            y = pct,
+            label = label,
+            color = educ
+        ),
+        family = "Times New Roman",
+        fontface = "bold",
+        size = 3.5,
+        hjust = -0.05
+    ) +
+    scale_x_continuous(
+        breaks = unique(plot_data$year),
+        limits = c(min(plot_data$year), max(plot_data$year) + 1.2)
+    ) +
+    scale_y_continuous(
+        breaks = seq(0, 50, 5),
+        limits = c(0, 50)
+    ) +
+    scale_color_paletteer_d("MoMAColors::Althoff") +
+    theme +
+    theme(
+        legend.position = "none",
+        text = element_text(
+            family = "Times New Roman",
+            size = 12
+        ),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12),
+        plot.margin = margin(10, 90, 10, 10),
+        panel.border = element_blank(),
+        panel.grid.major = element_line(color = "grey95"),
+        panel.grid.minor = element_line(color = "grey100") 
+    ) +
+    labs(
+        x = "Survey Year",
+        y = "Percent of U.S. gun owners"
+        ) + 
+  coord_cartesian(clip = "off") 
+
+
+ggsave(
+  height = 6,
+  width = 8, 
+  here(
+    path_ol, 
+    "figures/educ.jpeg"
+  )
+)
+```

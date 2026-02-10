@@ -59,3 +59,14 @@ kbl.format = list(big.mark = ",", scientific = FALSE)
 conflicts_prefer(dplyr::filter)
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::group_rows)
+
+
+# scale_color_paletteer_d("nationalparkcolors::DeathValley") 
+# nationalparkcolors::park_palette("DeathValley")
+# scale_color_paletteer_d("nationalparkcolors::ChannelIslands") 
+# scale_color_paletteer_d("MoMAColors::Althoff") 
+# scale_color_paletteer_d("MoMAColors::Abbott")
+# scale_color_paletteer_d("NatParksPalettes::Arches2")
+# scale_color_paletteer_d("fishualize::Acanthostracion_polygonius")
+# scale_color_paletteer_d("tvthemes::Day")
+

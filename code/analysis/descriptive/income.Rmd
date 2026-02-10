@@ -1,0 +1,175 @@
+# Income
+
+This chapter focuses time trends in income
+
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gun-owners.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "dplyr",
+    "here",
+    "vtable",
+    "paletteer",
+    "fastDummies"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "clean",
+      "gs-gun-owners.rds"
+      )
+  )
+```
+
+
+## Estimates with CIs
+
+```{r}
+gun %>% tabyl(income4)
+```
+
+```{r}
+des <- svydesign(
+  ids = ~1,          # no clustering info
+  weights = ~weight,
+  data = gun
+)
+
+income <- 
+  svyby(
+    ~income4,
+    ~year,
+    des,
+    svymean,
+    vartype = c("se", "ci"),
+    level = 0.95
+    ) %>% 
+  clean_names() %>% 
+  mutate(across(-year, ~ .x * 100))
+
+
+long <-
+  income %>%
+  pivot_longer(
+    cols = -year,
+    names_to = "name",
+    values_to = "value"
+  ) %>%
+  mutate(
+    stat = case_when(
+      str_starts(name, "se_")   ~ "se",
+      str_starts(name, "ci_l_") ~ "ci_l",
+      str_starts(name, "ci_u_") ~ "ci_u",
+      TRUE                      ~ "pct"
+    ),
+    group = name %>%
+      str_remove("^se_") %>%
+      str_remove("^ci_l_") %>%
+      str_remove("^ci_u_")
+  ) %>%
+  select(year, group, stat, value) %>%
+  pivot_wider(
+    names_from = stat,
+    values_from = value
+  ) %>% 
+   mutate(
+    income = 
+      case_when(
+        str_detect(group, "less") ~ 1,
+        str_detect(group, "30_000_60_000") ~ 2,
+        str_detect(group, "60_000_100_000") ~ 3,
+        TRUE ~ 4) %>% 
+      factor(
+        levels = 1:4, 
+        labels = 
+          c("<30,000", "30,000-60,000", "60,000-100,000", "100,000+")
+      ),
+    # lower CI at least 0
+    ci_l = ifelse(ci_l < 0, 0, ci_l)
+  ) %>% 
+  filter(!is.na(pct)) 
+```
+
+
+## Gun ownership by income overtime
+
+
+```{r}
+cap <-
+  paste0(
+    "This figure plots percent of U.S. gun-owner adults (N=",
+     nrow(gun),") stratified by income from seven waves of the National ",
+    "Survey of Gun Policy, spanning 2013 to 2025."
+  )
+```
+
+```{r}
+long %>% 
+  mutate(year = factor(year)) %>%  
+  ggplot(
+    aes(x = year, y = pct, group = income, color = income)
+  ) +
+  geom_line(linewidth = 1.25) +
+  # geom_errorbar(
+  #   aes(ymin = ci_l, ymax = ci_u)
+  # ) +
+  theme +
+  theme(
+    legend.position = c(0.2, .8),
+     legend.background = element_rect(
+      fill = "white",
+      color = "black"
+    ),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10)
+  ) +
+  scale_color_paletteer_d("nationalparkcolors::DeathValley") +
+  scale_y_continuous(
+    breaks = seq(0, 50, 5),
+    limits = c(10, 50)
+    ) +
+  labs(
+    x = "Survey Year",
+    y = "Percent of U.S. gun owners",
+    color = "Income (USD)"
+  ) 
+
+ggsave(
+  height = 6,
+  width = 8, 
+  here(
+    path_ol, 
+    "figures/income.jpeg"
+  )
+)
+```

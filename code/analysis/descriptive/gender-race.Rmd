@@ -55,94 +55,6 @@ gun <-
 
 ## Race by gender
 
-### `survey`
-
-```{r}
-
-
-```
-
-
-### Manual
-
-```{r}
-rg <-
-  gun %>% 
-  select( 
-    year, 
-    weight,
-    racethnicity,
-    gender
-    ) %>% 
-  mutate(
-    rg = paste0(racethnicity, " x ", gender) %>% factor
-  ) %>% 
-  dummy_cols("rg") %>% 
-  clean_names() %>% 
-  mutate(
-    across(
-      starts_with("rg_"), ~ .x * weight
-    )
-  ) %>% 
-  group_by(year) %>% 
-  summarize(
-    across(
-      starts_with("rg_"), ~ (sum(.x)/sum(weight))*100
-    ),
-    n = n()
-  )
-```
-
-```{r}
-long <-
-  rg %>% 
-  pivot_longer(
-    cols = -"year"
-  ) %>% 
-  mutate(
-    gender = 
-      case_when(
-        str_detect(name, "female") ~ 2,
-        str_detect(name, "male") ~ 1,
-        TRUE ~ 3) %>% 
-      factor(
-        levels = 1:3, 
-        labels = c("Male", "Female", "Other")
-      ),
-    race = case_when(
-      str_detect(name, "white") ~ 1,
-      str_detect(name, "black") ~ 2,
-      str_detect(name, "asian") ~ 3,
-      str_detect(name, "other") ~ 4,
-      str_detect(name, "races") ~ 5,
-      str_detect(name, "rg_hispanic") ~ 6
-    ) %>% 
-      factor(
-        levels = 1:6,
-        labels = 
-          c("White, non-Hispanic",
-            "Black, non-Hispanic",
-            "Asian, non-Hispanic",
-            "Other, non-Hispanic",
-            "2+ Races, non-Hispanic",
-            "Hispanic"
-            )
-      )
-  ) %>% 
-  filter(!is.na(value))
-```
-
-```{r}
-long %>% tabyl(race, gender)
-```
-
-```{r}
-long %>% tabyl(name, year)
-```
-
-
-## Use `survey` package
-
 ```{r}
 des <- svydesign(
   ids = ~1,          # no clustering info
@@ -239,10 +151,10 @@ cap <-
     "spanning 2013 to 2025.",
     " For reference, during the same period, ",
     "White non-Hispanic women composed roughly ",
-    mean(filter(long, name == "rg_white_non_hispanic_x_female")$value) %>% 
+    mean(filter(long, group == "rg_white_non_hispanic_x_female")$pct) %>% 
       round(0),
     " percent of U.S. gun owners, and White non-Hispanic women composed roughly ",
-    mean(filter(long, name == "rg_white_non_hispanic_x_male")$value) %>% 
+    mean(filter(long, group == "rg_white_non_hispanic_x_male")$pct) %>% 
       round(0),
     " percent of U.S. gun owners."
   )
@@ -251,7 +163,15 @@ cap <-
 ```{r}
 woc <-
   long %>% 
-  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic" )
+  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic" ) %>% 
+  mutate(
+    race = 
+      race %>% 
+      factor(
+        levels = 
+         
+      )
+  )
 ```
 
 ```{r}
@@ -263,16 +183,23 @@ woc %>%
   geom_line(linewidth = 1.25) +
   theme +
   theme(
-    legend.title = element_blank()
+    legend.position = c(0.2, .7),
+     legend.background = element_rect(
+      fill = "white",
+      color = "black"
+    ),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10)
   ) +
   scale_color_paletteer_d("nationalparkcolors::DeathValley") +
   scale_y_continuous(
-    breaks = seq(0, 7, 1),
-    limits = c(0, 7)
+    breaks = seq(0, 8, 2),
+    limits = c(0, 8)
     ) +
   labs(
     x = "Survey Year",
-    y = "Percent of U.S. gun owners"
+    y = "Percent of U.S. gun owners",
+    color = str_wrap("Racial ethnic group", 20)
   )
 
 ggsave(
@@ -324,7 +251,8 @@ note <-
     "racial ethnic group as a ",
     "percent of all U.S. gun-owners (N=",
      nrow(gun),") from seven waves of the National Survey of Gun Policy, ",
-    "spanning 2013 to 2025."
+    "spanning 2013 to 2025. Lower bounds of confidence intervals were truncated ",
+    "at 0."
   )
 ```
 
