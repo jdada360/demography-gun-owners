@@ -1,7 +1,6 @@
 # Gender and Racial composition
 
-This chapter focuses on exploring the gender and racial composition of US gun owners
-using figures.
+This chapter focuses on exploring the gender and racial composition of US gun owners using figures.
 
 
 **Input**
@@ -57,7 +56,7 @@ gun <-
 
 ```{r}
 des <- svydesign(
-  ids = ~1,          # no clustering info
+  ids = ~1,       
   weights = ~weight,
   data = gun
 )
@@ -78,8 +77,9 @@ rg_ci <-
     ) %>% 
   clean_names() %>% 
   mutate(across(-year, ~ .x * 100))
+```
 
-
+```{r}
 long <-
   rg_ci %>%
   pivot_longer(
@@ -115,12 +115,12 @@ long <-
         labels = c("Male", "Female", "Other")
       ),
     race = case_when(
+      str_detect(group, "rg_hispanic") ~ 6,
       str_detect(group, "white") ~ 1,
       str_detect(group, "black") ~ 2,
       str_detect(group, "asian") ~ 3,
       str_detect(group, "other") ~ 4,
-      str_detect(group, "races") ~ 5,
-      str_detect(group, "rg_hispanic") ~ 6
+      str_detect(group, "races") ~ 5
     ) %>% 
       factor(
         levels = 1:6,
@@ -134,13 +134,113 @@ long <-
             )
       ),
     # lower CI at least 0
-    ci_l = ifelse(ci_l < 0, 0, ci_l)
-  ) %>% 
-  filter(!is.na(pct)) 
+    ci_l = ifelse(ci_l < 0, 0, ci_l),
+    # indicator for people of color
+    poc = race !="White, non-Hispanic",
+    year = factor(year)
+  ) 
+```
+
+```{r}
+long %>% tabyl(poc)
+```
+
+## Percentage of U.S. Gun Owners that are Women of Color
+
+
+```{r}
+genlist <- c("female", "male")
+genrace <-
+  map(
+   genlist, ~ 
+     filter(
+       long, 
+       poc & gender == str_to_title(.x)
+       )
+  )
+```
+
+## Define function to plot by gender
+
+```{r}
+p <-
+  map(
+    genrace, 
+    ~ {
+      
+      .x %>%  
+        ggplot(
+          aes(
+            x = year,
+            y = pct,
+            group = race,
+            color = race
+            )
+        ) +
+        geom_line(linewidth = 1.25) +
+        theme +
+        theme(
+          legend.position = c(0.2, .7),
+           legend.background = element_rect(
+            fill = "white",
+            color = "black"
+          ),
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 10)
+        ) +
+        scale_color_paletteer_d("nationalparkcolors::DeathValley") +
+        labs(
+          x = "Survey Year",
+          y = "Percent of U.S. gun owners",
+          color = str_wrap("Racial ethnic group", 20)
+        )
+      }
+    )
+```
+
+```{r}
+walk(
+  seq_along(genlist), ~{
+    
+    p <- p[[.x]]
+    
+    if (.x == 1){
+      
+      p <-
+        p +
+        scale_y_continuous(
+          breaks = seq(0, 8, 2),
+          limits = c(0, 8)
+          )
+    }
+    
+    else (
+      p <-
+        p +
+        scale_y_continuous(
+          breaks = seq(0, 14, 2),
+          limits = c(0, 14)
+          ) + 
+        theme(legend.position = c(0.2, .75))
+    )
+  
+  print(p)
+  
+  ggsave(
+    height = 6,
+    width = 8, 
+    here(
+      path_ol, 
+      "figures",
+      paste0("non-white-", genlist[[.x]], ".jpeg")
+      )
+    )
+  }
+)
 ```
 
 
-## Percentage of U.S. Gun Owners that are Women of Color
+## Define caption
 
 ```{r}
 cap <-
@@ -150,7 +250,7 @@ cap <-
      nrow(gun),") from seven waves of the National Survey of Gun Policy, ",
     "spanning 2013 to 2025.",
     " For reference, during the same period, ",
-    "White non-Hispanic women composed roughly ",
+    "White non-Hispanic XXX composed roughly ",
     mean(filter(long, group == "rg_white_non_hispanic_x_female")$pct) %>% 
       round(0),
     " percent of U.S. gun owners, and White non-Hispanic women composed roughly ",
@@ -160,57 +260,6 @@ cap <-
   )
 ```
 
-```{r}
-woc <-
-  long %>% 
-  filter(gender != "Other" & gender == "Female" & race != "White, non-Hispanic" ) %>% 
-  mutate(
-    race = 
-      race %>% 
-      factor(
-        levels = 
-         
-      )
-  )
-```
-
-```{r}
-woc %>%  
-  mutate(year = factor(year)) %>%  
-  ggplot(
-    aes(x = year, y = pct, group = race, color = race)
-  ) +
-  geom_line(linewidth = 1.25) +
-  theme +
-  theme(
-    legend.position = c(0.2, .7),
-     legend.background = element_rect(
-      fill = "white",
-      color = "black"
-    ),
-    legend.text = element_text(size = 8),
-    legend.title = element_text(size = 10)
-  ) +
-  scale_color_paletteer_d("nationalparkcolors::DeathValley") +
-  scale_y_continuous(
-    breaks = seq(0, 8, 2),
-    limits = c(0, 8)
-    ) +
-  labs(
-    x = "Survey Year",
-    y = "Percent of U.S. gun owners",
-    color = str_wrap("Racial ethnic group", 20)
-  )
-
-ggsave(
-  height = 6,
-  width = 8, 
-  here(
-    path_ol, 
-    "figures/non-white-female.jpeg"
-  )
-)
-```
 
 ### Table with confidence intervals
 
@@ -226,7 +275,7 @@ tab <-
     race = 
       race %>% 
       factor(
-      labels = 
+      levels = 
         c("White, non-Hispanic",
           "Black, non-Hispanic",
           "Hispanic",
@@ -241,10 +290,7 @@ tab <-
     ) %>% 
   arrange(race) %>% 
   pivot_wider(names_from = "race", values_from = "pct")
-```
-
-
-```{r}
+`````{r}
 note <-
   paste0(
     "Note: This table shows female-identifying U.S. gun-owner adults stratified by ",
