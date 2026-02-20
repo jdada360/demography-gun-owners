@@ -26,6 +26,7 @@ packages <-
     "janitor",
     "dplyr",
     "here",
+    "ggh4x",
     "vtable",
     "paletteer",
     "fastDummies"
@@ -243,102 +244,140 @@ walk(
 ## Define caption
 
 ```{r}
-cap <-
+capw <-
   paste0(
-    "This figure plots non-White female-identifying U.S. gun-owner adults as a ",
-    "percent of all U.S. gun-owners (N=",
-     nrow(gun),") from seven waves of the National Survey of Gun Policy, ",
+    "This figure plots non-White Female-identifying U.S. gun-owner adults as a ",
+    "percent of all U.S. gun-owner adults (N=",
+     nrow(filter(gun, !grepl("White", racethnicity) & gender == "Female")),
+     ") from seven waves of the National Survey of Gun Policy, ",
     "spanning 2013 to 2025.",
     " For reference, during the same period, ",
-    "White non-Hispanic XXX composed roughly ",
+    "White, non-Hispanic Female-identifying U.S. gun-owner adults ", 
+    "composed roughly ",
     mean(filter(long, group == "rg_white_non_hispanic_x_female")$pct) %>% 
       round(0),
-    " percent of U.S. gun owners, and White non-Hispanic women composed roughly ",
+    " percent of U.S. gun owner adults. The survey weights in 2017 and 2019 ",
+    "are general population weights and are not scaled to the gun-owner population."
+  )
+
+capm <-
+  paste0(
+    "This figure plots non-White Male-identifying U.S. gun-owner adults as a ",
+    "percent of all U.S. gun-owner adults (N=",
+     nrow(filter(gun, !grepl("White", racethnicity) & gender == "Male")),
+     ") from seven waves of the National Survey of Gun Policy, ",
+    "spanning 2013 to 2025.",
+    " For reference, during the same period, ",
+    "White, non-Hispanic Male-identifying U.S. gun-owner adults ", 
+    "composed roughly ",
     mean(filter(long, group == "rg_white_non_hispanic_x_male")$pct) %>% 
       round(0),
-    " percent of U.S. gun owners."
+    " percent of U.S. gun owner adults. The survey weights in 2017 and 2019 ",
+    "are general population weights and are not scaled to the gun-owner population."
   )
+
 ```
 
 
 ### Table with confidence intervals
 
 ```{r}
-tab <- 
-  long %>% 
-  filter(gender == "Female") %>% 
-  mutate(
-      across(pct:ci_u, ~ round(.x, 1) %>% as.character())  
-    ) %>% 
-  transmute(
-    Year = factor(year),
-    race = 
-      race %>% 
-      factor(
-      levels = 
-        c("White, non-Hispanic",
-          "Black, non-Hispanic",
-          "Hispanic",
-          "Asian, non-Hispanic",
-          "2+ Races, non-Hispanic",
-          "Other, non-Hispanic"
-          )
-      ),
-      pct = paste0(
-        pct, " (", ci_l, ", ", ci_u, ")"
-      )
-    ) %>% 
-  arrange(race) %>% 
-  pivot_wider(names_from = "race", values_from = "pct")
-`````{r}
-note <-
-  paste0(
-    "Note: This table shows female-identifying U.S. gun-owner adults stratified by ",
-    "racial ethnic group as a ",
-    "percent of all U.S. gun-owners (N=",
-     nrow(gun),") from seven waves of the National Survey of Gun Policy, ",
-    "spanning 2013 to 2025. Lower bounds of confidence intervals were truncated ",
-    "at 0."
+notes <-
+  map(
+    genlist %>% str_to_title,
+    ~  paste0(
+    "Note: This table shows ", .x ," U.S. gun-owner adults stratified by ",
+      "racial ethnic group as a ",
+      "percent of all U.S. gun-owner adults (N=",
+       nrow(filter(gun, gender ==.x)),
+      ") from seven waves of the National Survey of Gun Policy, ",
+      "spanning 2013 to 2025. Lower bounds of confidence intervals were truncated ",
+      "at 0. The survey weights in 2017 and 2019 are general population weights ",
+      "and are not scaled to the gun-owner population."
+    )
+  )
+
+cap <-
+  map(
+    genlist %>% str_to_title,
+    ~ paste0(
+      .x,
+      "-identifying U.S. gun-owner adults stratified by racial ethnic group  ",
+      "as percent (95\\% CI) of all U.S. gun-owners, 2013-2025"
+    )
   )
 ```
 
 ```{r}
 out <-
-  tab %>% 
-    kable(
-      format = "latex",
-      booktabs = TRUE,
-      align = "lcccccc",
-      caption = "Female-identifying U.S. gun-owner adults stratified by racial ethnic group  as percent (95 \\% CI) of all U.S. gun-owners, 2013-2025",
-      label = "FemaleRace",
-      escape = FALSE
-    ) %>%
-    kable_styling(
-      latex_options = c("hold_position", "scale_down"),
-      position = "center"
-    ) %>% 
-  row_spec(0, bold = TRUE) %>% 
-  column_spec(1, bold = TRUE) %>% 
-  footnote(
-    general = note,
-    general_title = "",
-    threeparttable = TRUE,
-    escape = FALSE
+  map(
+    seq_along(genlist),
+    function(x) {
+      
+      tab <- 
+      filter(long, gender == str_to_title(genlist[[x]])) %>% 
+        mutate(
+            across(pct:ci_u, ~ round(.x, 1) %>% as.character())  
+          ) %>% 
+        transmute(
+          Year = factor(year),
+          race = 
+            race %>% 
+            factor(
+            levels = 
+              c("White, non-Hispanic",
+                "Black, non-Hispanic",
+                "Hispanic",
+                "Asian, non-Hispanic",
+                "2+ Races, non-Hispanic",
+                "Other, non-Hispanic"
+                )
+            ),
+            pct = paste0(
+              pct, " (", ci_l, ", ", ci_u, ")"
+            )
+          ) %>% 
+        arrange(race) %>% 
+        pivot_wider(names_from = "race", values_from = "pct") 
+      
+    t <-
+      tab %>% 
+        kable(
+          format = "latex",
+          booktabs = TRUE,
+          align = "lcccccc",
+          caption = cap[[x]],
+          label =  paste0(str_to_title(genlist[[x]]), "Race"), 
+          escape = FALSE
+        ) %>%
+        kable_styling(
+          latex_options = c("hold_position", "scale_down"),
+          position = "center"
+        ) %>% 
+      row_spec(0, bold = TRUE) %>% 
+      column_spec(1, bold = TRUE) %>% 
+      footnote(
+        general = str_wrap(notes[[x]], 100),
+        general_title = "",
+        threeparttable = TRUE,
+        escape = FALSE
+        )
+    
+    save_kable(
+      t,
+      file = 
+        here(
+          path_ol,
+          "tables",
+          paste0(genlist[[x]], "-race.tex")
+        )
     )
+    }
+  )
+  
 ```
 
-```{r}
-save_kable(
-  out,
-  file = 
-    here(
-      path_ol,
-      "tables/female-race.tex"
-    )
-)
-```
-
-## Political affiliation among black women
+## Age
 
 ```{r}
 des <- svydesign(
@@ -349,7 +388,7 @@ des <- svydesign(
 
 des <- update(
   des,
-  int = interaction(racethnicity, gender, party3, sep = " x ")
+  int = interaction(racethnicity, gender, age4, sep = " x ")
 )
 
 ci <- 
@@ -363,8 +402,9 @@ ci <-
     ) %>% 
   clean_names() %>% 
   mutate(across(-year, ~ .x * 100))
+```
 
-
+```{r}
 long <-
   ci %>%
   pivot_longer(
@@ -418,102 +458,101 @@ long <-
             "Hispanic"
             )
       ),
-    party = 
+    age = 
       case_when(
-        grepl("rep", group) ~ 1,
-        grepl("dem", group) ~ 2,
-        TRUE ~ 3
+        grepl("18_29", group) ~ 1,
+        grepl("30_44", group) ~ 2,
+        grepl("45_59", group) ~ 3,
+        TRUE ~ 4
       ) %>% 
       factor(
-        levels = 1:3, 
+        levels = 1:4, 
         labels = 
           c(
-            "Republican",
-            "Democrat",
-            "Independent"
+            "18-29",
+            "30-44",
+            "45-59",
+            "60+"
           )
       ),
-    # lower CI at least 0
     ci_l = ifelse(ci_l < 0, 0, ci_l)
-  ) %>% 
-  filter(!is.na(pct)) 
+  )
 ```
 
-## Look at black women
+## Figure among black men and women
 
-Calculate the percentage amoung black women
+Calculate the percentage amog black women
 
 ```{r}
-bw <-
+raceage <-
   long %>% 
-  filter(gender == "Female" & grepl("Black", race))  %>% 
-  group_by(year) %>% 
+  group_by(year, gender, race) %>% 
   mutate(tot = sum(pct)) %>% 
   ungroup() %>% 
   transmute(
     year = factor(year),
     gender,
     race,
-    party,
+    age,
     prop = (pct/tot)*100
     ) 
 ```
 
-## Plot political affiliation of black women gun owners
-
+## Age x race by year
 
 ```{r}
-bw %>% 
+raceage %>% 
+  filter(gender != "Other" & !grepl("Other|Asian", race))  %>% 
   ggplot(
     aes(
       x = year,
       y = prop,
-      group = party,
-      color = party,
-      fill = party
+      group = age,
+      color = age,
+      fill = age
       )
     ) +
-    geom_col() +
-    scale_y_continuous(
-        breaks = seq(0, 50, 5),
-        limits = c(0, 50)
+  geom_col() +
+  facet_grid2(
+    rows = vars(race), 
+    cols = vars(gender),
+    axes = "all"
     ) +
-    scale_color_paletteer_d("MoMAColors::Althoff") +
-    theme +
-    theme(
-        legend.position = "none",
-        text = element_text(
-            family = "Times New Roman",
-            size = 12
-        ),
-        axis.title = element_text(size = 12),
-        axis.text = element_text(size = 12),
-        plot.margin = margin(10, 90, 10, 10),
-        panel.border = element_blank(),
-        panel.grid.major = element_line(color = "grey95"),
-        panel.grid.minor = element_line(color = "grey100")
+  scale_color_paletteer_d("MoMAColors::Althoff") +
+  scale_fill_paletteer_d("MoMAColors::Althoff") +
+  guides(color = "none") +
+  theme +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10, hjust = .5),
+     strip.background = element_rect(
+      fill = "gray95",
+      color = "gray90"
+    )
     ) +
-    labs(
-        x = "Survey Year",
-        y = "Percent of Black, non-Hispanic Gun Owners"
-        ) +
-  coord_cartesian(clip = "off")
+  labs(
+    x = "Survey Year",
+    y = NULL,
+    fill = "Age (years)"
+    )
 
 
 ggsave(
-  height = 6,
+  height = 8,
   width = 8,
   here(
     path_ol,
-    "figures/bw-political.jpeg"
+    "figures/race-age.jpeg"
   )
 )
 ```
 
 
-
-
-## Age mong black women
+## Age x black women
 
 ```{r}
 des <- svydesign(
@@ -615,7 +654,7 @@ long <-
   )
 ```
 
-## Look at black women
+### Restrict at black women
 
 Calculate the percentage among black women
 
@@ -635,7 +674,7 @@ bw <-
     ) 
 ```
 
-## Plot age of black women gun owners
+### Plot age of black women gun owners
 
 Weights in 2017 and 2019 are not gun owners specific and lead to erroneous inference.
 
@@ -672,7 +711,7 @@ bw %>%
 
 
 ggsave(
-  height = 6,
+  height = 8,
   width = 8,
   here(
     path_ol,

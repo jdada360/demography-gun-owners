@@ -171,7 +171,12 @@ cap <-
     "This figure plots percent of U.S. gun-owner adults (N=",
      nrow(gun),") stratified by their highest level of education ",
     "from seven waves of the National ",
-    "Survey of Gun Policy, spanning 2013 to 2025."
+    "Survey of Gun Policy, spanning 2013 to 2025. ",
+    "Due to differences in the survey questions over time, ",
+    "Some college or associates degree also includes ",
+    "responses for vocational or technical schools. ",
+    "The survey weights in 2017 and 2019 are general population weights ",
+    "and are not scaled to the gun-owner population."
   )
 ```
 
@@ -253,4 +258,8 @@ ggsave(
     "figures/educ.jpeg"
   )
 )
+```
+
+```{r}
+
 ```
