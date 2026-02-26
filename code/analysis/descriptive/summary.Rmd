@@ -300,7 +300,16 @@ year_tbl <-
   column_spec(1, width = "4cm") %>%
   column_spec(2:8, width = "1.3cm") %>% 
   footnote(
-    general = "Values are weighted percentages describing the demographic composition of U.S. gun owners by survey year.",
+    general = 
+      paste0(
+        "Values are weighted percentages ",
+        "describing the demographic composition of ",
+        "U.S. gun owners by survey year. ",
+        "Due to differences in the survey questions ",
+        "over time, ``Some college or associates degree''",
+        "also includes responses for vocational or technical",
+        "schools."
+      ),
     threeparttable = TRUE,
     escape = FALSE
   )

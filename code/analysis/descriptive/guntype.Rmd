@@ -60,3 +60,237 @@ walk(
   ~  print(gun %>% tabyl(.x))
 )
 ```
+
+
+## Check years of available data
+
+```{r}
+type <-
+  gun %>% 
+  filter(
+   if_any(starts_with("own"),
+          ~ .x != "Question not asked"
+          )
+  )
+```
+
+```{r}
+type %>% tabyl(year) %>% adorn_percentages()
+```
+
+## Arrange data
+
+```{r}
+clean <- 
+  type %>% 
+  select(
+    year,
+    starts_with("own"),
+    state,
+    gender, 
+    educ5,
+    income4,
+    party3,
+    employ,
+    weight
+  )
+```
+
+```{r}
+long <- 
+  clean %>% 
+  pivot_longer(
+    cols = starts_with("own"),
+    names_to = "guntype",
+    values_to = "owner",
+    names_prefix = "own"
+  ) %>% 
+  mutate(
+    owner = recode_values(
+      owner,
+      "Yes" ~ 1,
+      "No" ~ 0,
+      "Unknown" ~ 0
+    ),
+    year = as.factor(year),
+    guntype = 
+      str_to_title(guntype) %>% 
+      ifelse(. == "Shot", "Shotgun", .) %>% 
+      factor(
+        levels = 
+          c("Handgun",
+            "Rifle",
+            "Shotgun",
+            "Other")
+      )
+  ) 
+```
+
+## Percentage by gun type
+
+```{r}
+main <-
+  long %>% 
+  group_by(guntype, year) %>% 
+  summarise(
+    pct = sum(owner*weight)/sum(weight),
+    .groups = "drop"
+    ) 
+```
+
+### Bar chart over time
+
+```{r}
+main %>% 
+  ggplot(
+    aes(
+      x = year,
+      y = pct,
+      group = guntype,
+      fill = guntype,
+      color = guntype
+      )
+  ) +
+  geom_col(position = "dodge") +
+  scale_fill_paletteer_d("MoMAColors::Althoff") +
+  scale_color_paletteer_d("MoMAColors::Althoff") +
+  theme  +
+  guides(
+    color = "none"
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10, hjust = .5)
+    ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, .9),
+    breaks = seq(0, .9, .15)
+  ) +
+  labs(
+    x = "Survey Year",
+    y = "Percent of U.S. Gun Owners",
+    fill = "Type of firearm"
+    )
+
+
+ggsave(
+  height = 8,
+  width = 8,
+  here(
+    path_ol,
+    "figures/type.jpeg"
+  )
+)
+```
+
+### Caption
+
+```{r}
+note <-
+  paste0(
+    "This figure plots the percentage of",
+    " U.S. gun owners by self-reported",
+    " ownership of the following types of",
+    " firearms: handgun, shotgun, rifle, and other.",
+    " The data are from the 2013, 2023 and 2025 waves",
+    " of the National Survey of Gun Policy (N=", 
+    nrow(clean), ").",
+    " The survey weights are scaled to the",
+    " gun-owner population.",
+    " Respondents can indicate ownership of",
+    " multiple types of firearms so percentages ",
+    "do not add up to 100%."
+  )
+```
+
+## Percentage by gun type x gender
+
+```{r}
+gen <-
+  long %>% 
+  group_by(guntype, year, gender) %>% 
+  summarise(
+    pct = sum(owner*weight)/sum(weight),
+    .groups = "drop"
+    ) %>% 
+  filter(gender != "Other")
+```
+
+
+### Bar chart over time
+
+```{r}
+gen %>% 
+  ggplot(
+    aes(
+      x = year,
+      y = pct,
+      group = guntype,
+      fill = guntype,
+      color = guntype
+      )
+  ) +
+  geom_col(position = "dodge") +
+  scale_fill_paletteer_d("MoMAColors::Althoff") +
+  scale_color_paletteer_d("MoMAColors::Althoff") +
+  facet_wrap(~gender, ncol = 1) +
+  theme  +
+  guides(
+    color = "none"
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10, hjust = .5)
+    ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, 1),
+    breaks = seq(0, 1, .25)
+  ) +
+  labs(
+    x = "Survey Year",
+    y = "Percent of U.S. Gun Owners",
+    fill = "Type of firearm"
+    )
+
+
+ggsave(
+  height = 8,
+  width = 8,
+  here(
+    path_ol,
+    "figures/type-gen.jpeg"
+  )
+)
+```
+
+
+### Caption
+
+```{r}
+note <-
+  paste0(
+    "This figure plots the percentage of",
+    " U.S. gun owners by self-reported",
+    " ownership of the following types of",
+    " firearms: handgun, shotgun, rifle, and other.",
+    " The data are from the 2013, 2023 and 2025 waves",
+    " of the National Survey of Gun Policy (N=", 
+    nrow(filter(clean, gender != "Female")),
+    ").",
+    " The survey weights are scaled to the",
+    " gun-owner population.",
+    " Respondents can indicate ownership of",
+    " multiple types of firearms so percentages ",
+    "do not add up to 100%."
+  )
+```

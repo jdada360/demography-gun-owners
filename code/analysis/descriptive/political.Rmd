@@ -117,7 +117,14 @@ long <-
     # lower CI at least 0
     ci_l = ifelse(ci_l < 0, 0, ci_l)
   ) %>% 
-  filter(!is.na(pct)) 
+  filter(
+    !is.na(pct),
+     year != 2015 & party != "Missing"
+    ) %>% 
+  mutate(
+    year = factor(year),
+    party = droplevels(party)
+  )
 ```
 
 
@@ -137,10 +144,14 @@ cap <-
 
 ```{r}
 long %>% 
-  filter(year != 2015 & party != "Missing") %>% 
-  mutate(year = factor(year), party = droplevels(party)) %>%  
   ggplot(
-    aes(x = year, y = pct, group = party, color = party, fill = party)
+    aes(
+      x = year,
+      y = pct,
+      group = party,
+      color = party,
+      fill = party
+      )
   ) +
   geom_col() +
   theme +
@@ -167,6 +178,77 @@ ggsave(
   here(
     path_ol, 
     "figures/political.jpeg"
+  )
+)
+```
+
+## Line plot
+
+```{r}
+long %>% 
+  mutate(
+    across(
+      c("pct", "ci_l", "ci_u"), ~ .x/100
+    )
+  ) %>% 
+  ggplot(
+    aes(
+      x = year,
+      color = party,
+      group = party,
+      y = pct
+      )
+  ) +
+  geom_line(
+    linewidth = 1.2,
+    linetype = "dashed"
+  ) +
+  geom_ribbon(
+    aes(
+      ymin = ci_l,
+      ymax = ci_u,
+      fill = party
+      ),
+    alpha = .7,
+    color = NA
+  ) +
+  scale_color_paletteer_d("MoMAColors::Althoff") +
+  scale_fill_paletteer_d("MoMAColors::Althoff") +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, .8),
+    breaks = seq(0, .8, .1)
+  ) +
+  theme + 
+  guides(
+    color = "none",
+    fill = 
+      guide_legend(
+        override.aes = 
+          list(alpha = 1)
+        )
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10, hjust = .5)
+  ) +
+  labs(
+    x = "Survey Year",
+    y = "Percent of U.S. gun owners",
+    color = "Political affiliation",
+    fill = "Political affiliation"
+  ) 
+
+ggsave(
+  height = 6,
+  width = 8, 
+  here(
+    path_ol, 
+    "figures/political-line.jpeg"
   )
 )
 ```
