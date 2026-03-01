@@ -685,11 +685,11 @@ raw <-
   mutate(
     party5 =
       case_when(
-        party7 %in% 1:2 ~ 1,
-        party7 == 3 ~ 2,
+        party7 %in% 6:7 ~ 1,
+        party7 == 5 ~ 2,
         party7 == 4 ~ 3,
-        party7 == 5 ~ 4,
-        TRUE ~ 5
+        party7 == 3 ~ 4,
+        party7 %in% 1:2 ~ 5
       ) %>% 
       factor(
         levels = 1:5,

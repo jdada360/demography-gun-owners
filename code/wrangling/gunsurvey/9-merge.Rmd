@@ -182,9 +182,11 @@ merge <-
 merge %>% tabyl(hhsize4)
 ```
 
-## Define simplified political party variable
+## Political party variable
 
 Group into republican, democrat and independent.
+
+Missing data in 2015.
 
 ```{r}
 merge %>% tabyl(party5)
@@ -219,10 +221,8 @@ merge %>% tabyl(party3)
 
 ```{r}
 merge %>% 
-  filter(party3 == "Question not asked") %>% 
-  tabyl(year)
+  tabyl(party3, year)
 ```
-
 
 ## Employment
 
@@ -320,6 +320,22 @@ merge <-
 ```{r}
 merge %>% tabyl(educ)
 ```
+##  NRA 
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+      nranow =  case_when(
+        grepl("Y", nranow) ~ "Member", 
+        TRUE ~ nranow
+        ) %>% 
+        factor(
+          levels =
+            c("Member", "No", "Unknown")
+          )
+  )
+```
 
 ## Relabel variables
 
@@ -368,7 +384,7 @@ merge <-
     ownshot = "Do you personally own any shotguns?",
     ownother = "Do you personally own any other types of guns?",
     nraever = "Have you ever been a member of the NRA?",
-    nranow = "Are you a member of the NRA?",
+    nranow = "National Rifle Association",
     goanow = "Are you a member of any other gun rights groups such as Gun Owners of America?",
     mdanow = "Are you a member of any gun safety groups such as Moms Demand Action or Everytown for Gun Safety?",
     gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
