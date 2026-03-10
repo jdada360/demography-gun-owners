@@ -1,0 +1,140 @@
+# Results
+
+This script creates a table to show the results
+of the logistic regression model of nra membership on 
+demographic characteristics
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gun-owners.rds
+
+**Output**
+
+-   DemographyGunOwners/data/raw/gunsurvey/...rds
+
+**Last ran**
+
+- 03/09/2026
+
+```{r,  message = FALSE, warning = FALSE}
+
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "dplyr",
+    "here",
+    "survey",
+    "broom",
+    "kableExtra",
+    "modelsummary",
+    "stargazer",
+    "gtsummary",
+    "gt"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od, 
+      "data",
+      "clean",
+      "gs-gun-owners.rds"
+      )
+  )
+```
+
+```{r}
+mod <-
+  read_rds(
+    here(
+    path_od, 
+    "data",
+    "models",
+    "nra.rds"
+    )
+  )
+```
+
+
+## Make Table for Pooled Regression
+
+I.e., all of the years together
+
+```{r}
+path <- here(path_ol, "tables/nra-reg.tex")
+```
+
+```{r}
+theme_gtsummary_compact()
+
+tbl <- 
+  tbl_regression(
+    mod,
+    exponentiate = TRUE
+    ) %>%  
+  modify_caption("Demographic Correlates of National Rifle Association Membership") %>% 
+  modify_header(estimate = "**Odds Ratio**") %>% 
+  remove_abbreviation("CI = Confidence Interval") %>% 
+  remove_abbreviation("OR = Odds Ratio")
+
+tbl %>% 
+  as_kable_extra(
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE,
+    label = "RegNRA",
+    linesep = "",
+    align = "lccc",
+    digits = 3
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    font_size = 9,
+    full_width = FALSE,
+    position = "center"
+  ) %>% 
+  footnote(
+   number = paste0(
+    "Note: Results are from a logistic regression of a ",
+    "binary indicator of National Rifle Association membership (N=", 
+    nrow(filter(gun, nranow == "Member" & year != 2015)),
+    ") on demographic characteristics from the National Survey of Gun Policy ",
+    "2013–2025, restricted to U.S. adult gun owners (N=", nrow(gun),  "). ",
+    "The 2015 survey wave is excluded because of missing data on political affiliation. ",
+    "Survey weights for 2017 and 2019 are general population weights ",
+    "and are not scaled to the gun-owner population. ",
+    "Because survey question wording varied across waves, ",
+    "the category ``Some college or associate's degree'' also ",
+    "includes respondents reporting vocational or technical school."
+    ),
+      threeparttable = TRUE,
+      escape = FALSE,
+      fixed_small_size = FALSE
+  ) %>% 
+  save_kable(
+    file = path
+  ) 
+```
+
+
+## Figure comparing key covariates over time
+
+
+```{r}
+
+
+
+```

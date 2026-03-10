@@ -210,13 +210,31 @@ merge <-
           c("Democrat",
             "Republican",
             "Independent",
-            "Question not asked")
+            "Question not asked"
+            )
+      ),
+    party5 = 
+      case_when(
+        grepl("Inde", party5) ~ "Independent",
+        year == 2015 ~ "Question not asked",
+        TRUE ~ party5
+      ) %>% 
+      factor(
+        levels = 
+          c("Republican",
+            "Lean Republican",
+            "Independent",
+            "Lean Democrat",
+            "Democrat",
+            "Unknown",
+            "Question not asked"
+            )
       )
   ) 
 ```
 
 ```{r}
-merge %>% tabyl(party3)
+merge %>% tabyl(party3, party5)
 ```
 
 ```{r}
@@ -396,8 +414,8 @@ merge <-
     gunreason = "Which of the following is your primary reason for owning guns?",
     activevet = "Are you currently on active duty in the U.S Armed Forces, military Reserves, or National Guard?",
     vet = "Have you ever served on active duty in the U.S. Armed Forces, military Reserves, or National Guard?",
-    party7 = "7-level political affiliation",
-    party5 = "5-level political affiliation",
+    party7 = "Political affiliation",
+    party5 = "Political affiliation",
     party3 = "Political affiliation",
     votediff20 = "How easy or difficult was it for you to vote in the 2020 election?",
     votereason22 = "In talking to people about elections, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you?",

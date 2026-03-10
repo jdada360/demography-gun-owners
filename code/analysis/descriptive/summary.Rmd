@@ -58,7 +58,7 @@ demovars <-
     "gender",
     "age4",
     "racethnicity",
-    "party3",
+    "party5",
     "nranow",
     "educ",
     "employ",
@@ -170,13 +170,11 @@ year_tbl <-
   ) %>%
   modify_table_body(
     ~ {
+      
       tbl <- .x
       
       # compute unweighted yearly totals
-      counts <- gun %>%
-        count(year) %>%
-        arrange(year) %>%
-        pull(n)
+      counts <- format(table(nra$year), big.mark = ",")
       
       # create row with obs
       n_row <- tibble(
@@ -185,37 +183,32 @@ year_tbl <-
         row_type = "label",
         label = "Observations",
         !!!setNames(
-          as.list(format(counts, big.mark = ",")),
+          as.list(counts),
           paste0("stat_", seq_along(counts))
-        )
-      )
-      
+          )
+        ) %>% 
+        mutate(across(starts_with("stat"), trimws)
+          )
+
       bind_rows(n_row, tbl) %>%
-        filter(
-          !(variable == "nranow" & label == "No"),
-          ! grepl("Ques", label)
-          ) %>% 
+        filter(! grepl("Ques", label)) %>% 
         mutate(
            label = ifelse(
             row_type == "level" & label != "Observations",
             paste0("  ", label),
             label),
-           # replace 0% in 2025 to indicate question was not asked
-           stat_2 = ifelse(
-             variable == "party3" & !grepl("aff", label), 
-             ".", stat_2
-             ),
-           # fix marital status for 2023 and 2025 where "living w partner" 
-           # not a category
+          stat_2 = ifelse(
+               variable == "party5" & row_type == "level",
+               "-", stat_2
+               ),
            across(
-             c(stat_6, stat_7), 
+             c(stat_6, stat_7),
              ~ ifelse(
-               variable == "marital" & grepl("with", label), 
-               ".", .x
+               variable == "marital" & grepl("with", label),
+               "-", .x
                )
-             # asian american not an option 2013-2017
+             )
            )
-        )
     }
   ) %>%
   modify_footnote(all_stat_cols() ~ NA_character_) %>%
@@ -242,10 +235,10 @@ year_tbl <-
   footnote(
    number = paste0(
     "Note: Values are weighted percentages describing ",
-    "the demographic composition of ",
-    "U.S. gun owners by survey year. Due to differences in the survey questions ",
-    "over time, ``Some college or associates degree'' also includes responses ",
-    "for vocational or technical schools."
+    "the demographic composition of U.S. gun owners by survey year. ",
+    "Because survey question wording varied across waves, the category ",
+    "``Some college or associate’s degree'' also includes respondents ",
+    "reporting vocational or technical school."
   ),
     threeparttable = TRUE,
     escape = FALSE,
@@ -256,4 +249,10 @@ save_kable(
   year_tbl,
   file = here(path_ol, "tables/summary-year.tex")
 )
+```
+
+
+```{r}
+
+
 ```
