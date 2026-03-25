@@ -77,7 +77,13 @@ walk(demovars, ~ print(tabyl(gun, .x)))
 ## Full sample summary
 
 ```{r}
-ds <- survey::svydesign(~ 1, data = gun, weights = ~ weight) 
+ds <- 
+  svydesign(
+    ~ 1, 
+    data = gun, 
+    strata = ~ year,
+    weights = ~ weight
+    ) 
 ```
 
 ```{r}
@@ -156,6 +162,12 @@ save_kable(
 ## Year
 
 ```{r}
+# This function gives the same results as
+# tbl_svysummary but includes standard errors.  
+svyby(~age4, ~year, design = ds, FUN = svymean)
+```
+
+```{r}
 year_tbl <-
   ds %>%
   tbl_svysummary(
@@ -174,7 +186,7 @@ year_tbl <-
       tbl <- .x
       
       # compute unweighted yearly totals
-      counts <- format(table(nra$year), big.mark = ",")
+      counts <- format(table(gun$year), big.mark = ",")
       
       # create row with obs
       n_row <- tibble(
@@ -191,7 +203,10 @@ year_tbl <-
           )
 
       bind_rows(n_row, tbl) %>%
-        filter(! grepl("Ques", label)) %>% 
+        filter(
+          ! grepl("Ques", label),
+          ! (grepl("No", label) & variable == "nranow")
+          ) %>% 
         mutate(
            label = ifelse(
             row_type == "level" & label != "Observations",

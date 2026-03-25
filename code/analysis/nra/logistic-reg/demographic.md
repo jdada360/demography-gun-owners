@@ -13,7 +13,8 @@ This script creates a descriptive table of NRA members
 
 - 03/12/2026
 
-```{r,  message = FALSE, warning = FALSE}
+
+``` r
 packages <-
   c(
     "tidyverse",
@@ -38,7 +39,8 @@ pacman::p_load(
 
 ## Import data
 
-```{r}
+
+``` r
 gun <-
   read_rds(
      here(
@@ -54,7 +56,8 @@ nra <- gun %>% filter(nra == 1)
 ```
 
 
-```{r}
+
+``` r
 demovars <-
   c(
     "gender" = "Gender",
@@ -71,7 +74,8 @@ demovars <-
 
 ## Set up survey design
 
-```{r}
+
+``` r
 # create study design for full sample
 ds <- 
   svydesign(
@@ -90,7 +94,8 @@ ds$variables <- set_variable_labels(
 
 ## Create table
 
-```{r}
+
+``` r
 demovars <-
   c(
     "gender",
@@ -105,7 +110,8 @@ demovars <-
   )
 ```
 
-```{r, warning = F}
+
+``` r
 tbl <- 
   ds %>%
   tbl_svysummary(
@@ -205,8 +211,5 @@ save_kable(
 ```
 
 
-```{r}
 
-
-```
 

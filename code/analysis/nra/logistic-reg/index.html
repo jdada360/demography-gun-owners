@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Correlates of Gun Ownership</title>
+  <meta name="description" content="Correlates of Gun Ownership" />
+  <meta name="generator" content="bookdown 0.43 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Correlates of Gun Ownership" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Correlates of Gun Ownership" />
+  
+  
+  
+
+<meta name="author" content="Joy Dada" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+
+<link rel="next" href="nra-membership.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/codefolding-lua-1.1/codefolding-lua.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Correlates of Gun Ownership</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Introduction</a>
+<ul>
+<li class="chapter" data-level="0.1" data-path="index.html"><a href="index.html#weights"><i class="fa fa-check"></i><b>0.1</b> Weights</a></li>
+<li class="chapter" data-level="0.2" data-path="index.html"><a href="index.html#standard-errors"><i class="fa fa-check"></i><b>0.2</b> Standard errors</a></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="nra-membership.html"><a href="nra-membership.html"><i class="fa fa-check"></i><b>1</b> NRA Membership</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="nra-membership.html"><a href="nra-membership.html#import-data"><i class="fa fa-check"></i><b>1.1</b> Import data</a></li>
+<li class="chapter" data-level="1.2" data-path="nra-membership.html"><a href="nra-membership.html#set-up-survey-design"><i class="fa fa-check"></i><b>1.2</b> Set up survey design</a></li>
+<li class="chapter" data-level="1.3" data-path="nra-membership.html"><a href="nra-membership.html#create-table"><i class="fa fa-check"></i><b>1.3</b> Create table</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="nra-membership-1.html"><a href="nra-membership-1.html"><i class="fa fa-check"></i><b>2</b> NRA Membership</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="nra-membership-1.html"><a href="nra-membership-1.html#import-data-1"><i class="fa fa-check"></i><b>2.1</b> Import data</a></li>
+<li class="chapter" data-level="2.2" data-path="nra-membership-1.html"><a href="nra-membership-1.html#define-binary-indicator-for-nra-membership"><i class="fa fa-check"></i><b>2.2</b> Define binary indicator for NRA membership</a></li>
+<li class="chapter" data-level="2.3" data-path="nra-membership-1.html"><a href="nra-membership-1.html#select-demographic-controls"><i class="fa fa-check"></i><b>2.3</b> Select demographic controls</a></li>
+<li class="chapter" data-level="2.4" data-path="nra-membership-1.html"><a href="nra-membership-1.html#redefine-demographic-variables"><i class="fa fa-check"></i><b>2.4</b> Redefine demographic variables</a></li>
+<li class="chapter" data-level="2.5" data-path="nra-membership-1.html"><a href="nra-membership-1.html#set-up-survey-design-1"><i class="fa fa-check"></i><b>2.5</b> Set up survey design</a></li>
+<li class="chapter" data-level="2.6" data-path="nra-membership-1.html"><a href="nra-membership-1.html#run-regression"><i class="fa fa-check"></i><b>2.6</b> Run regression</a></li>
+<li class="chapter" data-level="2.7" data-path="nra-membership-1.html"><a href="nra-membership-1.html#save-results"><i class="fa fa-check"></i><b>2.7</b> Save results</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>3</b> Results</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="results.html"><a href="results.html#import-data-2"><i class="fa fa-check"></i><b>3.1</b> Import data</a></li>
+<li class="chapter" data-level="3.2" data-path="results.html"><a href="results.html#make-table-for-pooled-regression"><i class="fa fa-check"></i><b>3.2</b> Make Table for Pooled Regression</a></li>
+<li class="chapter" data-level="3.3" data-path="results.html"><a href="results.html#interaction-terms"><i class="fa fa-check"></i><b>3.3</b> Interaction terms</a></li>
+<li class="chapter" data-level="3.4" data-path="results.html"><a href="results.html#figure-comparing-key-covariates-over-time"><i class="fa fa-check"></i><b>3.4</b> Figure comparing key covariates over time</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Correlates of Gun Ownership</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="header">
+<h1 class="title">Correlates of Gun Ownership</h1>
+<p class="author"><em>Joy Dada</em></p>
+<p class="date"><em>Sunday March 15 2026</em></p>
+</div>
+<div id="introduction" class="section level1 unnumbered hasAnchor">
+<h1>Introduction<a href="index.html#introduction" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>The book runs a logistic regression analysis to understand the demographic correlates of gun ownership.</p>
+<div id="weights" class="section level2 hasAnchor" number="0.1">
+<h2><span class="header-section-number">0.1</span> Weights<a href="index.html#weights" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>There are a maximum of 3 weights included in each survey year.</p>
+<ul>
+<li><p>Post-stratification to the US adult population (18+)</p>
+<ul>
+<li><p>This adjusts the sample to match the true national distribution of adults</p></li>
+<li><p>We use this weight when our outcome variable is a binary indicator of gun ownership and we include all observations, regardless of gun ownership status</p></li>
+<li><p><strong>We use when estimating the correlates of gun ownership</strong></p></li>
+</ul></li>
+<li><p>Post-stratified weights - scaled to 4 race groups (NH-Black, Hispanic, AAPI, NH-All Other)</p>
+<ul>
+<li><p><strong>We use this when we do race-stratified analysis and what estimates that are representative within race, not overall</strong></p></li>
+<li><p>Estimates are <em>race standardized average marginal effect</em></p></li>
+<li><p>We can use these weights as a sensitivity analysis</p></li>
+<li><p>For example, if we restrict the sample to US gun owners and want to ask “if gun owners had this specific racial composition, what would the relationship between race and voting behavior look like” we could use this weight. So the</p></li>
+</ul></li>
+<li><p>Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners)</p>
+<ul>
+<li><p><strong>We use this for descriptive balance checks to compare demographic variables by gun owners.</strong></p>
+<ul>
+<li>i.e. creating a balance table split by gun ownership status</li>
+<li>This table answers “what do gun owners and non-owners look like in the population?”</li>
+</ul></li>
+</ul></li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th>Analysis</th>
+<th>Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>National descriptives</td>
+<td>Population</td>
+</tr>
+<tr class="even">
+<td>Regression on gun ownership</td>
+<td>Population</td>
+</tr>
+<tr class="odd">
+<td>Regression within gun owners</td>
+<td>Population</td>
+</tr>
+<tr class="even">
+<td>Balance table by gun ownership</td>
+<td>Gun-adjusted</td>
+</tr>
+<tr class="odd">
+<td>Balance table by race</td>
+<td>Population</td>
+</tr>
+<tr class="even">
+<td>Race-standardized analysis</td>
+<td>Race-adjusted</td>
+</tr>
+<tr class="odd">
+<td>Any regression</td>
+<td>Never use outcome-based weights</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="standard-errors" class="section level2 hasAnchor" number="0.2">
+<h2><span class="header-section-number">0.2</span> Standard errors<a href="index.html#standard-errors" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We want to use robust SEs</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+
+<a href="nra-membership.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "section"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

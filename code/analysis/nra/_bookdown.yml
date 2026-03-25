@@ -3,5 +3,7 @@ new_session: yes
 output_dir: "logistic-reg"
 rmd_files: [
   "index.Rmd",
-  "reg.Rmd"
+  "demographic.Rmd",
+  "regression.Rmd",
+  "results.Rmd"
 ]

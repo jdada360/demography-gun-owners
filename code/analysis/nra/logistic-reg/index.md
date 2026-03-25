@@ -1,0 +1,57 @@
+---
+title: "Correlates of Gun Ownership"
+author: "Joy Dada"
+date: 'Sunday March 15 2026'
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+---
+
+# Introduction {.unnumbered}
+
+The book runs a logistic regression analysis to understand the demographic correlates of gun ownership.
+
+## Weights
+
+There are a maximum of 3 weights included in each survey year.
+
+-   Post-stratification to the US adult population (18+)
+
+    -   This adjusts the sample to match the true national distribution of adults
+
+    -   We use this weight when our outcome variable is a binary indicator of gun ownership and we include all observations, regardless of gun ownership status
+
+    -   **We use when estimating the correlates of gun ownership**
+
+-   Post-stratified weights - scaled to 4 race groups (NH-Black, Hispanic, AAPI, NH-All Other)
+
+    -   **We use this when we do race-stratified analysis and what estimates that are representative within race, not overall**
+
+    -   Estimates are *race standardized average marginal effect*
+
+    -   We can use these weights as a sensitivity analysis
+
+    -   For example, if we restrict the sample to US gun owners and want to ask "if gun owners had this specific racial composition, what would the relationship between race and voting behavior look like" we could use this weight. So the
+
+-   Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners)
+
+    -   **We use this for descriptive balance checks to compare demographic variables by gun owners.**
+
+        -   i.e. creating a balance table split by gun ownership status
+        -   This table answers "what do gun owners and non-owners look like in the population?"
+
+| Analysis                       | Weight                          |
+|--------------------------------|---------------------------------|
+| National descriptives          | Population                      |
+| Regression on gun ownership    | Population                      |
+| Regression within gun owners   | Population                      |
+| Balance table by gun ownership | Gun-adjusted                    |
+| Balance table by race          | Population                      |
+| Race-standardized analysis     | Race-adjusted                   |
+| Any regression                 | Never use outcome-based weights |
+
+## Standard errors
+
+We want to use robust SEs
+
+

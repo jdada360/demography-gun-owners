@@ -1,7 +1,7 @@
 --- 
 title: "Gun Survey Data Cleaning"
 author: "Joy Dada"
-date: 'Wednesday, February 04, 2026'
+date: 'Sunday, March 15, 2026'
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 documentclass: book
@@ -10,6 +10,10 @@ documentclass: book
 # Introduction {-}
 
 The code in this books cleans the gun survey data. 
+
+The data has been analyzed for other papers by authors from the Center for Gun Violence Solutions. Cass and Colleen Barry have written a number of papers using this data.
+
+The Gun Center has compiled links to the [survey reports](https://publichealth.jhu.edu/center-for-gun-violence-solutions/data/national-survey-of-gun-policy?). Use these reports to verify the correctness of my cleaning. 
 
 
 ``` r

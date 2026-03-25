@@ -12,7 +12,15 @@ This script regresses NRA membership on demographic characteristics
 
 **Last ran**
 
-- 03/08/2026
+- 03/11/2026
+
+
+Main specification is a pooled logistic regression with adjusted weights and a
+year indicator variable.
+
+$$
+\text{logit}(P(NRA_{it} = 1)) = \beta_0 + \beta_1 X_{it} + \gamma_t + \varepsilon_{it}
+$$
 
 ```{r,  message = FALSE, warning = FALSE}
 
@@ -29,7 +37,8 @@ packages <-
     "broom",
     "kableExtra",
     "modelsummary",
-    "labelled"
+    "labelled",
+    "gtsummary"
   )
 
 pacman::p_load(
@@ -41,7 +50,7 @@ pacman::p_load(
 ## Import data
 
 ```{r}
-gun <-
+raw <-
   read_rds(
      here(
       path_od, 
@@ -54,65 +63,25 @@ gun <-
 
 
 ```{r}
-gun %>% tabyl(nranow)
+raw %>% tabyl(nranow)
 ```
 
 
 ## Define binary indicator for NRA membership
 
 ```{r}
-nra <-
-  gun %>% 
+gun <-
+  raw %>% 
   mutate(
     nra = (nranow == "Member") %>% as.numeric %>% factor()
   )
+
+nra <- gun %>% filter(nra == 1)
 ```
 
 ```{r}
-nra %>% tabyl(nra)
+gun %>% tabyl(nra)
 ```
-
-
-
-## Redefine demographic variables 
-
-- Gender = binary indicator for male
-
-- Race = use white as baseline
-
-- party5 = democrat as base level
-
-- age4 = baseline 
-
-- year = factor
-
-```{r, warning = F}
-nra <-
-  nra %>% 
-  mutate(
-    Male = 
-      (gender == "Male") %>% 
-      as.numeric,
-    party = 
-      party5 %>% 
-      fct_relevel("Republican") %>% 
-      fct_relevel("Unkown", after = Inf),
-    Year = factor(year) %>% 
-      fct_relevel("2013")
-  ) %>% 
-  set_variable_labels(
-    party = "Political Affiliation"
-  )
-```
-
-```{r}
-nra %>% tabyl(Male)
-```
-
-```{r}
-contrasts(nra$party)
-```
-
 
 
 ## Select demographic controls
@@ -122,33 +91,115 @@ controls <-
   c(
     "Male",
     "age4",
-    "educ",
-    "party",
-    "income4",
     "racethnicity",
-    "employ"
+    "Republican",
+    "educ",
+    "employ",
+    "income4",
+    "marital",
+    "region4"
   )
 ```
 
+```{r}
+demovars <-
+  c(
+    "Male" = "Male",
+    "age4" = "Age",
+    "racethnicity" = "Race and ethnicity",
+    "Republican" = "Republican",
+    "educ" = "Highest level of education",
+    "employ" = "Current employment status",
+    "income4" = "Household income",
+
+    "region4" = "Region"
+  )
+
+  
+```
+
+## Redefine demographic variables 
+
+```{r, warning = F}
+gun <-
+  gun %>% 
+  mutate(
+    Male = 
+      (gender == "Male") %>% 
+      as.numeric,
+    # Group because of sample size (independent + democrat)
+    Republican = (party3 == "Republican") %>% 
+      as.numeric,
+    # Combine separated and divorced, married 
+    # and Living with partner 
+    marital = 
+      case_when(
+        marital == "Separated" ~ "Divorced",
+        marital == "Living with partner" ~ "Married",
+        TRUE ~ marital
+      ) %>% 
+      factor(
+        levels =
+          c(
+            "Married",
+            "Divorced",
+            "Never married",
+            "Widowed"
+          )
+      ),
+    # group asian and other
+    racethnicity = 
+      case_when(
+        grepl("Asian", racethnicity) ~ "Other, non-Hispanic",
+        TRUE ~ racethnicity
+      ) %>% 
+      factor(
+        levels =
+          c(
+            "White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Other, non-Hispanic",
+            "2+ Races, non-Hispanic",
+            "Hispanic"
+          )
+      ),
+    Year = factor(year)
+  ) %>% 
+  set_variable_labels(
+       racethnicity = "Race and ethnicity",
+       Republican = "Republican",
+       marital = "Marital status"
+  )
+```
 
 ```{r}
-nra <-
-  nra %>% 
+gun %>% tabyl(Male)
+gun %>% tabyl(Republican)
+gun %>% tabyl(marital)
+gun %>% tabyl(gun)
+```
+
+
+
+
+```{r}
+gun <-
+  gun %>% 
   select(
     nra, 
     Year,
     year,
     weight, 
     all_of(controls)
-  )
+  ) %>% 
+  filter(!(year == 2015))
 ```
 
 2015 observations are dropped because political party is missing
 
 ```{r}
-colSums(is.na(nra))
+colSums(is.na(gun))
 ```
-
 
 ## Set up survey design
 
@@ -156,20 +207,26 @@ colSums(is.na(nra))
 ds <- 
   svydesign(
     ~ 1, 
-    data = nra,
+    data = gun,
     weights = ~ weight
   )
 ```
 
-
 ## Run regression
 
+Instead of rescaling, interact variables with year.
+
 ```{r}
+int <-
+  map(
+    controls, ~ paste0(.x, "*Year")
+  ) %>% 
+  paste(collapse = " + ")
+
 fml <-
   paste0(
     "nra ~ ",
-    paste(controls, collapse = " + "), 
-    " + Year"
+    int
   ) %>%  as.formula()
 ```
 
@@ -178,15 +235,14 @@ mod <-
   svyglm(
     fml,
     design = ds,
-    family = quasibinomial() # logit
+    family = quasibinomial() 
   )
 ```
 
 ```{r}
-summary(mod)
+tbl_regression(mod, exponentiate = TRUE) 
 ```
 
-Only political party and gender seem important
 
 ## Save results
 
@@ -200,56 +256,4 @@ write_rds(
     "nra.rds"
     )
 )
-```
-
-
-## NRA by year
-
-```{r}
-fml <-
-  paste0(
-    "nra ~ ",
-    paste(controls, collapse = " + ")
-  ) %>%  as.formula()
-```
-
-```{r}
-models <- 
-  lapply(
-    seq(2013, 2025, 2), 
-    function(y) {
-      
-      if (y == 2015) {
-        fml <-
-          paste0(
-            "nra ~ ",
-            paste(controls[controls != "party"], collapse = " + ")
-          )
-                
-      }
-      
-      mod <-
-        svyglm(
-          fml,
-          design = subset(ds, year == y),
-          family = quasibinomial()
-          )
-          
-       write_rds(
-        mod,
-         here(
-          path_od, 
-          "data",
-          "models",
-          paste0("nra-", y, ".rds")
-          )
-        )
-       
-       mod
-      })
-```
-
-```{r}
-
-
 ```

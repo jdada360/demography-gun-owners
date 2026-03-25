@@ -16,8 +16,8 @@ demographic characteristics
 
 - 03/09/2026
 
-```{r,  message = FALSE, warning = FALSE}
 
+``` r
 packages <-
   c(
     "tidyverse",
@@ -45,7 +45,8 @@ pacman::p_load(
 
 ## Import data
 
-```{r}
+
+``` r
 gun <-
   read_rds(
      here(
@@ -57,7 +58,8 @@ gun <-
   )
 ```
 
-```{r}
+
+``` r
 mod <-
   read_rds(
     here(
@@ -74,14 +76,22 @@ mod <-
 
 I.e., all of the years together
 
-```{r}
+
+``` r
 path <- here(path_ol, "tables/nra-reg.tex")
 N <-  nrow(filter(gun, nranow == "Member" & year != 2015))
 ```
 
-```{r}
-theme_gtsummary_compact()
 
+``` r
+theme_gtsummary_compact()
+```
+
+```
+## Setting theme "Compact"
+```
+
+``` r
 tbl <- 
   tbl_regression(
     mod,
@@ -143,16 +153,22 @@ tbl %>%
 
 ## Interaction terms
 
-```{r}
+
+``` r
 path <- here(path_ol, "tables/nra-reg-time.tex")
 N <-  nrow(filter(gun, nranow == "Member" & year != 2015))
 ```
 
-```{r}
-# theme_gtsummary_compact()
 
-theme_gtsummary_journal(journal = "qjecon")
+``` r
+theme_gtsummary_compact()
+```
 
+```
+## Setting theme "Compact"
+```
+
+``` r
 tbl <- 
   tbl_regression(
     mod,
@@ -161,8 +177,8 @@ tbl <-
   modify_caption(
     "Time Trends in the Demographic Correlates of National Rifle Association Membership") %>% 
   modify_header(estimate = "**Odds Ratio**") %>% 
-  # remove_abbreviation("CI = Confidence Interval") %>% 
-  # remove_abbreviation("OR = Odds Ratio") %>% 
+  remove_abbreviation("CI = Confidence Interval") %>% 
+  remove_abbreviation("OR = Odds Ratio") %>% 
   modify_table_body(
     ~ .x %>%  
       filter(
@@ -214,7 +230,8 @@ tbl %>%
 
 ## Figure comparing key covariates over time
 
-```{r}
+
+``` r
 effect_by_year <- function(model, years) {
   
   coefs <- tidy(mod, exponentiate = TRUE, conf.int =  T)
@@ -241,7 +258,8 @@ effect_by_year <- function(model, years) {
 }
 ```
 
-```{r}
+
+``` r
 effects <-
   effect_by_year(mod) %>% 
   mutate(
@@ -260,7 +278,8 @@ effects <-
 ```
 
 
-```{r}
+
+``` r
 effects %>% 
   ggplot(
     aes(
@@ -275,3 +294,5 @@ effects %>%
   facet_wrap(~group) +
   coord_flip()
 ```
+
+<img src="results_files/figure-html/unnamed-chunk-10-1.png" width="672" />

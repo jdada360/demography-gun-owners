@@ -1214,17 +1214,6 @@ colSums(is.na(clean))
 
 ## Explore demographic variables
 
-
-```{r}
-des <- svydesign(
-  id = ~caseid, 
-  weights = ~ weight1, 
-  data = clean
-  )
-
-svymean(~gunhomeper, design = des) 
-```
-
 ### Gun owners
 
 ```{r}
