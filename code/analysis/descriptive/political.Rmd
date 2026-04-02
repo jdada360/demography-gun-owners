@@ -51,11 +51,21 @@ gun <-
   )
 ```
 
+## Manually compute shares as a sanity check
+
+Everything aligns perfectly.
+```{r}
+gun %>% 
+  group_by(year, party5) %>% 
+  summarise(w = sum(weight), .groups = "drop_last") %>% 
+  mutate(pct = w / sum(w)) %>% 
+  ungroup()
+```
 
 ## Estimates with CIs
 
 ```{r}
-gun %>% tabyl(party3)
+gun %>% tabyl(party5)
 ```
 
 ```{r}
@@ -67,7 +77,7 @@ des <- svydesign(
 
 party <- 
   svyby(
-    ~party3,
+    ~party5,
     ~year,
     des,
     svymean,
@@ -105,14 +115,23 @@ long <-
    mutate(
     party = 
       case_when(
-        str_detect(group, "rep") ~ 1,
-        str_detect(group, "demo") ~ 2,
-        str_detect(group, "inde") ~ 3,
-        TRUE ~ 4 ) %>% 
+        group == "party5republican" ~ 1,
+        group == "party5lean_republican" ~ 2,
+        group == "party5independent" ~ 3,
+        group == "party5lean_democrat" ~ 4,
+        group == "party5democrat" ~ 5,
+        TRUE ~ 6) %>% 
       factor(
-        levels = 1:4, 
+        levels = 1:6,
         labels = 
-          c("Republican", "Democrat", "Independent", "Missing")
+          c(
+            "Republican",
+            "Lean Republican",
+            "Independent",
+            "Lean Democrat",
+            "Democrat", 
+            "Missing"
+            )
         ),
     # lower CI at least 0
     ci_l = ifelse(ci_l < 0, 0, ci_l)
@@ -129,7 +148,6 @@ long <-
 
 
 ## Gun ownership by political party
-
 
 ```{r}
 cap <-

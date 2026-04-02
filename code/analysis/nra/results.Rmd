@@ -8,6 +8,8 @@ demographic characteristics
 
 -   DemographyGunOwners/data/clean/gs-gun-owners.rds
 
+-   DemographyGunOwners/data/models/nra.rds
+
 **Output**
 
 -   DemographyGunOwners/data/raw/gunsurvey/...rds

@@ -722,7 +722,7 @@ raw <-
 
 ## Weights
 
-The only weight available is "Post-stratification weights - 18+ general population (N=2,124)". 
+The only weight available is "Post-stratification weights - 18+ general population (N=2,124)", although Cass that we can use these weights for analysis.
 
 I am unsure if this can be used for analysis among gun owners.
 

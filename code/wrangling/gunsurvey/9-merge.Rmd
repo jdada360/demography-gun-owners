@@ -456,9 +456,10 @@ merge <-
 
 ## Create general population sample
 
-For 2013 and 2015, weight2 is the correct full sample weights.
+For 2013 and 2015, `weight2` is the correct full sample weights.
 
 For all other years we use weight1.
+
 
 ```{r}
 merge %>% 
@@ -590,7 +591,7 @@ colSums(is.na(gun))
 
 For all years other than 2017 and 2019, we use weight3.
 
-For 2017 and 2019, there are no gun owner/non-gun owner specific weight (i.e., normalized within groups), so we have to use the gen pop weights for the analysis of gun owners.
+For 2017 and 2019, there are only gun-owner specific weights, which is `weight1`.
 
 ```{r}
 gun %>% 

@@ -159,11 +159,10 @@ save_kable(
 ```
 
 
-## Year
+## Yearly Summary
 
+This function gives the same results as `tbl_svysummary` but includes standard errors. 
 ```{r}
-# This function gives the same results as
-# tbl_svysummary but includes standard errors.  
 svyby(~age4, ~year, design = ds, FUN = svymean)
 ```
 
@@ -233,7 +232,7 @@ year_tbl <-
     escape = FALSE,
     label = "SummaryYear",
     linesep = "",
-    caption = "Demographic Characteristics of U.S. Gun Owners by Survey Year",
+    caption = "Demographic Characteristics of US Gun Owners by Survey Year",
     align = "lccccccc"
   ) %>%
   kable_styling(
