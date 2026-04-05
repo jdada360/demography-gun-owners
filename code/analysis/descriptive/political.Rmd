@@ -182,11 +182,12 @@ long %>%
     legend.title = element_text(size = 10, hjust = .5)
   ) +
   guides(color = "none") +
-  scale_color_paletteer_d("MoMAColors::Althoff") +
-  scale_fill_paletteer_d("MoMAColors::Althoff") +
+  scale_color_paletteer_d("MetBrewer::Benedictus") +
+  scale_fill_paletteer_d("MetBrewer::Benedictus") +
+  scale_y_continuous(breaks = seq(0, 100, 20)) +
   labs(
     x = "Survey Year",
-    y = "Percent of U.S. gun owners",
+    y = "Percent of US gun owners",
     fill = "Political affiliation"
   ) 
 
@@ -230,8 +231,8 @@ long %>%
     alpha = .7,
     color = NA
   ) +
-  scale_color_paletteer_d("MoMAColors::Althoff") +
-  scale_fill_paletteer_d("MoMAColors::Althoff") +
+  scale_color_paletteer_d("MetBrewer::Benedictus") +
+  scale_fill_paletteer_d("MetBrewer::Benedictus") +
   scale_y_continuous(
     labels = scales::percent,
     limits = c(0, .8),
@@ -256,7 +257,7 @@ long %>%
   ) +
   labs(
     x = "Survey Year",
-    y = "Percent of U.S. gun owners",
+    y = "Percent of US gun owners",
     color = "Political affiliation",
     fill = "Political affiliation"
   ) 

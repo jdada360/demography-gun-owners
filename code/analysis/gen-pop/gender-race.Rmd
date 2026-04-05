@@ -1,0 +1,257 @@
+# Gender and Racial composition
+
+This chapter focuses on exploring the gender and racial composition of
+the US general population.
+
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gun-owners.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "dplyr",
+    "here",
+    "ggh4x",
+    "vtable",
+    "paletteer",
+    "fastDummies"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+genpop <-
+  read_rds(
+     here(
+      path_od,
+      "data",
+      "clean",
+      "gs-gen-pop.rds"
+      )
+     )
+```
+
+
+## Race by gender
+
+```{r}
+des <- svydesign(
+  ids = ~1,       
+  weights = ~weight,
+  data = genpop
+)
+
+des <- update(
+  des,
+  rg = interaction(racethnicity, gender, sep = " x ")
+)
+
+rg_ci <- 
+  svyby(
+    ~rg,
+    ~year,
+    des,
+    svymean,
+    vartype = c("se", "ci"),
+    level = 0.95
+    ) %>% 
+  clean_names() %>% 
+  mutate(across(-year, ~ .x * 100))
+```
+
+```{r}
+long <-
+  rg_ci %>%
+  pivot_longer(
+    cols = -year,
+    names_to = "name",
+    values_to = "value"
+  ) %>%
+  mutate(
+    stat = case_when(
+      str_starts(name, "se_")   ~ "se",
+      str_starts(name, "ci_l_") ~ "ci_l",
+      str_starts(name, "ci_u_") ~ "ci_u",
+      TRUE                      ~ "pct"
+    ),
+    group = name %>%
+      str_remove("^se_") %>%
+      str_remove("^ci_l_") %>%
+      str_remove("^ci_u_")
+  ) %>%
+  select(year, group, stat, value) %>%
+  pivot_wider(
+    names_from = stat,
+    values_from = value
+  ) %>% 
+   mutate(
+    gender = 
+      case_when(
+        str_detect(group, "female") ~ 2,
+        str_detect(group, "male") ~ 1,
+        TRUE ~ 3) %>% 
+      factor(
+        levels = 1:3, 
+        labels = c("Male", "Female", "Other")
+      ),
+    race = case_when(
+      str_detect(group, "rg_hispanic") ~ 6,
+      str_detect(group, "white") ~ 1,
+      str_detect(group, "black") ~ 2,
+      str_detect(group, "asian") ~ 3,
+      str_detect(group, "other") ~ 4,
+      str_detect(group, "races") ~ 5
+    ) %>% 
+      factor(
+        levels = 1:6,
+        labels = 
+          c("White, non-Hispanic",
+            "Black, non-Hispanic",
+            "Asian, non-Hispanic",
+            "Other, non-Hispanic",
+            "2+ Races, non-Hispanic",
+            "Hispanic"
+            )
+      ),
+    # lower CI at least 0
+    ci_l = ifelse(ci_l < 0, 0, ci_l),
+    # indicator for people of color
+    poc = race !="White, non-Hispanic",
+    year = factor(year)
+  ) 
+```
+
+```{r}
+genlist <- c("female", "male")
+genrace <-
+  map(
+   genlist, ~ 
+     filter(
+       long, 
+       poc & gender == str_to_title(.x)
+       )
+  )
+```
+
+## Table with confidence intervals
+
+```{r}
+notes <-
+  map(
+    genlist %>% str_to_title,
+    ~  paste0(
+    "Note: This table shows ", .x ," US adults stratified by ",
+      "racial ethnic group as a ",
+      "percent of all US adults (N=",
+       nrow(filter(genpop, gender ==.x)),
+      ") from seven waves of the National Survey of Gun Policy, ",
+      "spanning 2013 to 2025. Lower bounds of confidence intervals were truncated ",
+      "at 0."
+    )
+  )
+
+cap <-
+  map(
+    genlist %>% str_to_title,
+    ~ paste0(
+      .x,
+      "-identifying US adults stratified by racial ethnic group  ",
+      "as percent (95\\% CI) of US population, 2013-2025"
+    )
+  )
+```
+
+```{r}
+out <-
+  map(
+    seq_along(genlist),
+    function(x) {
+      
+      tab <- 
+      filter(long, gender == str_to_title(genlist[[x]])) %>% 
+        mutate(
+            across(pct:ci_u, ~ round(.x, 1) %>% as.character())  
+          ) %>% 
+        transmute(
+          Year = factor(year),
+          race = 
+            race %>% 
+            factor(
+            levels = 
+              c("White, non-Hispanic",
+                "Black, non-Hispanic",
+                "Hispanic",
+                "Asian, non-Hispanic",
+                "2+ Races, non-Hispanic",
+                "Other, non-Hispanic"
+                )
+            ),
+            pct = paste0(
+              pct, " (", ci_l, ", ", ci_u, ")"
+            )
+          ) %>% 
+        arrange(race) %>% 
+        pivot_wider(names_from = "race", values_from = "pct") 
+      
+    t <-
+      tab %>% 
+        kable(
+          format = "latex",
+          booktabs = TRUE,
+          align = "lcccccc",
+          caption = cap[[x]],
+          label =  paste0("Gen", str_to_title(genlist[[x]]), "Race"), 
+          escape = FALSE,
+          linesep = ""
+        ) %>%
+        kable_styling(
+          latex_options = c("hold_position", "scale_down"),
+          position = "center"
+        ) %>% 
+      row_spec(0, bold = TRUE) %>% 
+      column_spec(1, bold = TRUE) %>% 
+      footnote(
+        general = str_wrap(notes[[x]], 100),
+        general_title = "",
+        threeparttable = TRUE,
+        escape = FALSE
+        )
+    
+    save_kable(
+      t,
+      file = 
+        here(
+          path_ol,
+          "tables",
+          paste0("gen-pop-", genlist[[x]], "-race.tex")
+        )
+    )
+    }
+  )
+```
+
+```{r}
+
+```

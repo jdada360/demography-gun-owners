@@ -161,7 +161,7 @@ genrace <-
   )
 ```
 
-## Define function to plot by gender
+## Line plot by gender
 
 ```{r}
 p <-
@@ -275,11 +275,89 @@ capm <-
     " percent of U.S. gun owner adults. The survey weights in 2017 and 2019 ",
     "are general population weights and are not scaled to the gun-owner population."
   )
-
 ```
 
+## Bar chart by gender
 
-### Table with confidence intervals
+
+```{r}
+p <-
+map(
+  genrace, 
+  ~ {
+    
+    .x  %>% 
+    ggplot(
+      aes(
+        x = year,
+        y = pct,
+        group = race,
+        fill = race
+        )
+      ) +
+      geom_col(
+        color = NA,
+        alpha = 0.95
+        ) +
+      theme +
+      theme(
+        legend.position = "top",
+         legend.background = element_blank(),
+        text = element_text(size = 12),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10)
+      ) +
+      scale_fill_paletteer_d("MetBrewer::Benedictus") +
+      labs(
+        x = "Survey Year",
+        y = "Percent of US gun owners",
+        fill = str_wrap("Race and ethnicity", 20)
+      )
+    }
+  )
+```
+
+```{r}
+walk(
+  seq_along(genlist), ~{
+    
+    p <- p[[.x]]
+    
+    if (.x == 1){
+      
+      p <-
+        p +
+        scale_y_continuous(
+          breaks = seq(0, 12, 2),
+          limits = c(0, 12)
+          )
+    }
+    
+    else (
+      p <-
+        p +
+        scale_y_continuous(
+          breaks = seq(0, 22, 4),
+          limits = c(0, 22)
+          )
+    )
+  
+  print(p)
+  
+  ggsave(
+    height = 6,
+    width = 8, 
+    here(
+      path_ol, 
+      "figures",
+      paste0("non-white-", genlist[[.x]], "-bar.jpeg")
+      )
+    )
+  }
+)
+```
+
+## Table with confidence intervals
 
 ```{r}
 notes <-
@@ -292,8 +370,7 @@ notes <-
        nrow(filter(gun, gender ==.x)),
       ") from seven waves of the National Survey of Gun Policy, ",
       "spanning 2013 to 2025. Lower bounds of confidence intervals were truncated ",
-      "at 0. The survey weights in 2017 and 2019 are general population weights ",
-      "and are not scaled to the gun-owner population."
+      "at 0."
     )
   )
 
@@ -302,8 +379,8 @@ cap <-
     genlist %>% str_to_title,
     ~ paste0(
       .x,
-      "-identifying U.S. gun-owner adults stratified by racial ethnic group  ",
-      "as percent (95\\% CI) of all U.S. gun-owners, 2013-2025"
+      "-identifying US gun-owner adults stratified by racial ethnic group  ",
+      "as percent (95\\% CI) of all US gun-owners, 2013-2025"
     )
   )
 ```
@@ -348,7 +425,8 @@ out <-
           align = "lcccccc",
           caption = cap[[x]],
           label =  paste0(str_to_title(genlist[[x]]), "Race"), 
-          escape = FALSE
+          escape = FALSE,
+          linesep = ""
         ) %>%
         kable_styling(
           latex_options = c("hold_position", "scale_down"),
@@ -675,11 +753,12 @@ bw <-
 
 ### Plot age of black women gun owners
 
-Weights in 2017 and 2019 are not gun owners specific and lead to erroneous inference.
+Weights in 2017 and 2019 are correct weights but the results
+look weird.
 
 ```{r}
 bw %>% 
-  filter(!(year %in% as.character(2017:2019))) %>% 
+  # filter(!(year %in% as.character(2017:2019))) %>% 
   ggplot(
     aes(
       x = year,

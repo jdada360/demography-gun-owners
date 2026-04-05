@@ -1,0 +1,191 @@
+# Year Summary
+
+This chapter creates a basic descriptive table of the time
+trends in the demographics of US gun owners.
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-gen-pop.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "dplyr",
+    "here",
+    "vtable"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+
+
+##  Load data
+
+```{r}
+genpop <-
+  read_rds(
+    here(
+      path_od,
+      "data",
+      "clean",
+      "gs-gen-pop.rds"
+    )
+  )
+```
+
+## Demographic variables
+
+```{r}
+demovars <-
+  c(
+    "gender",
+    "age4",
+    "racethnicity",
+    "party5",
+    "nranow",
+    "educ",
+    "employ",
+    "income4",
+    "marital",
+    "region4"
+  )
+```
+
+## Tabulate values
+
+```{r}
+walk(demovars, ~ print(tabyl(genpop, .x)))
+```
+
+
+## Yearly Summary
+
+```{r}
+ds <- 
+  svydesign(
+    ~ 1, 
+    data = genpop, 
+    strata = ~ year,
+    weights = ~ weight
+    ) 
+```
+
+```{r}
+year_tbl <-
+  ds %>%
+  tbl_svysummary(
+    by = year,
+    include = demovars,
+    missing = "no",
+    statistic = all_categorical() ~ "{p}%"
+  ) %>%
+  modify_header(
+    label ~ "Characteristic",
+    all_stat_cols() ~ "{level}"
+  ) %>%
+  modify_table_body(
+    ~ {
+      
+      tbl <- .x
+      
+      # compute unweighted yearly totals
+      counts <- format(table(genpop$year), big.mark = ",")
+      
+      # create row with obs
+      n_row <- tibble(
+        variable = NA,
+        var_label = NA,
+        row_type = "label",
+        label = "Observations",
+        !!!setNames(
+          as.list(counts),
+          paste0("stat_", seq_along(counts))
+          )
+        ) %>% 
+        mutate(across(starts_with("stat"), trimws)
+          )
+
+      bind_rows(n_row, tbl) %>%
+        filter(
+          ! grepl("Ques", label),
+          ! (grepl("No", label) & variable == "nranow")
+          ) %>% 
+        mutate(
+           label = ifelse(
+            row_type == "level" & label != "Observations",
+            paste0("  ", label),
+            label),
+          stat_2 = ifelse(
+               variable == "party5" & row_type == "level",
+               "-", stat_2
+               ),
+           across(
+             c(stat_6, stat_7),
+             ~ ifelse(
+               variable == "marital" & grepl("with", label),
+               "-", .x
+               )
+             )
+           )
+    }
+  ) %>%
+  modify_footnote(all_stat_cols() ~ NA_character_) %>%
+  as_kable_extra(
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE,
+    label = "GenSummaryYear",
+    linesep = "",
+    caption = "Demographic Characteristics of US Adults Survey by Year",
+    align = "lccccccc"
+  ) %>%
+  kable_styling(
+    latex_options =
+      c("hold_position", "scale_down"),
+   font_size = 9
+  ) %>%
+  column_spec(1, width = "4.5cm") %>%
+  column_spec(
+    2:8, 
+    width = "1.3cm"
+    ) %>% 
+  row_spec(1, bold = TRUE) %>% 
+  footnote(
+   number = paste0(
+    "Note: Values are weighted percentages describing ",
+    "the demographic composition of US adults by survey year. ",
+    "Because survey question wording varied across waves, the category ",
+    "``Some college or associate’s degree'' also includes respondents ",
+    "reporting vocational or technical school."
+  ),
+    threeparttable = TRUE,
+    escape = FALSE,
+    fixed_small_size = TRUE
+  )
+
+save_kable(
+  year_tbl,
+  file = here(path_ol, "tables/gen-pop-summary-year.tex")
+)
+```
+
+

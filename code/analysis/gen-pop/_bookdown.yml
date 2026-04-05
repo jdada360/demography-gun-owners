@@ -1,0 +1,7 @@
+delete_merged_file: false
+new_session: yes
+output_dir: "gen-pop"
+rmd_files: [
+  "index.Rmd",
+  "year-summary.Rmd"
+  ]

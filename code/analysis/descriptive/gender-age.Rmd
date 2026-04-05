@@ -7,7 +7,9 @@
 
 **Output**
 
--   DemographyGunOwners/output
+-   figures/gender-race-2013.jpeg
+-   figures/gender-race-2025.jpeg
+
 
 **Last ran**
 
@@ -69,7 +71,7 @@ df <-
   distinct(year, gender, age4, racethnicity, pct, n)
 ``` 
 
-```{r}
+```{r, warning = F, message = F}
 plots <-
   map(
     c(2013, 2025),
@@ -92,9 +94,8 @@ plots <-
           scales = "free_x",
           switch = "x"
           ) +
-          scale_fill_viridis_d(
-            direction = 1,
-            end = 0.6,
+          scale_fill_paletteer_d(
+            "MetBrewer::Benedictus",
             drop = F,
             labels = 
               function(x) 
@@ -146,9 +147,9 @@ plots <-
 ```
 
 
-Combine plots from 2013 and 2025.
+## Combine plots from 2013 and 2025
 
-```{r}
+```{r, warning = F}
 p <- 
   ggarrange(
     plots[[1]] +

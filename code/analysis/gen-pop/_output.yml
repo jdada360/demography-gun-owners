@@ -1,0 +1,10 @@
+bookdown::gitbook:
+  self_contained: false
+  css: style.css
+  config:
+    toc:
+      collapse: section
+      before: |
+        <li><a href="./">General Population Descriptive Analysis</a></li>
+  code_folding: show
+
