@@ -77,6 +77,24 @@ mod <-
 I.e., all of the years together
 
 ```{r}
+note <-
+   paste0(
+    "Note: Results are from a logistic regression of a ",
+    "binary indicator of National Rifle Association ",
+    "membership (N=", N,") on demographic characteristics ",
+    "from the National Survey of Gun Policy ",
+    "2013–2025, restricted to U.S. adult gun owners (N=",
+    nrow(gun),  "). ",
+    "The 2015 survey wave is excluded because of missing ",
+    "data on political affiliation.",
+    "Because survey question wording varied across waves, ",
+    "the category ``Some college or associate's degree'' also ",
+    "includes respondents reporting vocational or ",
+    "technical school."
+    )
+```
+
+```{r}
 path <- here(path_ol, "tables/nra-reg.tex")
 N <-  nrow(filter(gun, nranow == "Member" & year != 2015))
 ```
@@ -117,25 +135,10 @@ tbl %>%
     position = "center"
   ) %>% 
   footnote(
-   number = paste0(
-    "Note: Results are from a logistic regression of a ",
-    "binary indicator of National Rifle Association ",
-    "membership (N=", N,") on demographic characteristics ",
-    "from the National Survey of Gun Policy ",
-    "2013–2025, restricted to U.S. adult gun owners (N=",
-    nrow(gun),  "). ",
-    "The 2015 survey wave is excluded because of missing ",
-    "data on political affiliation. Survey weights for 2017 ",
-    "and 2019 are general population weights ",
-    "and are not scaled to the gun-owner population. ",
-    "Because survey question wording varied across waves, ",
-    "the category ``Some college or associate's degree'' also ",
-    "includes respondents reporting vocational or ",
-    "technical school."
-    ),
-      threeparttable = TRUE,
-      escape = FALSE,
-      fixed_small_size = FALSE
+   number = note,
+  threeparttable = TRUE,
+  escape = FALSE,
+  fixed_small_size = FALSE
   ) %>% 
   save_kable(
     file = path
@@ -222,10 +225,14 @@ effect_by_year <- function(model, years) {
   coefs <- tidy(mod, exponentiate = TRUE, conf.int =  T)
 
   interactions <- coefs %>%
-    filter(str_detect(term, "Year[0-9]{4}:")) %>%
+    filter(grepl("\\:", term)) %>%
     mutate(
       year = str_extract(term, "[0-9]{4}"),
-      variable = str_remove(term, "Year[0-9]{4}:")
+      variable = 
+        str_remove_all(
+          term, "Year[0-9]{4}:|:Year[0-9]{4}
+age4"
+        )
     )
 
   main_effects <- coefs %>%
@@ -238,7 +245,7 @@ effect_by_year <- function(model, years) {
       interaction_or = estimate,
       total_or = main_or * interaction_or
     ) %>%
-    select(variable, year, main_or, interaction_or, total_or) %>%
+    select(variable, year, main_or, interaction_or, total_or, everything()) %>%
     arrange(variable, year)
 }
 ```
@@ -251,12 +258,29 @@ effects <-
       case_when(
         variable == "Republican" ~ "Republican",
         grepl("age", variable) ~ "Age",
+        grepl("Male", variable) ~ "Male",
         grepl("educ", variable) ~ "Highest level of education",
         grepl("employ", variable) ~ "Current employment status",
         grepl("income", variable) ~ "Household income",
         grepl("marital", variable) ~ "Marital status",
         grepl("race", variable) ~ "Race and ethnicity",
          grepl("region", variable) ~ "Region"
+      ),
+    variable = 
+      str_remove_all(
+        variable,
+        paste(
+          c(
+            "income4",
+            "age4",
+            "marital",
+            "racethnicity",
+            "region4",
+            "employ",
+            "educ"
+          ),
+          collapse = "|"
+        )
       )
   )
 ```
@@ -264,16 +288,21 @@ effects <-
 
 ```{r}
 effects %>% 
+  filter(group %in% c("Age", "Republican", "Male")) %>% 
   ggplot(
     aes(
       x = year,
       color = variable,
-      y = total_or
+      y = interaction_or,
+      ymin = conf.low,
+      ymax = conf.high
     )
   ) +
+  geom_errorbar(width = 0.5) +
   geom_point() +
   scale_color_viridis_d() +
   theme +
   facet_wrap(~group) +
   coord_flip()
+
 ```

@@ -1,0 +1,85 @@
+# DiD
+
+This chapter runs a DiD estimation of the impact of legalization of sports betting on gun ownership at the state level.
+
+```{r}
+packages <-
+  c(
+    "did"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = T
+)
+```
+
+## Load data
+
+```{r}
+panel <-
+  read_rds(
+    here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel.rds"
+  )
+  ) %>% 
+  group_by(state, year) %>% 
+  mutate(cluster = cur_group_id()) %>% 
+  ungroup()
+```
+
+
+```{r}
+map(
+  names(select(panel, ends_with("post"))),
+  ~ {
+    fml <- 
+      paste0("gun ~ ", .x, "| state + year")  %>% 
+      as.formula()
+    
+    fixest::feols(
+        fml,
+        cluster = ~ cluster,
+        data = panel
+      )
+  }
+) 
+
+```
+
+
+```{r}
+df <-
+  panel %>% 
+  select(
+    state,
+    year,
+    cluster,
+    any_D
+  )
+```
+
+
+## Run estimation
+
+```{r}
+att <- 
+  att_gt(
+    yname = "gun",
+    tname = "year",
+    idname = "stateid",
+    gname = "any_g",
+    data = panel,
+    print_details = FALSE,
+    cores = 4,
+    clustervars = "cluster",
+    control_group = "notyettreated"
+    # allow_unbalanced_panel = TRUE
+    )
+```
+
+
+## Save results

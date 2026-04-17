@@ -1,0 +1,19 @@
+--- 
+title: "Sports Betting"
+author: "Joy Dada"
+date: '`r format(Sys.Date(), format = "%A, %B %d, %Y")`'
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+---
+
+# Introduction {-}
+
+This book analyses the impact of the legalization of sports betting on gun ownership.
+
+```{r, warning = FALSE, message = FALSE, echo = F}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  meassage = FALSE
+  )
+```

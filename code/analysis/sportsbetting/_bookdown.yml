@@ -1,0 +1,11 @@
+delete_merged_file: false
+new_session: yes
+output_dir: "descriptive"
+rmd_files: [
+  "index.Rmd",
+  "own-overtime.Rmd",
+  "gender-race.Rmd",
+  "age.Rmd",
+  "education.Rmd",
+  "income.Rmd"
+  ]

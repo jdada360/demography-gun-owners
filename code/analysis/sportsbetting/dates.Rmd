@@ -1,0 +1,85 @@
+# Legalisation Dates
+
+This chapter cleans the data that includes the dates that each state legalization of sports betting.
+
+**Input**
+
+-   DemographyGunOwners/data/raw/sportsbettingdates.xlsx
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+
+
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "readxl",
+    "janitor",
+    "here"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+```{r}
+dates <-
+  read_excel(
+     here(
+      path_od, 
+      "data",
+      "raw",
+      "sportsbettingdates.xlsx"
+      ),
+     sheet = "df"
+  )
+```
+
+## Tidy data
+
+```{r}
+state_lookup <- setNames(state.abb, tolower(state.name))
+
+clean <-
+  dates %>% 
+  rename(
+    state_name = state
+  ) %>% 
+  mutate(
+    across(
+      ends_with("date"),
+      ~excel_numeric_to_date(as.numeric(.x))
+    ),
+    state = state_lookup[tolower(trimws(state_name))]
+  )
+```
+
+## Export data
+
+
+```{r}
+write_rds(
+  clean,
+  here(
+    path_od, 
+    "data",
+    "clean",
+    "sportsbettingdates.rds"
+    )
+) 
+```
+
