@@ -1,0 +1,161 @@
+# Create panel
+
+This chapter merges gun survey data with the implementation dates to create
+a panel for the did.
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od,
+      "data",
+      "clean",
+      "gun-panel.rds"
+    )
+  )
+```
+
+```{r}
+dates <-
+  read_rds(
+    here(
+      path_od, 
+      "data",
+      "clean",
+      "sportsbettingdates.rds"
+    )
+  )
+```
+
+## Merge
+
+```{r}
+merge <-
+  gun %>% 
+  inner_join(dates, by = "state")
+```
+
+```{r}
+n_distinct(merge$state)
+```
+
+## Define post treatment
+
+These variables are defined so that they can be used with the `did` package, which
+uses the Callaway and Sant'anna (2021) estimator.
+
+```{r}
+clean <-
+  merge %>% 
+  mutate(
+    across(
+      ends_with("date"),
+      ~ year(.x),
+      .names = "{str_replace_all(.col, 'date', 'year')}"
+    ),
+    across(
+      ends_with("_year"),
+      ~ case_when(
+        !is.na(.x) ~ year >=.x,
+        TRUE ~ F
+      ) %>% as.numeric() %>% 
+        factor(
+          levels = 0:1,
+          labels = c("Control", "Treatment")
+        ),
+      .names = "{str_replace_all(.col, 'year', 'post')}"
+    ),
+    # compute adjusted years so that implementation dates align with survey dates
+    across(
+      ends_with("_year"),
+      ~ case_when(
+        is.na(.x) ~ NA_real_,
+        TRUE ~ .x + (.x %% 2 == 0)
+      ),
+      .names = "{str_replace_all(.col, 'year', 'year_adj')}"
+    )
+  ) %>% 
+  group_by(year) %>% 
+  mutate(t = cur_group_id()) %>% 
+  ungroup() %>% 
+  mutate(
+     across(
+      ends_with("_year_adj"),
+      ~ case_when(
+        .x == year ~ t,
+        TRUE ~ NA_real_
+      ),
+      .names = "{str_replace_all(.col, 'year_adj', 'g')}"
+    )
+  ) %>% 
+  group_by(state)  %>% 
+   mutate(
+    across(
+      ends_with("g"), 
+      ~ max(ifelse(is.na(.x), 0, max(.x, na.rm = T))) %>% as.numeric
+      ),
+    stateid = cur_group_id()
+  )  %>% 
+  group_by(state, year) %>% 
+  mutate(cluster = cur_group_id()) %>% 
+  ungroup()
+```
+
+
+## Check if we want a balanced panel
+
+Balanced = Keep states that we observe for all 7 years.
+
+```{r}
+n_distinct(clean$state)
+```
+
+```{r}
+balanced <-
+  clean %>% 
+  group_by(state) %>% 
+  filter(n() == 7) %>% 
+  ungroup()
+```
+
+
+```{r}
+n_distinct(balanced$state)
+```
+
+```{r}
+clean %>% tabyl(state, any_post)
+```
+
+In the balanced panel, we have 2 controls.
+
+```{r}
+balanced %>% tabyl(state, any_post)
+```
+
+## Export data
+
+```{r}
+write_rds(
+  clean,
+  here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel.rds"
+  )
+)
+```
+
+
+```{r}
+write_rds(
+  balanced,
+  here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel-bal.rds"
+  )
+)
+```

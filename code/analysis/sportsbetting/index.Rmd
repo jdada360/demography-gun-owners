@@ -9,11 +9,15 @@ documentclass: book
 
 # Introduction {-}
 
-This book analyses the impact of the legalization of sports betting on gun ownership.
+This book estimates the impact of the legalization of sports betting on gun ownership.
+
+We use a DiD design, implemented by the `did` package, using the Callaway and Sant'Anna (2021) 
+estimator.
 
 ```{r, warning = FALSE, message = FALSE, echo = F}
 knitr::opts_chunk$set(
   warning = FALSE,
-  meassage = FALSE
+  message = FALSE,
+  echo = TRUE
   )
 ```

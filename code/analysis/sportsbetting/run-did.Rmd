@@ -1,0 +1,235 @@
+# DiD
+
+This chapter runs a DiD estimation of the impact of legalization of sports betting on gun ownership at the state level.
+
+This code currently does not include any control variables. 
+
+```{r, echo = F}
+packages <-
+  c(
+    "did",
+    "paletteer"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = T
+)
+```
+
+## Load data
+
+```{r}
+panel <-
+  read_rds(
+    here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel.rds"
+    )
+  ) 
+```
+
+```{r}
+balanced <-
+  read_rds(
+    here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel-bal.rds"
+    )
+  ) 
+```
+
+
+```{r}
+clean %>% tabyl(state)
+```
+
+```{r}
+balanced %>% tabyl(state)
+```
+
+## Simple OLS
+
+```{r}
+simple <-
+  map(
+    names(select(panel, ends_with("post"))),
+    ~ {
+      fml <- 
+        paste0("gun ~ ", .x, "| state + year")  %>% 
+        as.formula()
+      
+      fixest::feols(
+          fml,
+          cluster = ~ cluster,
+          data = panel
+        )
+    }
+  ) 
+```
+
+```{r}
+map(simple, tbl_regression) %>% tbl_stack
+```
+
+
+
+From the simple model, post-online gambling legalization has the most significant
+treatment effect. 
+
+## Run DiD
+
+```{r}
+y_list <-  names(select(panel, ends_with("_g")))
+```
+
+```{r, warning = F}
+att <-
+  map(
+    y_list,
+    ~ att_gt(
+      yname = "gun",
+      tname = "t",
+      idname = "stateid",
+      gname = .x,
+      data = balanced,
+      print_details = FALSE,
+      cores = 4,
+      clustervars = "stateid",
+      control_group = "notyettreated"
+      )
+  )
+```
+
+## Aggregate Group-Time Average Treatment Effects
+
+No significant weighted average of all group-time average treatment effects.
+
+```{r, fig.cap = "Aggregate Group-Time Average Treatment Effects by Policy"}
+map(
+  att,
+  ~ aggte(
+    .x, 
+    type = "simple",
+    na.rm = TRUE
+    ) %>% tidy()
+  ) %>% 
+  bind_rows() %>% 
+  mutate(
+    policy = 
+      y_list %>% 
+      str_replace_all(
+        c(
+          "any_g" = "Any Sports Betting",
+          "retail_g" = "Retail",
+          "online_g" = "Online",
+          "igaming_g" = "iGaming"
+        )
+      )
+    ) %>% 
+  ggplot(
+    aes(
+      x = estimate,
+      xmin = conf.low,
+      xmax = conf.high,
+      y = policy
+    )
+  ) +
+  geom_point() +
+  geom_errorbarh(width = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_event +
+  labs(
+    x = "Share of Gun Owners",
+    y = "Legalization"
+  )
+```
+
+
+## Event study
+
+```{r}
+events <-
+  map(
+    att, 
+    ~ aggte(
+      .x,
+      type = "dynamic",
+      na.rm = TRUE
+      )
+  )
+```
+
+
+```{r, warning = F}
+plotdf <-
+  map(
+    seq_along(att),
+    ~ aggte(
+      att[[.x]], 
+      type = "dynamic",
+      na.rm = TRUE
+      ) %>% 
+      tidy() %>% 
+      mutate(policy = y_list[[.x]])
+    ) %>% 
+    bind_rows() %>% 
+    mutate(
+      policy = 
+        str_replace_all(
+          policy,
+          c(
+            "any_g" = "Any Sports Betting",
+            "retail_g" = "Retail",
+            "online_g" = "Online",
+            "igaming_g" = "iGaming"
+          )
+        )
+      )
+```
+
+The implementation dates for retail and online gambling are the same I think.
+```{r, fig.width=8, fig.height=10, fig.cap = "Event Study Estimates"}
+plotdf %>% 
+  ggplot(
+    aes(
+      x = event.time,
+      y = estimate, 
+      ymin = point.conf.low,
+      ymax = point.conf.high
+     # color = policy
+      )
+  ) +
+  geom_point(size = 1) +
+  geom_line() +
+  geom_errorbar(width = 0.25) +
+  geom_vline(
+    xintercept =  0, 
+    color = "black",
+    linetype = "dashed"
+    ) +
+  geom_hline(
+    yintercept = 0 ,
+    linetype = "dashed",
+    color = "black"
+  ) +
+  theme_event +
+  scale_x_continuous(
+    breaks = -5:5
+    # limits = c(-5, 4)
+    ) +
+  scale_y_continuous(
+    # limits = c(-0.2, 0.2), 
+    breaks = seq(-0.2, 0.2, 0.05)
+    ) +
+  # scale_color_paletteer_d("MoMAColors::Althoff") +
+  facet_wrap(~ policy, ncol = 1) +
+  labs(
+    x = "Event time",
+    y = "Share of Gun Owners"
+  )
+```

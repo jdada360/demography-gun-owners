@@ -1,0 +1,165 @@
+# Sample summary
+
+This chapter summaries the states included in the main analysis.
+
+
+```{r, echo = F}
+library(kableExtra)
+library(ggthemes)
+```
+
+
+```{r}
+balanced <-
+  read_rds(
+    here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel-bal.rds"
+    )
+  ) 
+```
+
+
+## Sample sizes
+
+```{r}
+counts <- 
+  balanced %>% 
+    group_by(state) %>% 
+    summarise(
+       across(ends_with("_year"), max),
+       n = n(),
+       .groups = "drop"
+    ) %>% 
+  arrange(any_year) %>% 
+    mutate(
+      across(
+        - c(state, n),
+        ~ case_when(
+          is.na(.x) ~ "-",
+          TRUE ~ as.character(.x)
+        )
+      )
+    ) %>% 
+    bind_rows(
+      balanced %>%
+        mutate(state = "Overall (average)") %>% 
+        group_by(state) %>% 
+        summarise(
+          across(
+            ends_with("_year"), 
+            ~ sprintf("%.0f", (mean(.x, na.rm = T)))
+          ),
+          n = n()
+        )
+    ) 
+```
+
+
+
+```{r, results = "asis"}
+counts %>% 
+  kbl(
+    col.names = c(
+      "State",
+      "Any",
+      "Retail",
+      "Online",
+      "iGaming",
+      "Observations"
+    ),
+    format = "html",
+    linesep = "",
+    booktabs = TRUE,
+    format.args = list(big.mark = ','),
+    escape = F,
+    caption = "Implementation Dates and Sample Counts"
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    position = "center",
+    html_font = "Cambria"
+    )  %>% 
+  add_header_above(
+    c(
+      " " = 1,
+      "Gambling Legalization Date" = 4,
+      " " = 1
+    )
+  )
+```
+
+## Gun ownership
+
+```{r, fig.cap = "Gun Ownership by State and Year"}
+balanced %>% 
+  ggplot(
+    aes(
+      x = year,
+      y = gun,
+      color = state
+    )
+  ) +
+  geom_point() +
+  geom_line(size = 1.15) +
+  theme_event +
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  ) +
+  scale_color_economist() +
+  scale_x_continuous(breaks = seq(2013, 2025, 2)) +
+  scale_y_continuous(breaks = seq(0, 0.6, 0.1), limits = c(0, 0.6)) +
+  labs(
+    x = "Year",
+    y = "Share of gun owners"
+  ) +
+  guides(
+    color = guide_legend(
+      nrow = 1,
+      override.aes = list(
+        linetype = 0,   
+        shape = 15,    
+        size = 5       
+      )
+    )
+  )
+```
+
+
+## State averages
+
+```{r, fig.cap = "Gun Ownership by State, 2013-2025"}
+balanced %>% 
+  bind_rows(balanced %>% mutate(state = "Overall")) %>% 
+  group_by(state) %>% 
+  summarise(
+    across(
+      gun,
+      list(
+        mean = ~ mean(.x),
+        conf.low = ~ mean(.x) - 1.96 * sd(.x)/sqrt(7), # 7 observations per state
+        conf.high = ~ mean(.x) + 1.96 * sd(.x)/sqrt(7) 
+      ),
+      .names = "{.fn}"
+    )
+  ) %>% 
+  ggplot(
+    aes(x = reorder(state, mean),
+        y = mean,
+        ymin = conf.low,
+        ymax = conf.high)
+  ) +
+  geom_point() +
+  geom_errorbar() +
+  theme_event +
+  scale_y_continuous(breaks = seq(0.1, 0.4, 0.05)) +
+  labs(
+    x = "State",
+    y = "Share of gun owners"
+  ) +
+  coord_flip()
+```
+

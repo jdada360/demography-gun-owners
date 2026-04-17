@@ -1,0 +1,894 @@
+--- 
+title: "Sports Betting"
+author: "Joy Dada"
+date: '`r format(Sys.Date(), format = "%A, %B %d, %Y")`'
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+---
+
+# Introduction {-}
+
+This book estimates the impact of the legalization of sports betting on gun ownership.
+
+We use a DiD design, implemented by the `did` package, using the Callaway and Sant'Anna (2021) 
+estimator.
+
+```{r, warning = FALSE, message = FALSE, echo = F}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = TRUE
+  )
+```
+
+<!--chapter:end:index.Rmd-->
+
+# Legalisation Dates
+
+This chapter prepares the dataset, including constructing and standardizing the dates of sports betting legalization for each state.
+
+```{r,  message = FALSE, warning = FALSE, echo = F}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "readxl",
+    "janitor",
+    "here"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Import data
+
+Ben shared this document:
+```{r}
+dates <-
+  read_excel(
+     here(
+      path_od, 
+      "data",
+      "raw",
+      "sportsbettingdates.xlsx"
+      ),
+     sheet = "df"
+  )
+```
+
+```{r}
+dates %>% 
+  sample_n(10) %>% 
+  head(10) %>% 
+  kbl(
+    caption = 
+      "Sports Betting Legalization Data",
+    align = "c",
+    format = "html",
+    booktabs = TRUE
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+    )  %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+## Tidy data
+
+We convert the dates into the correct format and retrieve state name 
+abbreviations.
+
+```{r}
+state_lookup <- setNames(state.abb, tolower(state.name))
+
+clean <-
+  dates %>% 
+  rename(
+    state_name = state
+  ) %>% 
+  mutate(
+    across(
+      ends_with("date"),
+      ~excel_numeric_to_date(as.numeric(.x))
+    ),
+    state = state_lookup[tolower(trimws(state_name))]
+  )
+```
+
+## Export data
+
+```{r}
+write_rds(
+  clean,
+  here(
+    path_od, 
+    "data",
+    "clean",
+    "sportsbettingdates.rds"
+    )
+) 
+```
+
+
+<!--chapter:end:clean-dates.Rmd-->
+
+# Create gun ownership panel
+
+This chapter creates a state level panel of gun ownership by age and gender.
+
+```{r,  message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "readxl",
+    "janitor",
+    "here",
+    "gtsummary"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Load data
+
+This data is seven waves of the [National Gun Policy Survey](https://publichealth.jhu.edu/center-for-gun-violence-solutions/data/national-survey-of-gun-policy) from 2013 to 2025.
+
+We use survey weights to compute the share of individuals in a given state and year
+that own a gun. This data is nationally representative.
+
+
+```{r}
+raw <-
+  read_rds(
+     here(
+      path_od,
+      "data",
+      "clean",
+      "gs-gen-pop.rds"
+    )
+  )
+```
+
+
+```{r}
+raw %>% 
+  sample_n(10) %>% 
+  head(10) %>% 
+  kbl(
+    caption = 
+      "Gun Survey National Data",
+    align = "c",
+    format = "html",
+    booktabs = TRUE
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+    )  %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+
+## Create panel of gun ownership 
+
+```{r}
+des <- svydesign(
+  ids = ~1,        
+  weights = ~weight,
+  data = raw
+)
+
+est <-
+  svyby(
+    ~gun,
+    ~year + state,
+    des,
+    svymean,
+    keep.var = FALSE,
+    vartype = c("se", "ci"),
+      level = 0.95
+    ) %>% 
+    clean_names()
+```
+
+## State-year level
+
+```{r}
+long <-
+  est %>%
+  tibble() %>% 
+  rename(gun = statistic_gun_yes) %>% 
+  select(
+    state, year, gun
+  )
+```
+
+## Check missing states
+
+```{r}
+long %>% group_by(state) %>% filter(n() != 7) %>% tabyl(state)
+```
+
+AK and WY not present every year because of small sample sizes, so we drop.
+
+### Remove extreme values
+
+We drop states with low effective sample sizes. This is because we cannot draw 
+inference from these states. This reinforces the decision to drop observations
+with only zeros and ones.
+
+```{r}
+valid_cells <-
+  raw %>%
+  group_by(year, state) %>%
+  summarise(
+    n_eff = (sum(weight)^2) / sum(weight^2),
+    .groups = "drop"
+  ) %>%
+  filter(n_eff >= 30) %>% 
+  select(-n_eff)
+
+clean <-
+  long %>%
+  inner_join(valid_cells, by = c("year", "state"))
+```
+
+```{r}
+n_distinct(clean$state)
+```
+
+
+## Save data
+
+```{r}
+write_rds(
+  clean,
+  here(
+    path_od,
+    "data",
+    "clean",
+    "gun-panel.rds"
+  )
+)
+```
+
+
+<!-- ## State characteristics -->
+
+<!-- ```{r} -->
+<!-- vars <- -->
+<!--   c( -->
+<!--     "gender", -->
+<!--     "party3", -->
+<!--     "metro" -->
+<!--   ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ds <-  -->
+<!--   svydesign( -->
+<!--     ~ 1,  -->
+<!--     data = raw,  -->
+<!--     strata = ~ year + state, -->
+<!--     weights = ~ weight -->
+<!--     )  -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- share_df <- -->
+<!--   raw %>% -->
+<!--   pivot_longer( -->
+<!--     all_of(vars),  -->
+<!--     names_to = "variable",  -->
+<!--     values_to = "level" -->
+<!--     ) %>% -->
+<!--   group_by(year, state, variable) %>% -->
+<!--   mutate(total_w = sum(weight[!is.na(level)], na.rm = TRUE)) %>% -->
+<!--   group_by(year, state, variable, level) %>% -->
+<!--   summarise( -->
+<!--     share = sum(weight, na.rm = TRUE) / first(total_w), -->
+<!--     .groups = "drop" -->
+<!--   ) %>% -->
+<!--   filter( -->
+<!--     level %in% c("Male", "Metro", "Republican") -->
+<!--   ) %>%  -->
+<!--   pivot_wider( -->
+<!--     names_from = c(variable, level), -->
+<!--     values_from = share -->
+<!--   ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- n_distinct(share_df$state) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+
+<!-- ``` -->
+
+<!--chapter:end:clean-ownership.Rmd-->
+
+# Create panel
+
+This chapter merges gun survey data with the implementation dates to create
+a panel for the did.
+
+```{r}
+gun <-
+  read_rds(
+     here(
+      path_od,
+      "data",
+      "clean",
+      "gun-panel.rds"
+    )
+  )
+```
+
+```{r}
+dates <-
+  read_rds(
+    here(
+      path_od, 
+      "data",
+      "clean",
+      "sportsbettingdates.rds"
+    )
+  )
+```
+
+## Merge
+
+```{r}
+merge <-
+  gun %>% 
+  inner_join(dates, by = "state")
+```
+
+```{r}
+n_distinct(merge$state)
+```
+
+## Define post treatment
+
+These variables are defined so that they can be used with the `did` package, which
+uses the Callaway and Sant'anna (2021) estimator.
+
+```{r}
+clean <-
+  merge %>% 
+  mutate(
+    across(
+      ends_with("date"),
+      ~ year(.x),
+      .names = "{str_replace_all(.col, 'date', 'year')}"
+    ),
+    across(
+      ends_with("_year"),
+      ~ case_when(
+        !is.na(.x) ~ year >=.x,
+        TRUE ~ F
+      ) %>% as.numeric() %>% 
+        factor(
+          levels = 0:1,
+          labels = c("Control", "Treatment")
+        ),
+      .names = "{str_replace_all(.col, 'year', 'post')}"
+    ),
+    # compute adjusted years so that implementation dates align with survey dates
+    across(
+      ends_with("_year"),
+      ~ case_when(
+        is.na(.x) ~ NA_real_,
+        TRUE ~ .x + (.x %% 2 == 0)
+      ),
+      .names = "{str_replace_all(.col, 'year', 'year_adj')}"
+    )
+  ) %>% 
+  group_by(year) %>% 
+  mutate(t = cur_group_id()) %>% 
+  ungroup() %>% 
+  mutate(
+     across(
+      ends_with("_year_adj"),
+      ~ case_when(
+        .x == year ~ t,
+        TRUE ~ NA_real_
+      ),
+      .names = "{str_replace_all(.col, 'year_adj', 'g')}"
+    )
+  ) %>% 
+  group_by(state)  %>% 
+   mutate(
+    across(
+      ends_with("g"), 
+      ~ max(ifelse(is.na(.x), 0, max(.x, na.rm = T))) %>% as.numeric
+      ),
+    stateid = cur_group_id()
+  )  %>% 
+  group_by(state, year) %>% 
+  mutate(cluster = cur_group_id()) %>% 
+  ungroup()
+```
+
+
+## Check if we want a balanced panel
+
+Balanced = Keep states that we observe for all 7 years.
+
+```{r}
+n_distinct(clean$state)
+```
+
+```{r}
+balanced <-
+  clean %>% 
+  group_by(state) %>% 
+  filter(n() == 7) %>% 
+  ungroup()
+```
+
+
+```{r}
+n_distinct(balanced$state)
+```
+
+```{r}
+clean %>% tabyl(state, any_post)
+```
+
+In the balanced panel, we have 2 controls.
+
+```{r}
+balanced %>% tabyl(state, any_post)
+```
+
+## Export data
+
+```{r}
+write_rds(
+  clean,
+  here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel.rds"
+  )
+)
+```
+
+
+```{r}
+write_rds(
+  balanced,
+  here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel-bal.rds"
+  )
+)
+```
+
+<!--chapter:end:construct-panel.Rmd-->
+
+# Sample summary
+
+This chapter summaries the states included in the main analysis.
+
+
+```{r, echo = F}
+library(kableExtra)
+library(ggthemes)
+```
+
+
+```{r}
+balanced <-
+  read_rds(
+    here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel-bal.rds"
+    )
+  ) 
+```
+
+
+## Sample sizes
+
+```{r}
+counts <- 
+  balanced %>% 
+    group_by(state) %>% 
+    summarise(
+       across(ends_with("_year"), max),
+       n = n(),
+       .groups = "drop"
+    ) %>% 
+  arrange(any_year) %>% 
+    mutate(
+      across(
+        - c(state, n),
+        ~ case_when(
+          is.na(.x) ~ "-",
+          TRUE ~ as.character(.x)
+        )
+      )
+    ) %>% 
+    bind_rows(
+      balanced %>%
+        mutate(state = "Overall (average)") %>% 
+        group_by(state) %>% 
+        summarise(
+          across(
+            ends_with("_year"), 
+            ~ sprintf("%.0f", (mean(.x, na.rm = T)))
+          ),
+          n = n()
+        )
+    ) 
+```
+
+
+
+```{r, results = "asis"}
+counts %>% 
+  kbl(
+    col.names = c(
+      "State",
+      "Any",
+      "Retail",
+      "Online",
+      "iGaming",
+      "Observations"
+    ),
+    format = "html",
+    linesep = "",
+    booktabs = TRUE,
+    format.args = list(big.mark = ','),
+    escape = F,
+    caption = "Implementation Dates and Sample Counts"
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    position = "center",
+    html_font = "Cambria"
+    )  %>% 
+  add_header_above(
+    c(
+      " " = 1,
+      "Gambling Legalization Date" = 4,
+      " " = 1
+    )
+  )
+```
+
+## Gun ownership
+
+```{r, fig.cap = "Gun Ownership by State and Year"}
+balanced %>% 
+  ggplot(
+    aes(
+      x = year,
+      y = gun,
+      color = state
+    )
+  ) +
+  geom_point() +
+  geom_line(size = 1.15) +
+  theme_event +
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  ) +
+  scale_color_economist() +
+  scale_x_continuous(breaks = seq(2013, 2025, 2)) +
+  scale_y_continuous(breaks = seq(0, 0.6, 0.1), limits = c(0, 0.6)) +
+  labs(
+    x = "Year",
+    y = "Share of gun owners"
+  ) +
+  guides(
+    color = guide_legend(
+      nrow = 1,
+      override.aes = list(
+        linetype = 0,   
+        shape = 15,    
+        size = 5       
+      )
+    )
+  )
+```
+
+
+## State averages
+
+```{r, fig.cap = "Gun Ownership by State, 2013-2025"}
+balanced %>% 
+  bind_rows(balanced %>% mutate(state = "Overall")) %>% 
+  group_by(state) %>% 
+  summarise(
+    across(
+      gun,
+      list(
+        mean = ~ mean(.x),
+        conf.low = ~ mean(.x) - 1.96 * sd(.x)/sqrt(7), # 7 observations per state
+        conf.high = ~ mean(.x) + 1.96 * sd(.x)/sqrt(7) 
+      ),
+      .names = "{.fn}"
+    )
+  ) %>% 
+  ggplot(
+    aes(x = reorder(state, mean),
+        y = mean,
+        ymin = conf.low,
+        ymax = conf.high)
+  ) +
+  geom_point() +
+  geom_errorbar() +
+  theme_event +
+  scale_y_continuous(breaks = seq(0.1, 0.4, 0.05)) +
+  labs(
+    x = "State",
+    y = "Share of gun owners"
+  ) +
+  coord_flip()
+```
+
+
+<!--chapter:end:sample-summary.Rmd-->
+
+# DiD
+
+This chapter runs a DiD estimation of the impact of legalization of sports betting on gun ownership at the state level.
+
+This code currently does not include any control variables. 
+
+```{r, echo = F}
+packages <-
+  c(
+    "did",
+    "paletteer"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = T
+)
+```
+
+## Load data
+
+```{r}
+panel <-
+  read_rds(
+    here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel.rds"
+    )
+  ) 
+```
+
+```{r}
+balanced <-
+  read_rds(
+    here(
+    path_od,
+    "data",
+    "clean",
+    "betting-panel-bal.rds"
+    )
+  ) 
+```
+
+
+```{r}
+clean %>% tabyl(state)
+```
+
+```{r}
+balanced %>% tabyl(state)
+```
+
+## Simple OLS
+
+```{r}
+simple <-
+  map(
+    names(select(panel, ends_with("post"))),
+    ~ {
+      fml <- 
+        paste0("gun ~ ", .x, "| state + year")  %>% 
+        as.formula()
+      
+      fixest::feols(
+          fml,
+          cluster = ~ cluster,
+          data = panel
+        )
+    }
+  ) 
+```
+
+```{r}
+map(simple, tbl_regression) %>% tbl_stack
+```
+
+
+
+From the simple model, post-online gambling legalization has the most significant
+treatment effect. 
+
+## Run DiD
+
+```{r}
+y_list <-  names(select(panel, ends_with("_g")))
+```
+
+```{r, warning = F}
+att <-
+  map(
+    y_list,
+    ~ att_gt(
+      yname = "gun",
+      tname = "t",
+      idname = "stateid",
+      gname = .x,
+      data = balanced,
+      print_details = FALSE,
+      cores = 4,
+      clustervars = "stateid",
+      control_group = "notyettreated"
+      )
+  )
+```
+
+## Aggregate Group-Time Average Treatment Effects
+
+No significant weighted average of all group-time average treatment effects.
+
+```{r, fig.cap = "Aggregate Group-Time Average Treatment Effects by Policy"}
+map(
+  att,
+  ~ aggte(
+    .x, 
+    type = "simple",
+    na.rm = TRUE
+    ) %>% tidy()
+  ) %>% 
+  bind_rows() %>% 
+  mutate(
+    policy = 
+      y_list %>% 
+      str_replace_all(
+        c(
+          "any_g" = "Any Sports Betting",
+          "retail_g" = "Retail",
+          "online_g" = "Online",
+          "igaming_g" = "iGaming"
+        )
+      )
+    ) %>% 
+  ggplot(
+    aes(
+      x = estimate,
+      xmin = conf.low,
+      xmax = conf.high,
+      y = policy
+    )
+  ) +
+  geom_point() +
+  geom_errorbarh(width = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_event +
+  labs(
+    x = "Share of Gun Owners",
+    y = "Legalization"
+  )
+```
+
+
+## Event study
+
+```{r}
+events <-
+  map(
+    att, 
+    ~ aggte(
+      .x,
+      type = "dynamic",
+      na.rm = TRUE
+      )
+  )
+```
+
+
+```{r, warning = F}
+plotdf <-
+  map(
+    seq_along(att),
+    ~ aggte(
+      att[[.x]], 
+      type = "dynamic",
+      na.rm = TRUE
+      ) %>% 
+      tidy() %>% 
+      mutate(policy = y_list[[.x]])
+    ) %>% 
+    bind_rows() %>% 
+    mutate(
+      policy = 
+        str_replace_all(
+          policy,
+          c(
+            "any_g" = "Any Sports Betting",
+            "retail_g" = "Retail",
+            "online_g" = "Online",
+            "igaming_g" = "iGaming"
+          )
+        )
+      )
+```
+
+```{r, fig.width=8, fig.height=10}
+plotdf %>% 
+  ggplot(
+    aes(
+      x = event.time,
+      y = estimate, 
+      ymin = point.conf.low,
+      ymax = point.conf.high
+     # color = policy
+      )
+  ) +
+  geom_point(size = 1) +
+  geom_line() +
+  geom_errorbar(width = 0.25) +
+  geom_vline(
+    xintercept =  0, 
+    color = "black",
+    linetype = "dashed"
+    ) +
+  geom_hline(
+    yintercept = 0 ,
+    linetype = "dashed",
+    color = "black"
+  ) +
+  theme_event +
+  scale_x_continuous(
+    breaks = -5:5
+    # limits = c(-5, 4)
+    ) +
+  scale_y_continuous(
+    # limits = c(-0.2, 0.2), 
+    breaks = seq(-0.2, 0.2, 0.05)
+    ) +
+  # scale_color_paletteer_d("MoMAColors::Althoff") +
+  facet_wrap(~ policy, ncol = 1) +
+  labs(
+    x = "Event time",
+    y = "Share of Gun Owners"
+  )
+```
+
+<!--chapter:end:run-did.Rmd-->
+
