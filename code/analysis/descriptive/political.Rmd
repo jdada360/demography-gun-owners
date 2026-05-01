@@ -28,7 +28,8 @@ packages <-
     "here",
     "vtable",
     "paletteer",
-    "fastDummies"
+    "fastDummies",
+    "MetBrewer"
   )
 
 pacman::p_load(

@@ -364,13 +364,10 @@ notes <-
   map(
     genlist %>% str_to_title,
     ~  paste0(
-    "Note: This table shows ", .x ," U.S. gun-owner adults stratified by ",
-      "racial ethnic group as a ",
-      "percent of all U.S. gun-owner adults (N=",
-       nrow(filter(gun, gender ==.x)),
-      ") from seven waves of the National Survey of Gun Policy, ",
-      "spanning 2013 to 2025. Lower bounds of confidence intervals were truncated ",
-      "at 0."
+    "Note: This table includes ", nrow(filter(genpop, gender ==.x)),
+    " observations. Lower bounds of confidence intervals were truncated ",
+    "at 0. Asian, non-Hispanic was not included as a separate category until ",
+    "the 2019 survey wave."
     )
   )
 
@@ -378,9 +375,8 @@ cap <-
   map(
     genlist %>% str_to_title,
     ~ paste0(
-      .x,
-      "-identifying US gun-owner adults stratified by racial ethnic group  ",
-      "as percent (95\\% CI) of all US gun-owners, 2013-2025"
+    "Share of US Adult Gun Owners Who Are ", .x,
+    ", by Race and Ethnicity, 2013–2025"
     )
   )
 ```
@@ -394,7 +390,7 @@ out <-
       tab <- 
       filter(long, gender == str_to_title(genlist[[x]])) %>% 
         mutate(
-            across(pct:ci_u, ~ round(.x, 1) %>% as.character())  
+            across(pct:ci_u, ~ sprintf("%.2f",.x))  
           ) %>% 
         transmute(
           Year = factor(year),
@@ -412,6 +408,13 @@ out <-
             ),
             pct = paste0(
               pct, " (", ci_l, ", ", ci_u, ")"
+            ),
+          pct =
+            case_when(
+              # Asian not asked <= 2017
+              Year %in% as.character(2013:2017)  &
+                grepl("Asi", race) ~ "-",
+              TRUE ~ pct
             )
           ) %>% 
         arrange(race) %>% 

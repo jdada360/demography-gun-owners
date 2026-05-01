@@ -61,6 +61,7 @@ demovars <-
     "age4",
     "racethnicity",
     "party5",
+    "gun",
     "nranow",
     "educ",
     "employ",
@@ -89,6 +90,22 @@ ds <-
     ) 
 ```
 
+
+```{r}
+note <-
+  paste0(
+    "Note: ``Other'' gender category was not ",
+    "included until the 2025 wave. ",
+    "``Some college or associate’s degree'' also includes respondents ",
+    "reporting vocational or technical school. ",
+    "Political affiliation was not collected in the 2015 wave. ",
+    "Asian, non-Hispanic was not included as a separate category until ",
+    "the 2019 wave. ",
+    "For marital status, ``Living with partner'' was not included ",
+    "in the 2023 and 2025 waves."
+  )
+```
+
 ```{r}
 year_tbl <-
   ds %>%
@@ -98,6 +115,7 @@ year_tbl <-
     missing = "no",
     statistic = all_categorical() ~ "{p}%"
   ) %>%
+  # add_ci() %>% 
   modify_header(
     label ~ "Characteristic",
     all_stat_cols() ~ "{level}"
@@ -144,7 +162,23 @@ year_tbl <-
                variable == "marital" & grepl("with", label),
                "-", .x
                )
-             )
+             ),
+          across(
+            # Asian american not a category until > 2017
+            c(stat_1, stat_2, stat_3),
+            ~ ifelse(
+              variable == "racethnicity" & grepl("Asian", label),
+              "-", .x
+              )
+            ),
+          # other gender category only 2025
+          across(
+            starts_with("stat"),
+            ~ ifelse(
+              variable == "gender" & .x == "0%",
+              "-", .x
+              )
+          )
            )
     }
   ) %>%
@@ -155,7 +189,8 @@ year_tbl <-
     escape = FALSE,
     label = "GenSummaryYear",
     linesep = "",
-    caption = "Demographic Characteristics of US Adults Survey by Year",
+    caption = 
+      "Demographic Composition of US Adults by Survey Year, 2013–2025",
     align = "lccccccc"
   ) %>%
   kable_styling(
@@ -170,22 +205,20 @@ year_tbl <-
     ) %>% 
   row_spec(1, bold = TRUE) %>% 
   footnote(
-   number = paste0(
-    "Note: Values are weighted percentages describing ",
-    "the demographic composition of US adults by survey year. ",
-    "Because survey question wording varied across waves, the category ",
-    "``Some college or associate’s degree'' also includes respondents ",
-    "reporting vocational or technical school."
-  ),
-    threeparttable = TRUE,
-    escape = FALSE,
-    fixed_small_size = TRUE
+   number = note,
+   threeparttable = TRUE,
+   escape = FALSE,
+   fixed_small_size = TRUE
   )
 
 save_kable(
   year_tbl,
   file = here(path_ol, "tables/gen-pop-summary-year.tex")
 )
+```
+
+```{r}
+
 ```
 
 

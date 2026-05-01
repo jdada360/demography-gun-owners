@@ -186,6 +186,8 @@ raw %>% tabyl(age7)
 
 ## Race and ethnicity
 
+Note that 2013-2017 data does not include Asian, non-Hispanic as a category.
+
 ```{r}
 raw %>% tabyl(racethnicity)
 ```

@@ -61,7 +61,6 @@ walk(
 )
 ```
 
-
 ## Check years of available data
 
 ```{r}
@@ -95,6 +94,9 @@ clean <-
     weight
   )
 ```
+
+
+
 
 ```{r}
 long <- 
@@ -137,6 +139,27 @@ main <-
     .groups = "drop"
     ) 
 ```
+
+```{r}
+des <- svydesign(
+  ids = ~1,       
+  weights = ~weight,
+  data = clean
+)
+
+ci <- 
+  svyby(
+    ~rg,
+    ~year,
+    des,
+    svymean,
+    vartype = c("se", "ci"),
+    level = 0.95
+    ) %>% 
+  clean_names() %>% 
+  mutate(across(-year, ~ .x * 100))
+```
+
 
 ### Bar chart over time
 
