@@ -3,9 +3,9 @@ new_session: yes
 output_dir: "descriptive"
 rmd_files: [
   "index.Rmd",
-  "own-overtime.Rmd",
-  "gender-race.Rmd",
-  "age.Rmd",
-  "education.Rmd",
-  "income.Rmd"
+  "summary.Rmd",
+  "income.Rmd",
+  "gender.Rmd",
+  "political.Rmd",
+  "gender-race.Rmd"
   ]

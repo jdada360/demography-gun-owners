@@ -220,11 +220,13 @@ diff_lookup <- map_dfr(demovars, function(v) {
 ```{r}
 note <-
   paste0(
+    "Gun ownership prevalence is the weighted prevalence of gun ",
+    "ownership in the full general population sample. ",
     "``Some college or associate's degree'' includes vocational or technical school. ",
     "``Other'' gender, Asian non-Hispanic, and ``Living with partner'' were not collected ",
     "in all waves (introduced in 2025, 2019, and discontinued after 2021, respectively). ",
     "Political affiliation was not collected in 2015. ",
-    "\\textit{p}-values are from Rao-Scott chi-squared tests comparing 2013 and 2025 ",
+    "p-values are from Rao-Scott chi-squared tests comparing 2013 and 2025 ",
     "weighted distributions; the gender test is restricted to Male/Female, the ",
     "political affiliation test excludes ``Unknown'' responses, and marital status ",
     "is not tested because response categories differed across waves."
@@ -264,9 +266,9 @@ year_tbl <-
       # Gun ownership prevalence row (weighted, from genpop)
       gun_prev_row <- tibble(
         variable  = "gun_prev",
-        var_label = "Gun ownership",
+        var_label = "Gun ownership prevalence",
         row_type  = "label",
-        label     = "Gun ownership",
+        label     = "Gun ownership prevalence",
         !!!setNames(
           as.list(gun_prev_strs),
           paste0("stat_", seq_along(gun_prev_strs))
@@ -359,7 +361,6 @@ year_tbl <-
   column_spec(9,   width = "1.3cm") %>%
   column_spec(10,  width = "1.3cm") %>%
   row_spec(1, bold = TRUE) %>%
-  row_spec(2, bold = TRUE) %>%
   footnote(
     number           = note,
     threeparttable   = TRUE,

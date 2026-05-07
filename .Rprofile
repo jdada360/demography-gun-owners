@@ -18,7 +18,7 @@ path_git <-
 path_ol <-
   file.path(
     Sys.getenv("OVERLEAF"),
-    "Gun Demographics"
+    "GunDemographics"
   )
 
 theme <-
