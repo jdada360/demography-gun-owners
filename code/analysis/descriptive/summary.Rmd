@@ -50,6 +50,17 @@ gun <-
   )
 ```
 
+```{r}
+genpop <- read_rds(here(path_od, "data", "clean", "gs-gen-pop.rds"))
+ 
+ds_genpop <- svydesign(
+  ~1,
+  data    = genpop,
+  strata  = ~year,
+  weights = ~weight
+)
+```
+
 ## Demographic variables
 
 ```{r}
@@ -74,13 +85,56 @@ demovars <-
 walk(demovars, ~ print(tabyl(gun, .x)))
 ```
 
-## Yearly Summary
+## General population summary
 
-This function gives the same results as `tbl_svysummary` but includes standard errors. 
+Gets share of us gun ownership overtime.
+
 ```{r}
-svyby(~age4, ~year, design = ds, FUN = svymean)
+years_ordered <- sort(unique(genpop$year))
+# Weighted gun ownership prevalence per wave
+# NOTE: adjust `gun == 1` if your variable uses different coding
+#       e.g. gun == "Yes" or gun == TRUE
+gun_prev_raw <- svyby(
+  formula = ~gun,
+  by      = ~year,
+  design  = ds_genpop,
+  FUN     = svymean,
+  na.rm   = TRUE
+)
+
+gun_prev_vec <- gun_prev_raw$gunYes
+ 
+# Format as percentage strings matching the rest of the table (e.g. "22%")
+gun_prev_strs <- paste0(round(gun_prev_vec * 100), "%")
+ 
+# Diff: 2025 minus 2013 in percentage points
+gun_diff_str <- sprintf(
+  "%+.1f",
+  (gun_prev_vec[length(gun_prev_vec)] - gun_prev_vec[1]) * 100
+)
+ 
+# P-value from Rao-Scott chi-squared test comparing 2013 and 2025 only
+genpop_ends  <- filter(genpop, year %in% range(years_ordered))
+ds_ends      <- svydesign(~1, data = genpop_ends, weights = ~weight)
+gun_pval_raw <- svychisq(~gun + year, ds_ends, statistic = "Chisq")$p.value
+ 
+# Add gun_prev p-value to your existing chisq_pvals vector so the
+# label-row case_when picks it up automatically
+chisq_pvals["gun_prev"] <- gun_pval_raw
 ```
 
+## Yearly Summary
+
+
+```{r}
+ds <- 
+  svydesign(
+    ~ 1, 
+    data = gun, 
+    strata = ~ year,
+    weights = ~ weight
+    ) 
+```
 
 ```{r}
 note <-
@@ -101,9 +155,9 @@ note <-
 year_tbl <-
   ds %>%
   tbl_svysummary(
-    by = year,
-    include = demovars,
-    missing = "no",
+    by        = year,
+    include   = demovars,
+    missing   = "no",
     statistic = all_categorical() ~ "{p}%"
   ) %>%
   modify_header(
@@ -112,97 +166,128 @@ year_tbl <-
   ) %>%
   modify_table_body(
     ~ {
-      
       tbl <- .x
-      
-      # compute unweighted yearly totals
-      counts <- format(table(gun$year), big.mark = ",")
-      
-      # create row with obs
-      n_row <- tibble(
-        variable = NA,
-        var_label = NA,
-        row_type = "label",
-        label = "Observations",
-        !!!setNames(
-          as.list(counts),
-          paste0("stat_", seq_along(counts))
-          )
-        ) %>% 
-        mutate(across(starts_with("stat"), trimws)
-          )
 
-      bind_rows(n_row, tbl) %>%
+      # Observations row (unweighted counts)
+      counts <- format(table(gun$year), big.mark = ",")
+      n_row <- tibble(
+        variable  = NA_character_,
+        var_label = NA_character_,
+        row_type  = "label",
+        label     = "Observations",
+        !!!setNames(as.list(counts), paste0("stat_", seq_along(counts)))
+      ) %>%
+        mutate(across(starts_with("stat"), trimws))
+
+      # Gun ownership prevalence row (weighted, from genpop)
+      gun_prev_row <- tibble(
+        variable  = "gun_prev",
+        var_label = "Gun ownership",
+        row_type  = "label",
+        label     = "Gun ownership",
+        !!!setNames(
+          as.list(gun_prev_strs),
+          paste0("stat_", seq_along(gun_prev_strs))
+        )
+      )
+
+      # Bind: Observations | Gun prev | everything else
+      tbl <- bind_rows(n_row, gun_prev_row, tbl) %>%
         filter(
-          ! grepl("Ques", label),
-          ! (grepl("No", label) & variable == "nranow")
-          ) %>% 
+          !grepl("Ques", label),
+          !(grepl("No", label) & variable == "nranow")
+        ) %>%
         mutate(
-           label = ifelse(
+          label = ifelse(
             row_type == "level" & label != "Observations",
-            paste0("  ", label),
-            label),
+            paste0("  ", label), label
+          ),
           stat_2 = ifelse(
-               variable == "party5" & row_type == "level",
-               "-", stat_2
-               ),
+            variable == "party5" & row_type == "level", "-", stat_2
+          ),
           across(
-            # Asian american not a category until > 2017
             c(stat_1, stat_2, stat_3),
             ~ ifelse(
-              variable == "racethnicity" & grepl("Asian", label),
-              "-", .x
-              )
-            ),
-           across(
-             c(stat_6, stat_7),
-             ~ ifelse(
-               variable == "marital" & grepl("with", label),
-               "-", .x
-               )
-             ),
-           across(
+              variable == "racethnicity" & grepl("Asian", label), "-", .x
+            )
+          ),
+          across(
+            c(stat_6, stat_7),
+            ~ ifelse(
+              variable == "marital" & grepl("with", label), "-", .x
+            )
+          ),
+          across(
             starts_with("stat"),
             ~ ifelse(
-              variable == "gender" & .x == "0%",
-              "-", .x
-              )
+              variable == "gender" & .x == "0%", "-", .x
+            )
           )
-           )
+        )
+
+      # Diff and p-value columns
+      tbl <- tbl %>%
+        rowwise() %>%
+        mutate(
+          stat_diff = case_when(
+            label == "Observations"                                              ~ "",
+            variable == "gun_prev"                                               ~ gun_diff_str,
+            row_type == "label" & !is.na(variable)                              ~ "",
+            variable == "gender"  & grepl("Other",   label)                     ~ "-",
+            variable == "marital" & grepl("partner", label, ignore.case = TRUE) ~ "-",
+            row_type == "level" ~ {
+              lv      <- str_trim(label)
+              matched <- diff_lookup %>%
+                filter(variable == .data$variable, level == lv)
+              if (nrow(matched) == 1) matched$diff_str else "-"
+            },
+            TRUE ~ ""
+          ),
+          stat_pval = case_when(
+            label == "Observations"                 ~ "",
+            row_type == "label" & !is.na(variable) ~ format_pval(chisq_pvals[variable]),
+            TRUE                                    ~ ""
+          )
+        ) %>%
+        ungroup()
+
+      tbl
     }
+  ) %>%
+  modify_header(
+    stat_diff ~ "2025--2013",
+    stat_pval ~ "p-value"
   ) %>%
   modify_footnote(all_stat_cols() ~ NA_character_) %>%
   as_kable_extra(
-    format = "latex",
-    booktabs = TRUE,
-    escape = FALSE,
-    label = "SummaryYear",
-    linesep = "",
-    caption = 
-      "Demographic Composition of US Adult Gun Owners by Survey Year, 2013–2025",
-    align = "lccccccc"
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    label     = "SummaryYearTest",
+    linesep   = "",
+    caption   = "Demographic Composition of US Adult Gun Owners by Survey Year, 2013-2025",
+    align     = "lccccccccc"
   ) %>%
   kable_styling(
-    latex_options =
-      c("hold_position", "scale_down"),
-   font_size = 9
+    latex_options = c("hold_position", "scale_down"),
+    font_size = 9
   ) %>%
-  column_spec(1, width = "4.5cm") %>%
-  column_spec(
-    2:8, 
-    width = "1.3cm"
-    ) %>% 
-  row_spec(1, bold = TRUE) %>% 
+  column_spec(1,   width = "4.5cm") %>%
+  column_spec(2:8, width = "1.3cm") %>%
+  column_spec(9,   width = "1.3cm") %>%
+  column_spec(10,  width = "1.3cm") %>%
+  row_spec(1, bold = TRUE) %>%
+  row_spec(2, bold = TRUE) %>%
   footnote(
-   number = note,
-   threeparttable = TRUE,
-   escape = FALSE,
-   fixed_small_size = TRUE
+    number           = note,
+    threeparttable   = TRUE,
+    escape           = FALSE,
+    fixed_small_size = TRUE
   )
-
+ 
 save_kable(
   year_tbl,
-  file = here(path_ol, "tables/summary-year.tex")
+  file = here(path_ol, "tables/summary-year-2.tex")
 )
 ```
 
@@ -325,18 +410,31 @@ year_tbl <-
     ~ {
       tbl <- .x
 
-      # Unweighted totals row
+      # Observations row (unweighted counts)
       counts <- format(table(gun$year), big.mark = ",")
       n_row <- tibble(
-        variable = NA,
-        var_label = NA,
-        row_type = "label",
-        label = "Observations",
+        variable  = NA_character_,
+        var_label = NA_character_,
+        row_type  = "label",
+        label     = "Observations",
         !!!setNames(as.list(counts), paste0("stat_", seq_along(counts)))
       ) %>%
         mutate(across(starts_with("stat"), trimws))
 
-      tbl <- bind_rows(n_row, tbl) %>%
+      # Gun ownership prevalence row (weighted, from genpop)
+      gun_prev_row <- tibble(
+        variable  = "gun_prev",
+        var_label = "Gun ownership prevalence",
+        row_type  = "label",
+        label     = "Gun ownership prevalence",
+        !!!setNames(
+          as.list(gun_prev_strs),
+          paste0("stat_", seq_along(gun_prev_strs))
+        )
+      )
+
+      # Bind: Observations | Gun prev | everything else
+      tbl <- bind_rows(n_row, gun_prev_row, tbl) %>%
         filter(
           !grepl("Ques", label),
           !(grepl("No", label) & variable == "nranow")
@@ -369,14 +467,15 @@ year_tbl <-
           )
         )
 
-      # Add difference and p-value columns
+      # Diff and p-value columns
       tbl <- tbl %>%
         rowwise() %>%
         mutate(
           stat_diff = case_when(
-            label == "Observations"  ~ "",
-            row_type == "label" & !is.na(variable) ~ "",
-            variable == "gender" & grepl("Other", label) ~ "-",
+            label == "Observations"                                              ~ "",
+            variable == "gun_prev"                                               ~ gun_diff_str,
+            row_type == "label" & !is.na(variable)                              ~ "",
+            variable == "gender"  & grepl("Other",   label)                     ~ "-",
             variable == "marital" & grepl("partner", label, ignore.case = TRUE) ~ "-",
             row_type == "level" ~ {
               lv      <- str_trim(label)
@@ -387,11 +486,9 @@ year_tbl <-
             TRUE ~ ""
           ),
           stat_pval = case_when(
-            label == "Observations"                    ~ "",
-            row_type == "label" & !is.na(variable)    ~ {
-              format_pval(chisq_pvals[variable])
-            },
-            TRUE ~ ""
+            label == "Observations"                 ~ "",
+            row_type == "label" & !is.na(variable) ~ format_pval(chisq_pvals[variable]),
+            TRUE                                    ~ ""
           )
         ) %>%
         ungroup()
@@ -400,7 +497,7 @@ year_tbl <-
     }
   ) %>%
   modify_header(
-    stat_diff ~  "2025--2013",
+    stat_diff ~ "2025--2013",
     stat_pval ~ "p-value"
   ) %>%
   modify_footnote(all_stat_cols() ~ NA_character_) %>%
@@ -417,11 +514,12 @@ year_tbl <-
     latex_options = c("hold_position", "scale_down"),
     font_size = 9
   ) %>%
-  column_spec(1, width = "4.5cm") %>%
+  column_spec(1,   width = "4.5cm") %>%
   column_spec(2:8, width = "1.3cm") %>%
-  column_spec(9, width = "1.3cm") %>%
-  column_spec(10, width = "1.3cm") %>%
+  column_spec(9,   width = "1.3cm") %>%
+  column_spec(10,  width = "1.3cm") %>%
   row_spec(1, bold = TRUE) %>%
+  row_spec(2, bold = TRUE) %>%
   footnote(
     number           = note,
     threeparttable   = TRUE,
