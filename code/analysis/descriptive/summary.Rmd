@@ -224,7 +224,12 @@ chisq_pvals <- map_dbl(demovars, function(v) {
     des_sub <- subset(des_sub, party5 != "Unknown")
     des_sub$variables$party5 <- droplevels(des_sub$variables$party5)
   }
-  
+
+  if (v == "nranow") {
+    des_sub <- subset(des_sub, nranow != "Unknown")
+    des_sub$variables$nranow <- droplevels(des_sub$variables$nranow)
+  }
+
   if (v == "marital") return(NA_real_)
   
   tryCatch(

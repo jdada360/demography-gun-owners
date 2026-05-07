@@ -331,7 +331,7 @@ long <-
       case_when(
         group == "party3republican" ~ 1,
         group == "party3independent" ~ 2,
-        group == "party3republican" ~ 3,
+        group == "party3democrat" ~ 3,
         TRUE ~ 4) %>% 
       factor(
         levels = 1:4,
