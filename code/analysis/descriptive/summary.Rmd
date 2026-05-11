@@ -46,7 +46,15 @@ gun <-
     )
   )
 
-genpop <- read_rds(here(path_od, "data", "clean", "gs-gen-pop.rds"))
+genpop <- 
+  read_rds(
+    here(
+      path_od,
+      "data",
+      "clean", 
+      "gs-gen-pop.rds"
+      )
+    )
 ```
 
 ## Survey designs
@@ -129,8 +137,9 @@ gun_pval_raw <- svychisq(~gun + year, ds_ends, statistic = "Chisq")$p.value
 Chi-squared p-values (survey-weighted, Rao-Scott) for gun owner demographics.
 
 ```{r}
+des_sub <- subset(ds, year %in% c(2013, 2025))
+
 chisq_pvals <- map_dbl(demovars, function(v) {
-  des_sub <- subset(ds, year %in% c(2013, 2025))
 
   if (v == "gender") {
     des_sub <- subset(des_sub, gender != "Other")
@@ -141,6 +150,7 @@ chisq_pvals <- map_dbl(demovars, function(v) {
     des_sub <- subset(des_sub, party5 != "Unknown")
     des_sub$variables$party5 <- droplevels(des_sub$variables$party5)
   }
+  
 
   if (v == "nranow") {
     des_sub <- subset(des_sub, nranow != "Unknown")
@@ -180,10 +190,24 @@ format_pval <- function(p) {
 }
 ```
 
+### Test function
+
+Run a test of the difference in `party3`. It is signficantly different.
+
+```{r}
+des_sub <- subset(des_sub, party5  %in% c("Democrat", "Republican", "Independent"))
+    des_sub$variables$party3 <- droplevels(des_sub$variables$party3)
+    
+svychisq(
+      as.formula(paste0("~", "party3", " + year")),
+      design    = des_sub,
+      statistic = "Chisq"
+    )$p.value
+```
+
 ## Difference lookup
 
-Compute weighted % for one variable in one year, then build a lookup
-table of variable + level -> difference string.
+Compute weighted % for one variable in one year, then build a lookup table of variable + level -> difference string.
 
 ```{r}
 get_pct <- function(var, yr) {
