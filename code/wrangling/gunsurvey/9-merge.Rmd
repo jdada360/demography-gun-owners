@@ -355,6 +355,30 @@ merge <-
   )
 ```
 
+## Metro
+
+```{r}
+merge %>% tabyl(metro)
+```
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    metro = 
+      as.integer(
+        metro %in% c("Metro", "Metro Area")
+      ) %>% 
+      factor(
+        levels = 1:0,
+        labels = c("Metro", "Non-Metro")
+      )
+  )
+```
+
+```{r}
+merge %>% tabyl(metro)
+```
+
 ## Relabel variables
 
 ```{r}
@@ -380,7 +404,7 @@ merge <-
     state = "State",
     region4 = "Region",
     region9 = "Region",
-    metro = "Metropolitan area flag",
+    metro = "Metropolitan area",
     internet = "Household internet access?",
     housing = "Home ownership",
     home_type = "Type of building of panelists' residence",
@@ -688,8 +712,4 @@ write_rds(
     "gs-gun-owners.rds"
   )
 )
-```
-
-```{r}
-nrow(gun)
 ```

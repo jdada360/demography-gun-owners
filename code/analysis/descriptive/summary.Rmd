@@ -83,12 +83,13 @@ demovars <-
     "gender",
     "age4",
     "racethnicity",
-    "party5",
+    "party3",
     "nranow",
     "educ",
     "employ",
     "income4",
     "marital",
+    "metro",
     "region4"
   )
 ```
@@ -151,6 +152,10 @@ chisq_pvals <- map_dbl(demovars, function(v) {
     des_sub$variables$party5 <- droplevels(des_sub$variables$party5)
   }
   
+  if (v == "party3") {
+    des_sub <- subset(des_sub, party3  %in% c("Democrat", "Republican", "Independent"))
+    des_sub$variables$party3 <- droplevels(des_sub$variables$party3)
+  }
 
   if (v == "nranow") {
     des_sub <- subset(des_sub, nranow != "Unknown")
