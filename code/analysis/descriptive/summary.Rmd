@@ -309,6 +309,8 @@ year_tbl <-
         filter(
           !grepl("Ques", label),
           !(grepl("No", label) & variable == "nranow")
+          # drop non-metro percentages
+          #!(variable == "metro" & label == "Non-Metro")
         ) %>%
         mutate(
           label = ifelse(
@@ -316,7 +318,7 @@ year_tbl <-
             paste0("  ", label), label
           ),
           stat_2 = ifelse(
-            variable == "party5" & row_type == "level", "-", stat_2
+            variable == "party3" & row_type == "level", "-", stat_2
           ),
           across(
             c(stat_1, stat_2, stat_3),

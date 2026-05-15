@@ -701,17 +701,33 @@ raw <-
             "Republican"
             )
       ),
-    party7 = droplevels(as_factor(party7))
+    party7 = droplevels(as_factor(party7)),
+    party3 = 
+      case_when(
+        grepl("demo", party7, ignore.case = T) ~ 1,
+        grepl("repub", party7, ignore.case = T) ~ 2,
+        grepl("ind", party7, ignore.case = T) ~ 3
+      ) %>% 
+      factor(
+        levels = 1:3,
+        labels = c(
+          "Democrat",
+          "Republican",
+          "Independent"
+        )
+      )
   ) %>% 
   set_variable_labels(
     party7 = "7-level political affiliation",
-    party5 = "5-level political affiliation"
+    party5 = "5-level political affiliation",
+    party3 = "3-level political affiliation"
   )
 ```
 
 ```{r}
 raw %>% tabyl(party5)
 raw %>% tabyl(party7, party5)
+raw %>% tabyl(party3, party7)
 ```
 
 ## Gun ownership

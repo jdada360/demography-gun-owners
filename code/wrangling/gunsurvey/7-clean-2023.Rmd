@@ -1073,16 +1073,35 @@ raw <-
             "Lean Republican",
             "Republican",
             "Unknown")
+      ),
+    party3 = 
+      case_when(
+        grepl("demo", party5, ignore.case = T) ~ 1,
+        grepl("rep", party5, ignore.case = T) ~ 2,
+        grepl("inde", party5, ignore.case = T) ~ 3,
+        TRUE ~ -1
+      ) %>% 
+       factor(
+        party5,
+        levels = c(1:3, -1),
+        labels = 
+          c("Democrat",
+            "Republican",
+            "Independent",
+            "Unknown"
+            )
       )
   ) %>% 
   set_variable_labels(
     party7 = "7-level political affiliation",
-    party5 = "5-level political affiliation"
+    party5 = "5-level political affiliation",
+    party3 = "3-level political affiliation"
   )
 ```
 
 ```{r}
 raw %>% tabyl(party7, party5)
+raw %>% tabyl(party7, party3)
 ```
 
 ## Elections
@@ -1212,6 +1231,21 @@ colSums(is.na(clean))
 ```
 
 
+## Export data
+
+```{r}
+write_rds(
+  clean,
+  here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2023.rds"
+    )
+  ) 
+```
+
+
 ## Explore demographic variables
 
 ### Gun owners
@@ -1281,20 +1315,3 @@ st(
   scroll_box(width = "800px", height = "500px")
 ```
 
-## Export data
-
-```{r}
-write_rds(
-  clean,
-  here(
-    path_od, 
-    "data",
-    "clean",
-    "gs-2023.rds"
-    )
-  ) 
-```
-
-```{r}
-nrow(clean)
-```

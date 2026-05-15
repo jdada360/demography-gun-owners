@@ -184,12 +184,10 @@ merge %>% tabyl(hhsize4)
 
 ## Political party variable
 
-Group into republican, democrat and independent.
-
 Missing data in 2015.
 
 ```{r}
-merge %>% tabyl(party5)
+merge %>% tabyl(party3)
 ```
 
 ```{r}
@@ -198,18 +196,19 @@ merge <-
   mutate(
     party3 = 
       case_when(
-        grepl("Demo", party5) ~ 1,
-        grepl("Rep", party5) ~ 2,
-        !is.na(party5) ~ 3,
-        # In survey years where political party was not collected
-        TRUE ~ 4
+        grepl("Demo", party3) ~ 1,
+        grepl("Rep", party3) ~ 2,
+        grepl("Ind", party3) ~ 3,
+        grepl("Unknown", party3) ~ 4,
+        is.na(party3) ~ 5
       ) %>% 
       factor(
-        levels = 1:4,
+        levels = 1:5,
         labels = 
           c("Democrat",
             "Republican",
             "Independent",
+            "Unknown",
             "Question not asked"
             )
       ),
@@ -234,7 +233,7 @@ merge <-
 ```
 
 ```{r}
-merge %>% tabyl(party3, party5)
+merge %>% tabyl(party3)
 ```
 
 ```{r}

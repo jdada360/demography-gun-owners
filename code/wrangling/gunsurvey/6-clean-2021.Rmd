@@ -783,6 +783,22 @@ raw <-
             "Unknown"
             )
       ),
+    party3 = 
+      case_when(
+         grepl("demo", party7, ignore.case = T) ~ 1,
+         grepl("rep", party7, ignore.case = T) ~ 2,
+         grepl("indep", party7, ignore.case = T) ~ 3,
+         TRUE ~ -1
+      ) %>% 
+      factor(
+        levels = c(1:3, -1),
+        labels = c(
+          "Democrat",
+          "Republican",
+          "Independent",
+          "Unknown"
+        )
+      ),
     party5 =
       case_when(
         grepl("Unknown", party7) ~ -1,
@@ -806,12 +822,17 @@ raw <-
   ) %>% 
   set_variable_labels(
     party7 = "7-level political affiliation",
-    party5 = "5-level political affiliation"
+    party5 = "5-level political affiliation",
+    party3 = "3-level political affiliation"
   )
 ```
 
 ```{r}
 raw %>% tabyl(party7, party5)
+```
+
+```{r}
+raw %>% tabyl(party7, party3)
 ```
 
 ## Household size
@@ -849,6 +870,20 @@ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun o
 
 ```{r}
 clean %>% filter(if_any(everything(), is.na)) %>% nrow() == 0
+```
+
+## Export data
+
+```{r}
+write_rds(
+  clean,
+  here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-2021.rds"
+    )
+  ) 
 ```
 
 ## Explore demographic variables
@@ -929,19 +964,6 @@ st(
   scroll_box(width = "800px", height = "500px")
 ```
 
-## Export data
-
-```{r}
-write_rds(
-  clean,
-  here(
-    path_od, 
-    "data",
-    "clean",
-    "gs-2021.rds"
-    )
-  ) 
-```
 
 ```{r}
 nrow(clean)
