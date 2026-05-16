@@ -1,0 +1,178 @@
+# Arrange survey data
+
+This script constructs variables related to child exposure to guns in the home using
+the 2013-2025 waves of the National Gun Policy Survey.
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-genpop.rds
+
+**Output**
+
+-  DemographyGunOwners/data/clean/gs-child.rds
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "dplyr",
+    "labelled",
+    "here"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+```
+
+## Load data
+
+```{r}
+gun <-
+  read_rds(
+    here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-gun-owners.rds"
+    )
+  )
+```
+
+```{r}
+genpop <-
+  read_rds(
+    here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-gen-pop.rds"
+    )
+  )
+```
+
+## Construct binary indicator regarding children in the home
+
+This sample is of gun-owner respondents, however, in the general population sample, there are respondents that answered yes to "Do you happen to have in your home or garage any guns or revolvers?" but those guns did not personally belong to them so I should go back and use the general population sample and define presence of a gun in the home using that.
+
+```{r}
+gun %>% tabyl(year, gunhome)
+```
+
+In 2013-2015, "Do you happen to have in your home or garage any guns or revolvers?"  was not asked, but we have if the respondent is a gun owner.
+
+In 2013, there was an indicator for having a gun in the household but not being the primary owner of the gun. We combine this with the 2015+ definition perfectly. 
+
+But for 2015, we can define that binary indicator based on personal gun ownership, rather than a gun being in the home. Must include this caveat in the methods section.
+
+```{r}
+genpop %>% tabyl(year, gunhome)
+```
+
+```{r}
+genpop %>% tabyl(year, gunhh)
+```
+
+```{r}
+genpop %>%  select(starts_with("hh")) %>% names()
+```
+
+There are lots of missing values in each year for different variables. In particular, lots of missing values in 2025. The only variable with no missing values across all years is `hh18un=hhsize-hh18ov` defined in `code/wrangling/gunsurvery/9-merge.Rmd.` Our primary specification uses `hh18un` to determine if children in are in the household.
+
+
+```{r}
+child <-
+  genpop %>% 
+  mutate(
+    across(
+      c("hh01","hh02","hh25", "hh612", "hh1317", "hh18un"),
+      # unknown is grouped together with No
+      ~ as.integer(.x > 0),
+      .names = "{str_replace_all(.col, 'hh', 'child')}"
+      ),
+    # define gun in household
+    gunhousehold = 
+      case_when(
+        year == 2013 & (gunhh == "Yes" | gun == "Yes") ~ 1,
+        year == 2015 & gun == "Yes" ~ 1,
+        year > 2015 & gunhome == "Yes" ~ 1, 
+        TRUE ~ 0
+      ),
+    # create child x gun household interaction
+    across(
+      starts_with("child"),
+      ~ .x * gunhousehold,
+      .names = "gun{.col}"
+    ),
+    # convert to factor after defining interaction term
+    across(
+      starts_with(c("child", "gunchild", "gunhousehold")),
+      ~ .x %>%  
+        factor(
+          levels = 0:1,
+          labels = c("No", "Yes")
+        )
+      )
+    )
+```
+
+
+```{r}
+variable_labels <-
+  c(
+    # Gun in household
+    gunhousehold = "Household has gun",
+    
+    # Child age groups in household
+    child01 = "Household has child under 2",
+    child02 = "Household has child ages 1 to <2",
+    child25 = "Household has child ages 2 to <5",
+    child612 = "Household has child ages 6 to <13",
+    child1317 = "Household has child ages 13 to <18",
+    child18un = "Household has child under 18",
+    
+    # Household with gun AND child (by age)
+    gunchild01 = "Household has gun and child under 1",
+    gunchild02 = "Household has gun and child ages 1 to <2",
+    gunchild25 = "Household has gun and child ages 2 to <5",
+    gunchild612 = "Household has gun and child ages 6 to <13",
+    gunchild1317 = "Household has gun and child ages 13 to <18",
+    gunchild18un = "Household has gun and child under 18"
+  )
+```
+
+```{r}
+child <- 
+  child %>%
+  set_variable_labels(!!!variable_labels)
+```
+
+## Check vairable construction
+
+```{r}
+child %>% tabyl(child18un, gunhousehold) %>% adorn_totals() 
+child %>% tabyl(year, gunchild18un)
+```
+
+## Export data
+
+```{r}
+write_rds(
+  child,
+   here(
+    path_od, 
+    "data",
+    "clean",
+    "gs-child.rds"
+    )
+)
+```

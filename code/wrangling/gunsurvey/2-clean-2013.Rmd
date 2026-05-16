@@ -763,14 +763,19 @@ raw %>%
 ```{r}
 raw <-
   raw %>% 
-  rename(gunhomeper = xpa0122) %>% 
+  rename(
+    gunhomeper = xpa0122,
+    gunhh = xpa0117
+    ) %>% 
   mutate(
-    gunhomeper = as_factor(gunhomeper)
+    across(
+      c("gunhh", "gunhomeper"), ~ as_factor(.x)
+    )
   ) %>% 
   set_variable_labels(
-    gunhomeper = "Respondent personally owns a gun"
-  ) %>% 
-  select(-"xpa0117")
+    gunhomeper = "Respondent personally owns a gun",
+    gunhh = "Respondent has a gun in household but is not owner"
+  ) 
 ```
 
 ```{r}

@@ -1,0 +1,10 @@
+bookdown::gitbook:
+  self_contained: true
+  css: style.css
+  split_by: chapter
+  config:
+    toc:
+      collapse: section
+      before: |
+        <li><a href="./">Gun Survey Data Cleaning</a></li>
+  code_folding: show

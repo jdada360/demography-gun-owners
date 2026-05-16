@@ -1,0 +1,19 @@
+--- 
+title: "Child Exposure to Guns"
+author: "Joy Dada"
+date: '`r format(Sys.Date(), format = "%A, %B %d, %Y")`'
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+---
+
+# Introduction {-}
+
+The code in this books analyzes child exposure to guns in the home using the 2013-2025 waves of the National Gun Policy Survey and national census data. This code uses the data created in `code/wrangling/gunsurvey`.
+
+```{r, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  meassage = FALSE
+  )
+```

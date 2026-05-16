@@ -929,6 +929,8 @@ raw %>% tabyl(firstgun7)
 ```
 ## Household size
 
+There are so many missing values for these age groups for some reason.
+
 ```{r}
 raw <-
   raw %>% 

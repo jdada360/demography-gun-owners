@@ -1,0 +1,715 @@
+# Merge survey years
+
+This analysis creates a combined data set of the survey years.
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-`i`.rds for `i %in% seq(2013, 2025, by = 2)`
+
+**Output**
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+
+```{r,  message = FALSE, warning = FALSE, echo = FALSE}
+
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "tidyr",
+    "janitor",
+    "statar",
+    "skimr",
+    "psych",
+    "kableExtra",
+    "dplyr",
+    "vtable",
+    "here",
+    "labelled"
+  )
+
+pacman::p_load(
+  packages,
+  character.only = TRUE
+)
+
+cleanfold <-
+  here(
+    path_od, 
+    "data",
+    "clean"
+  )
+```
+
+## Import data
+
+```{r}
+years <- seq(2013, 2025, 2)
+```
+
+```{r}
+source <-
+  map_dfr(
+    years, 
+    ~ read_rds(here(cleanfold,paste0("gs-", .x, ".rds"))) %>% 
+      mutate(year = .x)
+  )
+```
+
+## Explore data
+
+```{r}
+source %>% 
+  sample_n(10) %>% 
+  head(10) %>% 
+  kbl(
+    caption = 
+      "Gun Survey Data",
+    align = "c",
+    format = "html",
+    booktabs = TRUE
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+    )  %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+### Summary table
+
+| Name | Value |
+|-------------------------|----------------------------------------------|
+| Number of observations | `r nrow(source)` |
+| Number of unique cases | `r n_distinct(source$case_id)` |
+| Sum of weights | `r sum(source$weight)` |
+| Number of variables | `r length(source)` |
+| Variable names | `r source %>% names() %>% paste(collapse = ", ")` |
+| Years of data | `r source %>% distinct(year) %>% pull(year) %>% paste(collapse = ", ")` |
+
+## Create unique ID
+
+Within years, the `caseid` is the ID variable. We redefine `caseid` to be unique across years.
+
+```{r}
+merge <-
+  source %>% 
+  select(-caseid) %>% 
+  arrange(year) %>% 
+  mutate(caseid = row_number())
+```
+
+## We do not restrict to gun owners at this point. 
+
+We save 2 data sets: gun owners, and all US citizens.
+
+We use `gunhomeper` and we rename it to `gun`
+
+```{r}
+merge %>% tabyl(gunhomeper) 
+```
+
+```{r}
+merge <-
+  merge %>% 
+  rename(gun = gunhomeper)
+```
+
+## Check that the common columns are all non-missing
+
+Different survey years have different questions, but they key demographic variables are the same across years and should not be missing. We also need survey weights to be non-missing.
+
+```{r}
+commonvars <-
+  c(
+    "caseid",
+    "year",
+    "gun",
+    "age4",
+    "gender",
+    "racethnicity",
+    "educ5",
+    "marital",
+    "employ",
+    "income9",
+    "state",
+    "region4",
+    "metro",
+    "internet",
+    "housing",
+    "hhsize"
+  )
+```
+
+```{r}
+merge %>% 
+  select(all_of(commonvars)) %>% 
+  filter(
+    gun == "Yes",
+    if_any(commonvars, is.na)
+    ) %>% 
+  nrow() == 0
+```
+
+## Household size grouping variables
+
+-   `hh18un` = Under 18
+
+-   `hhsize4` = categorical = weighted by weight3 - gun owner
+
+```{r}
+merge %>% tabyl(hhsize)
+```
+
+```{r}
+merge <-
+  merge %>%  
+  mutate( 
+    hh18un = hhsize - hh18ov, 
+    hhsize4 = 
+      xtile(hhsize, wt = weight1, n = 3) %>% 
+      factor(
+        levels = 1:3,
+        labels = c("Small", "Medium", "Large")
+      )
+  ) 
+```
+
+```{r}
+merge %>% tabyl(hhsize4)
+```
+
+## Political party variable
+
+Missing data in 2015.
+
+```{r}
+merge %>% tabyl(party3)
+```
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    party3 = 
+      case_when(
+        grepl("Demo", party3) ~ 1,
+        grepl("Rep", party3) ~ 2,
+        grepl("Ind", party3) ~ 3,
+        grepl("Unknown", party3) ~ 4,
+        is.na(party3) ~ 5
+      ) %>% 
+      factor(
+        levels = 1:5,
+        labels = 
+          c("Democrat",
+            "Republican",
+            "Independent",
+            "Unknown",
+            "Question not asked"
+            )
+      ),
+    party5 = 
+      case_when(
+        grepl("Inde", party5) ~ "Independent",
+        year == 2015 ~ "Question not asked",
+        TRUE ~ party5
+      ) %>% 
+      factor(
+        levels = 
+          c("Republican",
+            "Lean Republican",
+            "Independent",
+            "Lean Democrat",
+            "Democrat",
+            "Unknown",
+            "Question not asked"
+            )
+      )
+  ) 
+```
+
+```{r}
+merge %>% tabyl(party3)
+```
+
+```{r}
+merge %>% 
+  tabyl(party3, year)
+```
+
+## Employment
+
+Paid employee, self-employed, retired, unemployed
+
+```{r}
+tabyl(merge, employ)
+```
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    employ = 
+      case_when(
+        grepl("paid", employ) ~ "Paid employee",
+        grepl("self", employ) ~ "Self-employed",
+        grepl("retired", employ) ~ "Retired",
+        TRUE ~ "Unemployed"
+      ) %>% factor
+  )
+```
+
+
+```{r}
+tabyl(merge, employ)
+```
+
+
+## Gender
+
+```{r}
+merge %>% tabyl(gender)
+```
+
+We group everything other than male and female into other.
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    gender = 
+      case_when(
+       ! (gender %in% c("Male", "Female")) ~ "Other",
+       TRUE ~ gender
+      ) %>% 
+      factor(
+        levels = c("Male", "Female", "Other")
+      )
+  ) 
+```
+
+```{r}
+merge %>% tabyl(gender)
+```
+
+
+## Do not group Asian, non-Hispanic into other non-Hispanic
+
+Note that Asian, non-Hispanic only became a category later on. We choose not to group this into non-Hispanic other because we want to detect the increase 
+in gun ownership in this group.
+
+```{r}
+merge %>% tabyl(racethnicity)
+```
+
+## Education
+
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    educ = 
+      case_when(
+        grepl("Less", educ5) ~ "Less than high school",
+        grepl("HS", educ5) ~ "High school graduate",
+        grepl("Some|Voc", educ5) ~ "Some college, or associates degree",
+        grepl("Post", educ5) ~ "Graduate study",
+        TRUE ~ educ5
+      ) %>% 
+      factor(
+        levels = 
+          c(
+            "Less than high school",
+            "High school graduate",
+            "Some college, or associates degree",
+            "Bachelors degree",
+            "Graduate study"
+          )
+      )
+  )
+```
+
+```{r}
+merge %>% tabyl(educ)
+```
+##  NRA 
+
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+      nranow =  case_when(
+        grepl("Y", nranow) ~ "Member", 
+        TRUE ~ nranow
+        ) %>% 
+        factor(
+          levels =
+            c("Member", "No", "Unknown")
+          )
+  )
+```
+
+## Metro
+
+```{r}
+merge %>% tabyl(metro)
+```
+```{r}
+merge <-
+  merge %>% 
+  mutate(
+    metro = 
+      as.integer(
+        metro %in% c("Metro", "Metro Area")
+      ) %>% 
+      factor(
+        levels = 1:0,
+        labels = c("Metro", "Non-Metro")
+      )
+  )
+```
+
+```{r}
+merge %>% tabyl(metro)
+```
+
+## Relabel variables
+
+```{r}
+merge <-
+  merge %>% 
+  set_variable_labels(
+    year = "Year",
+    gender = "Gender",
+    gender_as = "Gender, assigned at birth",
+    gender_tr = "Transgender identity",
+    lgbt = "Sexual identity",
+    age = "Age",
+    age4 = "Age",
+    age7 = "Age",
+    educ5 = "Highest level of education",
+    educ = "Highest level of education",
+    employ = "Current employment status",
+    racethnicity = "Race and ethnicity",
+    marital = "Marital status",
+    income = "Household income",
+    income4 = "Household income",
+    income9 = "Household income",
+    state = "State",
+    region4 = "Region",
+    region9 = "Region",
+    metro = "Metropolitan area",
+    internet = "Household internet access?",
+    housing = "Home ownership",
+    home_type = "Type of building of panelists' residence",
+    phoneservice = "Telephone service for the household",
+    hhsize = "Household size (including children)",
+    hh02 = "Number of HH members age 0-2",
+    hh01 = "Number of HH members age 0-1",
+    hh25 = "Number of HH members age 2-5",
+    hh612 = "Number of HH members age 6-12",
+    hh1317 = "Number of HH members age 13-17",
+    hh18ov = "Number of HH members age 18+",
+    hh18ov = "Number of HH members age 0-17",
+    hhsize4 = "Household size",
+    corepar = "Is respondent a parent or legal guardian?",
+    everpar = "Has respondent ever been a parent or legal guardian?",
+    hhead = "Is respondent the household head?",
+    ownhandgun = "Do you personally own any hanguns?",
+    ownrifle = "Do you personally own any rifles?", 
+    ownshot = "Do you personally own any shotguns?",
+    ownother = "Do you personally own any other types of guns?",
+    nraever = "Have you ever been a member of the NRA?",
+    nranow = "National Rifle Association",
+    goanow = "Are you a member of any other gun rights groups such as Gun Owners of America?",
+    mdanow = "Are you a member of any gun safety groups such as Moms Demand Action or Everytown for Gun Safety?",
+    gunhome = "Do you happen to have in your home or garage any guns or revolvers?",
+    gunhh = "Respondent has a gun in household but is not owner (2013 only)",
+    gun = "Gun owner",
+    gun2020 = "Have you bought any guns since January 1, 2020?",
+    firstgun2020 = "Did you buy your first gun after January 1, 2020?",
+    racialgun2020 = "Was your purchase after January 1, 2020 motivated by concerns of racial violence?",
+    polgun2020 = "Was your purchase after January 1, 2020 motivated by concerns of political violence?",
+    gunreason = "Which of the following is your primary reason for owning guns?",
+    activevet = "Are you currently on active duty in the U.S Armed Forces, military Reserves, or National Guard?",
+    vet = "Have you ever served on active duty in the U.S. Armed Forces, military Reserves, or National Guard?",
+    party7 = "Political affiliation",
+    party5 = "Political affiliation",
+    party3 = "Political affiliation",
+    votediff20 = "How easy or difficult was it for you to vote in the 2020 election?",
+    votereason22 = "In talking to people about elections, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you?",
+    votecandi20 = "Who did you vote for in the 2020 election?",
+    votediff22 = "How easy or difficult was it for you to vote in the 2022 election?",
+    weight1 = "Post-stratification weights - 18+ general population",
+    weight2 = "Post-stratified weights - scaled to 3 race groups (NH-Black, Hispanic, NH-All Other)",
+ weight3 = "Post-stratified weights - scaled to 2 groups (gun owners vs not gun owners)",
+  weight4 = "Post-stratified weights for gun households",
+  firstgun7 = "At what age did you buy your first gun? 7 categories",
+  firstgun = "At what age did you buy your first gun?",
+  victim = "Have you ever been the victim of a crime involving a gun?"
+  )
+```
+
+## Remove year specific variables that we wont use
+
+We remove variables that are redundant because other variables cover them or they are only available for 1 year.
+
+We have ownership by the type of gun in 2013, 2023, and 2025.
+
+```{r}
+merge %>% 
+  filter(if_any(starts_with("own"), ~ !is.na(.x))) %>% 
+  tabyl(year)
+```
+
+```{r}
+merge <-
+  merge %>% 
+  select(
+    -c(
+      educ4
+    )
+  )
+```
+
+
+## Create general population sample
+
+For 2013 and 2015, `weight2` is the correct full sample weights.
+
+For all other years we use weight1.
+
+
+```{r}
+merge %>% 
+  filter(is.na(weight1)) %>% 
+  tabyl(year)
+```
+
+
+```{r}
+gen <-
+  merge %>% 
+  mutate(
+    weight = 
+      case_when(
+        year %in% 2013:2015 ~ weight2,
+        TRUE ~ weight1
+      )
+  ) %>% 
+  select(-c(weight1, weight2, weight3, weight4))
+```
+
+### Estimate gun ownership
+
+```{r}
+gen %>% 
+  mutate(
+    g = as.numeric(gun == "Yes")
+  ) %>% 
+  group_by(year) %>% 
+  summarise(
+    rate = 
+      sum(g*weight, na.rm = T)/sum(weight, na.rm = T) %>%  
+      round(2) *100
+  )
+```
+
+### Summary table
+
+```{r}
+demovars <-
+  c(
+    "gun",
+    "gender",
+    "age4",
+    "racethnicity",
+    "educ5",
+    "employ",
+    "income4",
+    "hhsize4",
+    "marital",
+    "region4"
+  )
+
+summstats <-
+  c("notNA(x)", "mean(x)")
+summnames <-
+  c("Observations", "Mean")
+```
+
+```{r, results = "asis", warning = F, message = F}
+st(
+  gen,
+  vars = demovars,
+  group.weights = "weight",
+  group = "year",
+  summ = summstats,
+  summ.names = summnames,
+  title = "Weighted demographic summary",
+  out = "kable",
+  numformat = "comma",
+  labels =  T
+  ) %>% 
+  kable_classic(
+    full_width = FALSE,
+    html_font = "Cambria"
+  ) %>% 
+  scroll_box(width = "800px", height = "500px")
+```
+
+### Export data
+
+```{r}
+skim(gen, c(caseid, weight, hhsize, age, gun, income9, educ5))
+```
+
+```{r}
+gen <-
+  gen %>% 
+  select(
+    caseid, year,
+    starts_with("weight"),
+    starts_with("gun"),
+    starts_with("age"),
+    everything()
+  )
+```
+
+```{r}
+write_rds(
+  gen,
+  here(
+    cleanfold,
+    "gs-gen-pop.rds"
+  )
+)
+```
+
+## Create gun owner sample
+
+Restrict to gun onwers.
+
+```{r}
+merge %>% tabyl(gun) %>% adorn_totals("row")
+```
+
+```{f}
+merge %>% tabyl(gun, year) %>% adorn_totals()
+```
+
+```{r}
+gun <- filter(merge, gun == "Yes") 
+```
+
+```{r}
+colSums(is.na(gun))
+```
+
+### Fix weight
+
+For all years other than 2017 and 2019, we use weight3.
+
+For 2017 and 2019, there are only gun-owner specific weights, which is `weight1`.
+
+```{r}
+gun %>% 
+  filter(is.na(weight3)) %>% 
+  tabyl(year)
+```
+
+```{r}
+gun <-
+  gun %>% 
+  mutate(
+    weight =
+      case_when(
+        year %in% 2017:2019 ~ weight1,
+        TRUE ~ weight3
+      )
+  ) %>% 
+  select(-c(sample, weight1, weight2, weight3, weight4))
+```
+
+```{r}
+gun %>% filter(is.na(weight)) %>% nrow() == 0
+```
+
+
+```{r}
+gun %>% tabyl(year)
+```
+
+### Harmonize gun ownership variables
+
+If a gun owner refuses to answer to the question about what kind of gun they own in the years the question is asked, we code this as saying that they own another typeof gun.
+
+In the years that the question is not asked, we code this as "Question not asked".
+
+```{r}
+gun %>% tabyl(gun, ownrifle)
+```
+
+```{r}
+gun <-
+  gun %>% 
+  mutate(
+    ownother =
+      case_when(
+        if_all(
+          c(ownhandgun, ownrifle, ownshot),
+          ~ .x == "Unknown"
+          ) ~ "Yes",
+        TRUE ~ ownother
+      )
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    across(
+      starts_with("own"),
+      ~ fct_na_value_to_level(.x, level = "Question not asked") %>% 
+        droplevels()
+    )
+  )
+```
+
+```{r}
+walk(
+    gun %>% select(starts_with("own")) %>% names(),
+  ~ print(gun %>% tabyl(.x))
+)
+```
+
+### Export data
+
+```{r}
+skim(gun, c(caseid, weight, hhsize, age, gun, income9, educ5, ownshot))
+```
+
+
+```{r}
+gun <-
+  gun %>% 
+  select(
+    caseid, year,
+    starts_with("weight"),
+    starts_with("gun"),
+    starts_with("age"),
+    everything()
+  )
+```
+
+```{r}
+write_rds(
+  gun,
+  here(
+    cleanfold,
+    "gs-gun-owners.rds"
+  )
+)
+```

@@ -1,0 +1,15 @@
+delete_merged_file: false
+new_session: yes
+output_dir: "gunsurvey"
+rmd_files: [
+  "index.Rmd",
+  "1-import.Rmd",
+  "2-clean-2013.Rmd",
+  "3-clean-2015.Rmd",
+  "4-clean-2017.Rmd",
+  "5-clean-2019.Rmd",
+  "6-clean-2021.Rmd",
+  "7-clean-2023.Rmd",
+  "8-clean-2025.Rmd",
+  "9-merge.Rmd"
+]
