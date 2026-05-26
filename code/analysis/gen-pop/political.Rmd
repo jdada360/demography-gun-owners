@@ -1,7 +1,6 @@
-# Year Summary
+# Political Affiliation
 
-This chapter creates a basic descriptive table of the time
-trends in the demographics of US gun owners.
+This chapter explores time trends in the political affiliation of the US population.
 
 **Input**
 
@@ -52,22 +51,46 @@ genpop <-
   )
 ```
 
+## Redefine political affiliation
+
+```{r}
+genpop <- 
+  genpop %>% 
+  mutate(
+    altparty = 
+      case_when(
+        grepl(
+          "Strong Democrat", 
+          party7, 
+          ignore.case = T
+          ) ~ "Democrat",
+        grepl(
+          "Strong Republican", 
+          party7, 
+          ignore.case = T
+          ) ~ "Republican",
+        grepl(
+          "Unknown", 
+          party7
+        ) ~ "Unknown",
+        TRUE ~ "Independent"
+      )
+  ) %>% 
+  set_variable_labels(
+    party3 = "Leaners as Partisans",
+    altparty = "Leaners as Independents",
+    party7 = "Seperate Categories"
+  )
+```
+
 ## Demographic variables
 
 ```{r}
 demovars <-
   c(
-    "gender",
-    "age4",
-    "racethnicity",
     "party3",
-    "gun",
-    "nranow",
-    "educ",
-    "employ",
-    "income4",
-    "marital",
-    "region4"
+    "party7",
+    "altparty"
   )
 ```
 
@@ -90,21 +113,6 @@ ds <-
     ) 
 ```
 
-
-```{r}
-note <-
-  paste0(
-    "Note: ``Other'' gender category was not ",
-    "included until the 2025 wave. ",
-    "``Some college or associate’s degree'' also includes respondents ",
-    "reporting vocational or technical school. ",
-    "Political affiliation was not collected in the 2015 wave. ",
-    "Asian, non-Hispanic was not included as a separate category until ",
-    "the 2019 wave. ",
-    "For marital status, ``Living with partner'' was not included ",
-    "in the 2023 and 2025 waves."
-  )
-```
 
 ```{r}
 year_tbl <-
@@ -203,23 +211,18 @@ year_tbl <-
     2:8, 
     width = "1.3cm"
     ) %>% 
-  row_spec(1, bold = TRUE) %>% 
-  footnote(
-   number = note,
-   threeparttable = TRUE,
-   escape = FALSE,
-   fixed_small_size = TRUE
-  )
+  row_spec(1, bold = TRUE) 
+  # footnote(
+  #  number = note,
+  #  threeparttable = TRUE,
+  #  escape = FALSE,
+  #  fixed_small_size = TRUE
+  # )
 
 save_kable(
   year_tbl,
-  file = here(path_ol, "tables/gen-pop-summary-year.tex")
+  file = here(path_ol, "tables/political-summary-year.tex")
 )
 ```
 
 ```{r}
-
-```
-
-
-

@@ -644,7 +644,42 @@ raw <-
 
 ```{r}
 raw %>% tabyl(party7, party3)
+raw %>% tabyl(party3)
 ```
+
+Try alternate definition of political party to match [Barry et al. 2017](https://ajph.aphapublications.org/doi/10.2105/AJPH.2018.304432?url_ver=Z39.88-2003&rfr_id=ori%3Arid%3Acrossref.org&rfr_dat=cr_pub++0pubmed)   
+
+This method matches hers. 
+
+```{r}
+altparty <- 
+  raw %>% 
+  mutate(
+    altparty = 
+      case_when(
+        grepl(
+          "Strong Democrat", 
+          party7, 
+          ignore.case = T
+          ) ~ "Democrat",
+        grepl(
+          "Strong Republican", 
+          party7, 
+          ignore.case = T
+          ) ~ "Republican",
+        grepl(
+          "Unknown", 
+          party7
+        ) ~ "Unknown",
+        TRUE ~ "Independent"
+      )
+  )
+```
+
+```{r}
+altparty %>% tabyl(altparty)
+```
+
 ## Are you a member of the National Rifle Association (Q29)
 
 Are you a member of the National Rifle Association--also known as the NRA? = `q29` = `nranow`

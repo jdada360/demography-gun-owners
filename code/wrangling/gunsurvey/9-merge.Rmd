@@ -228,6 +228,47 @@ merge <-
             "Unknown",
             "Question not asked"
             )
+      ),
+    party7 = 
+      case_when(
+        party7 == "Strong Republican" ~ 1,
+        party7 %in% c(
+          "Not so strong Republican", 
+          "Not Strong Republican"
+          ) ~ 2,
+        party7 %in% c(
+          "Leans Republican",
+          "Lean Republican"
+      ) ~ 3,
+      party7 %in% c(
+        "Undecided/Independent/Other",
+        "Don't Lean/Independent/None"
+      ) ~ 4,
+      party7 %in% c(
+        "Leans Democrat",
+        "Lean Democrat"
+      ) ~ 5,
+      party7 %in% c(
+          "Not so strong Democrat", 
+          "Not Strong Democrat"
+          ) ~ 6,
+      party7  == "Strong Democrat" ~ 7,
+      party7 == "Unknown" ~ 8, 
+      TRUE ~ 9
+      ) %>% 
+      factor(
+        levels = 1:9,
+        labels = c(
+          "Strong Republican",
+          "Not Strong Republican",
+          "Leans Republican",
+          "Independent",
+          "Leans Democrat",
+          "Not Strong Democrat",
+          "Strong Democrat",
+          "Unknown",
+          "Question not asked"
+        )
       )
   ) 
 ```
@@ -239,6 +280,10 @@ merge %>% tabyl(party3)
 ```{r}
 merge %>% 
   tabyl(party3, year)
+```
+
+```{r}
+merge %>% tabyl(year, party7)
 ```
 
 ## Employment
