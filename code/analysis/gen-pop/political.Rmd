@@ -73,11 +73,14 @@ genpop <-
           "Unknown", 
           party7
         ) ~ "Unknown",
+        year == 2015 ~ "Question not asked",
         TRUE ~ "Independent"
-      )
+      ) %>% 
+      factor()
   ) %>% 
   set_variable_labels(
     party3 = "Leaners as Partisans",
+    party5 = "Strong and not so Strong as Partisans",
     altparty = "Leaners as Independents",
     party7 = "Seperate Categories"
   )
@@ -89,8 +92,9 @@ genpop <-
 demovars <-
   c(
     "party3",
-    "party7",
-    "altparty"
+    "altparty",
+    "party5",
+    "party7"
   )
 ```
 
@@ -112,7 +116,7 @@ ds <-
     weights = ~ weight
     ) 
 ```
-
+numbers are slightly off what is in Barry et al. 2018 so check survey weights and definitions
 
 ```{r}
 year_tbl <-
