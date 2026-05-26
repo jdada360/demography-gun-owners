@@ -35,8 +35,6 @@ pacman::p_load(
 )
 ```
 
-
-
 ##  Load data
 
 ```{r}

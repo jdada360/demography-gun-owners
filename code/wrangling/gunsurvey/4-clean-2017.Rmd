@@ -680,6 +680,17 @@ altparty <-
 altparty %>% tabyl(altparty)
 ```
 
+```{r}
+altparty %>%
+  filter(altparty!= "Unknown") %>% 
+  group_by(altparty) %>%
+  summarise(wt_n = sum(weight1, na.rm = TRUE), .groups = "drop") %>% 
+  mutate(prop = wt_n/sum(wt_n))
+```
+
+If you remove Unknown, the numbers match Barry exactly!!!!
+
+
 ## Are you a member of the National Rifle Association (Q29)
 
 Are you a member of the National Rifle Association--also known as the NRA? = `q29` = `nranow`

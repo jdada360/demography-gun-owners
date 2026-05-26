@@ -286,6 +286,8 @@ merge %>%
 merge %>% tabyl(year, party7)
 ```
 
+
+
 ## Employment
 
 Paid employee, self-employed, retired, unemployed
