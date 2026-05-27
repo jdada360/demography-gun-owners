@@ -1,13 +1,40 @@
-library(ggplot2)
-library(purrr)
-library(conflicted)
+pacman::p_load(
+  c(
+    "ggplot2",
+    "purrr",
+    "haven",
+    "conflicted"
+  ),
+  character.only = T
+)
 
-path_od <-
-  file.path(
-    Sys.getenv("ONEDRIVE"),
-    "Research",
-    "DemographyGunOwners"
-  )
+
+define_path <- function(username){
+  
+  if (username == "rebekahbeksspicuglia"){
+    
+    path <-  file.path(
+      Sys.getenv("ONEDRIVE"),
+      "DemographyGunOwners"
+    )
+  }
+  
+  if (username == "jdada"){
+    
+    path <- 
+      file.path(
+        Sys.getenv("ONEDRIVE"),
+        "Research",
+        "DemographyGunOwners"
+      )
+  }
+  
+  return(path)
+  
+}
+
+
+path_od <- define_path(Sys.info()[["user"]])
 
 path_git <-
   file.path(
