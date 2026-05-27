@@ -1,7 +1,6 @@
-# Demographic Summary of Households with Children Exposed to Guns.
+# Summary of Number of Exposed Children
 
-This chapter creates a descriptive table that shows the demographics of households with 
-children exposed to guns in the home. 
+This chapter creates a descriptive table that shows the demographics of households with children exposed to guns in the home. 
 
 **Input**
 

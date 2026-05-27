@@ -1,6 +1,6 @@
 --- 
 title: "Child Exposure to Guns"
-author: "Joy Dada"
+author: "Joy Dada and Beks Spicuglia"
 date: '`r format(Sys.Date(), format = "%A, %B %d, %Y")`'
 site: bookdown::bookdown_site
 output: bookdown::gitbook
