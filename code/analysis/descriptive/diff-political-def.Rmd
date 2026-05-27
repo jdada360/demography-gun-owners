@@ -22,11 +22,12 @@ packages <-
     "haven",
     "survey",
     "tidyr",
-    "gtsummary",
     "janitor",
     "dplyr",
     "here",
-    "vtable"
+    "vtable",
+    "gtsummary",
+    "survey"
   )
 
 pacman::p_load(
@@ -38,13 +39,13 @@ pacman::p_load(
 ##  Load data
 
 ```{r}
-genpop <-
+gun <-
   read_rds(
     here(
       path_od,
       "data",
       "clean",
-      "gs-gen-pop.rds"
+      "gs-gun-owners.rds"
     )
   )
 ```
@@ -52,8 +53,8 @@ genpop <-
 ## Redefine political affiliation
 
 ```{r}
-genpop <- 
-  genpop %>% 
+gun <- 
+  gun %>% 
   mutate(
     altparty = 
       case_when(
@@ -75,6 +76,12 @@ genpop <-
         TRUE ~ "Independent"
       ) %>% 
       factor()
+  )  %>% 
+  filter(party3 != "Unknown") %>% 
+  mutate(
+    across(
+      c(starts_with("party"),  "altparty"), ~ droplevels(.x)
+    )
   ) %>% 
   set_variable_labels(
     party3 = "Leaners as Partisans",
@@ -99,7 +106,7 @@ demovars <-
 ## Tabulate values
 
 ```{r}
-walk(demovars, ~ print(tabyl(genpop, .x)))
+walk(demovars, ~ print(tabyl(gun, .x)))
 ```
 
 
@@ -109,13 +116,13 @@ walk(demovars, ~ print(tabyl(genpop, .x)))
 ds <- 
   svydesign(
     ~ 1, 
-    data = genpop, 
+    data = gun,
     strata = ~ year,
     weights = ~ weight
     ) 
 ```
 
-Numbers are slightly off what is in Barry et al. 2018 because they remove unknowns from their proportions.
+When you use the general population sample, numbers are slightly off what is in Barry et al. 2018 because they remove unknowns from their proportions. Maybe I should remove unknowns.
 
 ```{r}
 year_tbl <-
@@ -137,7 +144,7 @@ year_tbl <-
       tbl <- .x
       
       # compute unweighted yearly totals
-      counts <- format(table(genpop$year), big.mark = ",")
+      counts <- format(table(gun$year), big.mark = ",")
       
       # create row with obs
       n_row <- tibble(
@@ -156,7 +163,6 @@ year_tbl <-
       bind_rows(n_row, tbl) %>%
         filter(
           ! grepl("Ques", label),
-          ! (grepl("No", label) & variable == "nranow")
           ) %>% 
         mutate(
            label = ifelse(
@@ -164,44 +170,22 @@ year_tbl <-
             paste0("  ", label),
             label),
           stat_2 = ifelse(
-               variable == "party5" & row_type == "level",
+              row_type == "level",
                "-", stat_2
-               ),
-           across(
-             c(stat_6, stat_7),
-             ~ ifelse(
-               variable == "marital" & grepl("with", label),
-               "-", .x
                )
-             ),
-          across(
-            # Asian american not a category until > 2017
-            c(stat_1, stat_2, stat_3),
-            ~ ifelse(
-              variable == "racethnicity" & grepl("Asian", label),
-              "-", .x
-              )
-            ),
-          # other gender category only 2025
-          across(
-            starts_with("stat"),
-            ~ ifelse(
-              variable == "gender" & .x == "0%",
-              "-", .x
-              )
-          )
            )
     }
   ) %>%
   modify_footnote(all_stat_cols() ~ NA_character_) %>%
+  bold_labels() %>% 
   as_kable_extra(
     format = "latex",
     booktabs = TRUE,
-    escape = FALSE,
-    label = "GenSummaryYear",
+    escape = TRUE,
+    label = "PoliticalComparison",
     linesep = "",
     caption = 
-      "Demographic Composition of US Adults by Survey Year, 2013–2025",
+      "Political Affiliation of US Gun Owners by Survey Year and Definition, 2013-2025",
     align = "lccccccc"
   ) %>%
   kable_styling(
@@ -215,17 +199,9 @@ year_tbl <-
     width = "1.3cm"
     ) %>% 
   row_spec(1, bold = TRUE) 
-  # footnote(
-  #  number = note,
-  #  threeparttable = TRUE,
-  #  escape = FALSE,
-  #  fixed_small_size = TRUE
-  # )
 
 save_kable(
   year_tbl,
   file = here(path_ol, "tables/political-summary-year.tex")
 )
 ```
-
-```{r}

@@ -308,9 +308,9 @@ year_tbl <-
       tbl <- bind_rows(n_row, gun_prev_row, tbl) %>%
         filter(
           !grepl("Ques", label),
-          !(grepl("No", label) & variable == "nranow")
+          !(grepl("No", label) & variable == "nranow"),
           # drop non-metro percentages
-          #!(variable == "metro" & label == "Non-Metro")
+          !(variable == "metro" & label == "Non-Metro")
         ) %>%
         mutate(
           label = ifelse(

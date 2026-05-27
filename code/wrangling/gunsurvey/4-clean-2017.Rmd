@@ -690,7 +690,6 @@ altparty %>%
 
 If you remove Unknown, the numbers match Barry exactly!!!!
 
-
 ## Are you a member of the National Rifle Association (Q29)
 
 Are you a member of the National Rifle Association--also known as the NRA? = `q29` = `nranow`
