@@ -6,5 +6,5 @@ bookdown::gitbook:
     toc:
       collapse: section
       before: |
-        <li><a href="./">Gun Survey Data Cleaning</a></li>
+        <li><a href="./">Child Gun Exposure</a></li>
   code_folding: show

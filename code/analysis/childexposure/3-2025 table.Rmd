@@ -1,0 +1,70 @@
+# 2025 Table
+
+This chapter creates a descriptive table that shows the demographics of households with children exposed to guns in the home in 2025. 
+
+**Input**
+
+-   DemographyGunOwners/data/clean/gs-child.rds
+
+**Output**
+
+-   DemographyGunOwners/output
+
+**Last ran**
+
+-   `r format(Sys.Date(), format = "%A, %B %d, %Y")`
+
+```{r, message = FALSE, warning = FALSE}
+packages <-
+  c(
+    "tidyverse",
+    "purrr",
+    "haven",
+    "survey",
+    "tidyr",
+    "gtsummary",
+    "janitor",
+    "dplyr",
+    "here",
+    "vtable",
+    "tidycensus"
+  )
+
+pacman::p_load(packages, character.only = TRUE)
+
+```
+
+## Load data
+
+```{r}
+child <- 
+  read_rds(
+    here(
+      path_od,
+      "data",
+      "clean", 
+      "gs-child.rds"
+      )
+    )
+```
+
+## Filter to 2025
+
+```{r}
+child2025 <-
+  child %>% 
+  filter(year == 2025)
+
+```
+
+
+## Survey designs
+
+```{r}
+ds <- svydesign(
+  ~1,
+  data    = child,
+  strata  = ~year,
+  weights = ~weight
+)
+```
