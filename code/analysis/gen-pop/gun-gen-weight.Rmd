@@ -1,7 +1,12 @@
-# Year Summary
+# Gun Owner analysis using general population weights
 
-This chapter creates a basic descriptive table of the time
-trends in the demographics of US gun owners.
+This chapter creates a demographic summary table of gun owners, but instead of using the
+gun owner specific weights, we use the general population weights. This analysis is performed in 
+response to Julie's comments:
+
+How do these distributions compare to the demographic distributions of gun ownership in the weights applied for gun owner comparisons on these surveys? Are there groups that we may be systematically under-representing in more recent analyses?
+
+The results are the same....
 
 **Input**
 
@@ -52,6 +57,14 @@ genpop <-
   )
 ```
 
+## Restrict to gun owners
+
+```{r}
+genpop <-
+  genpop %>% 
+  filter(gun == "Yes")
+```
+
 ## Demographic variables
 
 ```{r}
@@ -61,7 +74,6 @@ demovars <-
     "age4",
     "racethnicity",
     "party3",
-    "gun",
     "nranow",
     "educ",
     "employ",
@@ -191,7 +203,7 @@ year_tbl <-
     label = "GenSummaryYear",
     linesep = "",
     caption = 
-      "Demographic Composition of US Adults by Survey Year, 2013–2025",
+      "Demographic Composition of US Gun Owners using General Population Weights by Survey Year, 2013–2025",
     align = "lccccccc"
   ) %>%
   kable_styling(
@@ -214,7 +226,7 @@ year_tbl <-
 
 save_kable(
   year_tbl,
-  file = here(path_ol, "tables/gen-pop-summary-year.tex")
+  file = here(path_ol, "tables/gen-pop-gun-summary-year.tex")
 )
 ```
 
