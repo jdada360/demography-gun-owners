@@ -49,6 +49,12 @@ genpop <-
       "clean",
       "gs-gen-pop.rds"
     )
+  ) %>% 
+  mutate(
+    altparty = factor(
+      altparty,
+      levels =c("Republican", "Independent", "Democrat")
+    )
   )
 ```
 
@@ -61,7 +67,7 @@ demovars <-
     "age4",
     "racethnicity",
     "altparty",
-    "gun",
+    # "gun",
     "nranow",
     "educ",
     "employ",
@@ -92,20 +98,258 @@ ds <-
 ```
 
 
+
+## Significance tests
+
+Chi-squared p-values (survey-weighted, Rao-Scott) for gun owner demographics.
+
+```{r}
+des_sub <- subset(ds, year %in% c(2013, 2025))
+
+chisq_pvals <- map_dbl(demovars, function(v) {
+
+  if (v == "gender") {
+    des_sub <- subset(des_sub, gender != "Other")
+    des_sub$variables$gender <- droplevels(des_sub$variables$gender)
+  }
+  
+  if (v == "altparty") {
+    des_sub <- subset(des_sub, altparty  %in% c("Democrat", "Republican", "Independent"))
+    des_sub$variables$altparty <- droplevels(des_sub$variables$altparty)
+  }
+
+  if (v == "nranow") {
+    des_sub <- subset(des_sub, nranow != "Unknown")
+    des_sub$variables$nranow <- droplevels(des_sub$variables$nranow)
+  }
+
+  if (v == "marital") return(NA_real_)
+
+  tryCatch(
+    svychisq(
+      as.formula(paste0("~", v, " + year")),
+      design    = des_sub,
+      statistic = "Chisq"
+    )$p.value,
+    error   = function(e) NA_real_,
+    warning = function(w) NA_real_
+  )
+}) %>%
+  set_names(demovars)
+```
+
+## P-value formatter
+
+```{r}
+format_pval <- function(p) {
+  case_when(
+    is.na(p)  ~ "",
+    p < 0.001 ~ "<0.001",
+    p < 0.01  ~ sprintf("%.3f", p),
+    p < 0.05  ~ sprintf("%.3f", p),
+    TRUE      ~ sprintf("%.2f", p)
+  )
+}
+```
+
+### Test function
+
+Run a test of the difference in `party3`. It is signficantly different.
+
+```{r}
+des_sub <- subset(des_sub, party5  %in% c("Democrat", "Republican", "Independent"))
+    des_sub$variables$party3 <- droplevels(des_sub$variables$party3)
+    
+svychisq(
+      as.formula(paste0("~", "party3", " + year")),
+      design    = des_sub,
+      statistic = "Chisq"
+    )$p.value
+```
+
+## Difference lookup
+
+Compute weighted % for one variable in one year, then build a lookup table of variable + level -> difference string.
+
+```{r}
+get_pct <- function(var, yr) {
+  svyby(
+    formula = as.formula(paste0("~", var)),
+    by      = ~year,
+    design  = subset(ds, year %in% c(yr)),
+    FUN     = svymean,
+    na.rm   = TRUE
+  ) %>%
+    select(-year, -starts_with("se.")) %>%
+    unlist() %>%
+    `*`(100) %>%
+    round(1)
+}
+
+pct_2013 <- map(demovars, ~ get_pct(.x, 2013)) %>% set_names(demovars)
+pct_2025 <- map(demovars, ~ get_pct(.x, 2025)) %>% set_names(demovars)
+
+diff_lookup <- map_dfr(demovars, function(v) {
+  p13  <- pct_2013[[v]]
+  p25  <- pct_2025[[v]]
+  lvls <- names(p13) %>% str_remove(paste0("^", v))
+  tibble(
+    variable = v,
+    level    = lvls,
+    diff_str = sprintf("%+.1f", p25 - p13)
+  )
+})
+```
+
+
+## Table
+
+
+
 ```{r}
 note <-
   paste0(
-    "Note: ``Other'' gender category was not ",
-    "included until the 2025 wave. ",
-    "``Some college or associate’s degree'' also includes respondents ",
-    "reporting vocational or technical school. ",
-    "Political affiliation was not collected in the 2015 wave. ",
-    "Asian, non-Hispanic was not included as a separate category until ",
-    "the 2019 wave. ",
-    "For marital status, ``Living with partner'' was not included ",
-    "in the 2023 and 2025 waves."
+      "``Some college or associate's degree'' includes vocational or technical school. ",
+    "``Other'' gender, Asian non-Hispanic, and ``Living with partner'' were not collected ",
+    "in all waves (introduced in 2025, 2019, and discontinued after 2021, respectively). ",
+    "Political affiliation was not collected in 2015. ",
+    "p-values are from Rao-Scott chi-squared tests comparing 2013 and 2025 ",
+    "weighted distributions; the gender test is restricted to Male/Female."
   )
 ```
+
+
+```{r}
+year_tbl <-
+  ds %>%
+  tbl_svysummary(
+    by        = year,
+    include   = demovars,
+    missing   = "no",
+    statistic = all_categorical() ~ "{p}%"
+  ) %>%
+  modify_header(
+    label ~ "Characteristic",
+    all_stat_cols() ~ "{level}"
+  ) %>%
+  modify_table_body(
+    ~ {
+      tbl <- .x
+
+      # Observations row (unweighted counts)
+      counts <- format(table(genpop$year), big.mark = ",")
+      n_row <- tibble(
+        variable  = NA_character_,
+        var_label = NA_character_,
+        row_type  = "label",
+        label     = "Observations",
+        !!!setNames(as.list(counts), paste0("stat_", seq_along(counts)))
+      ) %>%
+        mutate(across(starts_with("stat"), trimws))
+
+
+      # Bind: Observations | Gun prevalence | everything else
+      tbl <- bind_rows(n_row, tbl) %>%
+        filter(
+          !grepl("Ques", label),
+          !(grepl("No", label) & variable == "nranow"),
+          # drop non-metro percentages
+          !(variable == "metro" & label == "Non-Metro")
+        ) %>%
+        mutate(
+          label = ifelse(
+            row_type == "level" & label != "Observations",
+            paste0("  ", label), label
+          ),
+          stat_2 = ifelse(
+            variable == "altparty" & row_type == "level", "-", stat_2
+          ),
+          across(
+            c(stat_1, stat_2, stat_3),
+            ~ ifelse(
+              variable == "racethnicity" & grepl("Asian", label), "-", .x
+            )
+          ),
+          across(
+            c(stat_6, stat_7),
+            ~ ifelse(
+              variable == "marital" & grepl("with", label), "-", .x
+            )
+          ),
+          across(
+            starts_with("stat"),
+            ~ ifelse(
+              variable == "gender" & .x == "0%", "-", .x
+            )
+          )
+        )
+
+      # Diff and p-value columns
+      tbl <- tbl %>%
+        rowwise() %>%
+        mutate(
+          stat_diff = case_when(
+            label == "Observations"                                              ~ "",
+            row_type == "label" & !is.na(variable)                              ~ "",
+            variable == "gender"  & grepl("Other",   label)                     ~ "-",
+            variable == "marital" & grepl("partner", label, ignore.case = TRUE) ~ "-",
+            row_type == "level" ~ {
+              lv      <- str_trim(label)
+              matched <- diff_lookup %>%
+                filter(variable == .data$variable, level == lv)
+              if (nrow(matched) == 1) matched$diff_str else "-"
+            },
+            TRUE ~ ""
+          ),
+          stat_pval = case_when(
+            label == "Observations"                 ~ "",
+            row_type == "label" & !is.na(variable) ~ format_pval(chisq_pvals[variable]),
+            TRUE                                    ~ ""
+          )
+        ) %>%
+        ungroup()
+
+      tbl
+    }
+  ) %>%
+  modify_header(
+    stat_diff ~ "2025--2013",
+    stat_pval ~ "p-value"
+  ) %>%
+  modify_footnote(all_stat_cols() ~ NA_character_) %>%
+  as_kable_extra(
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    label     = "GenSummaryYear",
+    linesep   = "",
+    caption   = "Demographic Composition of US Adults by Survey Year, 2013–2025",
+    align     = "lccccccccc"
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    font_size = 9
+  ) %>%
+  column_spec(1,   width = "4.5cm") %>%
+  column_spec(2:8, width = "1.3cm") %>%
+  column_spec(9,   width = "1.3cm") %>%
+  column_spec(10,  width = "1.3cm") %>%
+  row_spec(1, bold = TRUE) %>%
+  footnote(
+    number           = note,
+    threeparttable   = TRUE,
+    escape           = FALSE,
+    fixed_small_size = TRUE
+  )
+
+save_kable(
+  year_tbl,
+  file = here(path_ol, "tables/gen-pop-summary-year.tex")
+)
+```
+
+## Table without differences
+
 
 ```{r}
 year_tbl <-
@@ -116,19 +360,19 @@ year_tbl <-
     missing = "no",
     statistic = all_categorical() ~ "{p}%"
   ) %>%
-  # add_ci() %>% 
+  # add_ci() %>%
   modify_header(
     label ~ "Characteristic",
     all_stat_cols() ~ "{level}"
   ) %>%
   modify_table_body(
     ~ {
-      
+
       tbl <- .x
-      
+
       # compute unweighted yearly totals
       counts <- format(table(genpop$year), big.mark = ",")
-      
+
       # create row with obs
       n_row <- tibble(
         variable = NA,
@@ -139,15 +383,16 @@ year_tbl <-
           as.list(counts),
           paste0("stat_", seq_along(counts))
           )
-        ) %>% 
+        ) %>%
         mutate(across(starts_with("stat"), trimws)
           )
 
       bind_rows(n_row, tbl) %>%
         filter(
           ! grepl("Ques", label),
-          ! (grepl("No", label) & variable == "nranow")
-          ) %>% 
+          ! (grepl("No", label) & variable == "nranow"),
+          ! (grepl("Unknown", label))
+          ) %>%
         mutate(
            label = ifelse(
             row_type == "level" & label != "Observations",
@@ -190,7 +435,7 @@ year_tbl <-
     escape = FALSE,
     label = "GenSummaryYear",
     linesep = "",
-    caption = 
+    caption =
       "Demographic Composition of US Adults by Survey Year, 2013–2025",
     align = "lccccccc"
   ) %>%
@@ -201,10 +446,10 @@ year_tbl <-
   ) %>%
   column_spec(1, width = "4.5cm") %>%
   column_spec(
-    2:8, 
+    2:8,
     width = "1.3cm"
-    ) %>% 
-  row_spec(1, bold = TRUE) %>% 
+    ) %>%
+  row_spec(1, bold = TRUE) %>%
   footnote(
    number = note,
    threeparttable = TRUE,
@@ -217,10 +462,4 @@ save_kable(
   file = here(path_ol, "tables/gen-pop-summary-year.tex")
 )
 ```
-
-```{r}
-
-```
-
-
 

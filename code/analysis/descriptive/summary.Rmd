@@ -44,7 +44,14 @@ gun <-
       "clean",
       "gs-gun-owners.rds"
     )
-  ) 
+  )  %>% 
+  mutate(
+    altparty = factor(
+      altparty,
+      levels =c("Republican", "Independent", "Democrat")
+    )
+  )
+
 genpop <- 
   read_rds(
     here(
@@ -244,14 +251,14 @@ diff_lookup <- map_dfr(demovars, function(v) {
 note <-
   paste0(
     "Gun ownership prevalence is the weighted prevalence of gun ",
-    "ownership in the full general population sample. ",
+    "ownership in the full sample of the National Gun Policy Survey (N=", sjmisc::big_mark(nrow(genpop)), "). ",
     "``Some college or associate's degree'' includes vocational or technical school. ",
     "``Other'' gender, Asian non-Hispanic, and ``Living with partner'' were not collected ",
     "in all waves (introduced in 2025, 2019, and discontinued after 2021, respectively). ",
     "Political affiliation was not collected in 2015. ",
     "p-values are from Rao-Scott chi-squared tests comparing 2013 and 2025 ",
-    "weighted distributions; the gender test is restricted to Male/Female, the ",
-    "political affiliation test excludes ``Unknown'' responses, and marital status ",
+    "weighted distributions; the gender test is restricted to Male/Female, ",
+    "marital status ",
     "is not tested because response categories differed across waves."
   )
 ```
@@ -304,7 +311,8 @@ year_tbl <-
           !grepl("Ques", label),
           !(grepl("No", label) & variable == "nranow"),
           # drop non-metro percentages
-          !(variable == "metro" & label == "Non-Metro")
+          !(variable == "metro" & label == "Non-Metro"),
+          label != "Unknown"
         ) %>%
         mutate(
           label = ifelse(
