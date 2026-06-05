@@ -186,6 +186,8 @@ merge %>% tabyl(hhsize4)
 
 Missing data in 2015.
 
+Define a grouping that matches Barry et al. 2018.
+
 ```{r}
 merge %>% tabyl(party3)
 ```
@@ -211,7 +213,27 @@ merge <-
             "Unknown",
             "Question not asked"
             )
-      ),
+        ),
+    altparty = 
+      case_when(
+        grepl(
+          "Strong Democrat", 
+          party7, 
+          ignore.case = T
+          ) ~ "Democrat",
+        grepl(
+          "Strong Republican", 
+          party7, 
+          ignore.case = T
+          ) ~ "Republican",
+        grepl(
+          "Unknown", 
+          party7
+        ) ~ "Unknown",
+        year == 2015 ~ "Question not asked",
+        TRUE ~ "Independent"
+      ) %>% 
+      factor(),
     party5 = 
       case_when(
         grepl("Inde", party5) ~ "Independent",
@@ -274,12 +296,12 @@ merge <-
 ```
 
 ```{r}
-merge %>% tabyl(party3)
+merge %>% tabyl(altparty)
 ```
 
 ```{r}
 merge %>% 
-  tabyl(party3, year)
+  tabyl(altparty, year)
 ```
 
 ```{r}
@@ -486,6 +508,7 @@ merge <-
     vet = "Have you ever served on active duty in the U.S. Armed Forces, military Reserves, or National Guard?",
     party7 = "Political affiliation",
     party5 = "Political affiliation",
+    altparty = "Political affiliation",
     party3 = "Political affiliation",
     votediff20 = "How easy or difficult was it for you to vote in the 2020 election?",
     votereason22 = "In talking to people about elections, we often find that a lot of people were not able to vote because they weren’t registered, they were sick, or they just didn’t have time. Which one of the following statements best describes you?",

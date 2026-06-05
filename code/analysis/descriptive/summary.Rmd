@@ -44,8 +44,7 @@ gun <-
       "clean",
       "gs-gun-owners.rds"
     )
-  )
-
+  ) 
 genpop <- 
   read_rds(
     here(
@@ -83,7 +82,7 @@ demovars <-
     "gender",
     "age4",
     "racethnicity",
-    "party3",
+    "altparty",
     "nranow",
     "educ",
     "employ",
@@ -146,15 +145,10 @@ chisq_pvals <- map_dbl(demovars, function(v) {
     des_sub <- subset(des_sub, gender != "Other")
     des_sub$variables$gender <- droplevels(des_sub$variables$gender)
   }
-
-  if (v == "party5") {
-    des_sub <- subset(des_sub, party5 != "Unknown")
-    des_sub$variables$party5 <- droplevels(des_sub$variables$party5)
-  }
   
-  if (v == "party3") {
-    des_sub <- subset(des_sub, party3  %in% c("Democrat", "Republican", "Independent"))
-    des_sub$variables$party3 <- droplevels(des_sub$variables$party3)
+  if (v == "altparty") {
+    des_sub <- subset(des_sub, altparty  %in% c("Democrat", "Republican", "Independent"))
+    des_sub$variables$altparty <- droplevels(des_sub$variables$altparty)
   }
 
   if (v == "nranow") {
@@ -318,7 +312,7 @@ year_tbl <-
             paste0("  ", label), label
           ),
           stat_2 = ifelse(
-            variable == "party3" & row_type == "level", "-", stat_2
+            variable == "altparty" & row_type == "level", "-", stat_2
           ),
           across(
             c(stat_1, stat_2, stat_3),

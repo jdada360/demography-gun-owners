@@ -50,33 +50,25 @@ gun <-
   )
 ```
 
+
+```{r}
+genpop <-
+  read_rds(
+    here(
+      path_od,
+      "data",
+      "clean",
+      "gs-gen-pop.rds"
+    )
+  )
+```
+
+
 ## Redefine political affiliation
 
 ```{r}
-gun <- 
-  gun %>% 
-  mutate(
-    altparty = 
-      case_when(
-        grepl(
-          "Strong Democrat", 
-          party7, 
-          ignore.case = T
-          ) ~ "Democrat",
-        grepl(
-          "Strong Republican", 
-          party7, 
-          ignore.case = T
-          ) ~ "Republican",
-        grepl(
-          "Unknown", 
-          party7
-        ) ~ "Unknown",
-        year == 2015 ~ "Question not asked",
-        TRUE ~ "Independent"
-      ) %>% 
-      factor()
-  )  %>% 
+genpop <- 
+  genpop %>%  
   filter(party3 != "Unknown") %>% 
   mutate(
     across(
@@ -106,7 +98,7 @@ demovars <-
 ## Tabulate values
 
 ```{r}
-walk(demovars, ~ print(tabyl(gun, .x)))
+walk(demovars, ~ print(tabyl(genpop, .x)))
 ```
 
 
@@ -116,7 +108,7 @@ walk(demovars, ~ print(tabyl(gun, .x)))
 ds <- 
   svydesign(
     ~ 1, 
-    data = gun,
+    data = genpop,
     strata = ~ year,
     weights = ~ weight
     ) 
@@ -144,7 +136,7 @@ year_tbl <-
       tbl <- .x
       
       # compute unweighted yearly totals
-      counts <- format(table(gun$year), big.mark = ",")
+      counts <- format(table(genpop$year), big.mark = ",")
       
       # create row with obs
       n_row <- tibble(
@@ -185,7 +177,7 @@ year_tbl <-
     label = "PoliticalComparison",
     linesep = "",
     caption = 
-      "Political Affiliation of US Gun Owners by Survey Year and Definition, 2013-2025",
+      "Political Affiliation of US Adults by Survey Year and Definition, 2013-2025",
     align = "lccccccc"
   ) %>%
   kable_styling(

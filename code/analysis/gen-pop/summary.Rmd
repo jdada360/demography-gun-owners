@@ -60,7 +60,7 @@ demovars <-
     "gender",
     "age4",
     "racethnicity",
-    "party3",
+    "altparty",
     "gun",
     "nranow",
     "educ",
@@ -154,7 +154,7 @@ year_tbl <-
             paste0("  ", label),
             label),
           stat_2 = ifelse(
-               variable == "party5" & row_type == "level",
+               variable == "altparty" & row_type == "level",
                "-", stat_2
                ),
            across(
