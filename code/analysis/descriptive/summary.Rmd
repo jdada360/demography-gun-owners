@@ -27,7 +27,10 @@ packages <-
     "janitor",
     "dplyr",
     "here",
-    "vtable"
+    "flextable",
+    "officer",
+    "vtable",
+    "labelled"
   )
 
 pacman::p_load(packages, character.only = TRUE)
@@ -266,7 +269,7 @@ note <-
 ## Yearly summary table
 
 ```{r}
-year_tbl <-
+year_tbl_gt1 <-
   ds %>%
   tbl_svysummary(
     by        = year,
@@ -375,7 +378,10 @@ year_tbl <-
     stat_diff ~ "2025--2013",
     stat_pval ~ "p-value"
   ) %>%
-  modify_footnote(all_stat_cols() ~ NA_character_) %>%
+  modify_footnote(all_stat_cols() ~ NA_character_) 
+
+year_tbl <-
+  year_tbl_gt1 |> 
   as_kable_extra(
     format    = "latex",
     booktabs  = TRUE,
@@ -394,17 +400,17 @@ year_tbl <-
   column_spec(9,   width = "1.3cm") %>%
   column_spec(10,  width = "1.3cm") %>%
   row_spec(1, bold = TRUE) %>%
-  footnote(
+  kableExtra::footnote(
     number           = note,
     threeparttable   = TRUE,
     escape           = FALSE,
     fixed_small_size = TRUE
   )
 
-save_kable(
-  year_tbl,
-  file = here(path_ol, "tables/summary-year-2.tex")
-)
+# save_kable(
+#   year_tbl,
+#   file = here(path_ol, "tables/summary-year-2.tex")
+# )
 ```
 
 ## Full sample summary
@@ -457,7 +463,7 @@ overview_tbl <-
   ) %>%
   column_spec(1, width = "6cm") %>%
   column_spec(2, width = "2cm") %>%
-  footnote(
+  kableExtra::footnote(
     number =
       paste(
         "Values are weighted percentages",
@@ -472,8 +478,249 @@ overview_tbl <-
     fixed_small_size = TRUE
   )
 
-save_kable(
-  overview_tbl,
-  file = here(path_ol, "tables/summary.tex")
+# save_kable(
+#   overview_tbl,
+#   file = here(path_ol, "tables/summary.tex")
+# )
+```
+
+
+## General population
+
+```{r}
+genpop <-
+  read_rds(
+    here(
+      path_od,
+      "data",
+      "clean",
+      "gs-gen-pop.rds"
+    )
+  ) %>% 
+  mutate(
+    altparty = factor(
+      altparty,
+      levels =c("Republican", "Independent", "Democrat")
+    )
+  ) |> 
+  set_variable_labels(altparty = "Political affiliation")
+```
+
+## Demographic variables
+
+```{r}
+demovars <-
+  c(
+    "gender",
+    "age4",
+    "racethnicity",
+    "altparty",
+    # "gun",
+    "nranow",
+    "educ",
+    "employ",
+    "income4",
+    "marital",
+    "metro",
+    "region4"
+  )
+```
+
+## Tabulate values
+
+```{r}
+walk(demovars, ~ print(tabyl(genpop, .x)))
+```
+
+
+## Yearly Summary
+
+```{r}
+ds <- 
+  svydesign(
+    ~ 1, 
+    data = genpop, 
+    strata = ~ year,
+    weights = ~ weight
+    ) 
+```
+
+
+## Table 
+
+```{r}
+year_tbl_gt2 <-
+  ds %>%
+  tbl_svysummary(
+    by = year,
+    include = demovars,
+    missing = "no",
+    statistic = all_categorical() ~ "{p}%"
+  ) %>%
+  # add_ci() %>%
+  modify_header(
+    label ~ "Characteristic",
+    all_stat_cols() ~ "{level}"
+  ) %>%
+  modify_table_body(
+    ~ {
+
+      tbl <- .x
+
+      # compute unweighted yearly totals
+      counts <- format(table(genpop$year), big.mark = ",")
+
+      # create row with obs
+      n_row <- tibble(
+        variable = NA,
+        var_label = NA,
+        row_type = "label",
+        label = "Observations",
+        !!!setNames(
+          as.list(counts),
+          paste0("stat_", seq_along(counts))
+          )
+        ) %>%
+        mutate(across(starts_with("stat"), trimws)
+          )
+
+      bind_rows(n_row, tbl) %>%
+        filter(
+          ! grepl("Ques", label),
+          ! (grepl("No", label) & variable == "nranow"),
+          ! (grepl("Unknown", label))
+          ) %>%
+        mutate(
+           label = ifelse(
+            row_type == "level" & label != "Observations",
+            paste0("  ", label),
+            label),
+          stat_2 = ifelse(
+               variable == "altparty" & row_type == "level",
+               "-", stat_2
+               ),
+           across(
+             c(stat_6, stat_7),
+             ~ ifelse(
+               variable == "marital" & grepl("with", label),
+               "-", .x
+               )
+             ),
+          across(
+            # Asian american not a category until > 2017
+            c(stat_1, stat_2, stat_3),
+            ~ ifelse(
+              variable == "racethnicity" & grepl("Asian", label),
+              "-", .x
+              )
+            ),
+          # other gender category only 2025
+          across(
+            starts_with("stat"),
+            ~ ifelse(
+              variable == "gender" & .x == "0%",
+              "-", .x
+              )
+          )
+           )
+    }
+  ) %>%
+  modify_footnote(all_stat_cols() ~ NA_character_) 
+
+year_tbl <-
+  year_tbl_gt2 |> 
+  as_kable_extra(
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE,
+    label = "GenSummaryYear",
+    linesep = "",
+    caption =
+      "Demographic Composition of US Adults by Survey Year, 2013–2025",
+    align = "lccccccc"
+  ) %>%
+  kable_styling(
+    latex_options =
+      c("hold_position", "scale_down"),
+   font_size = 9
+  ) %>%
+  column_spec(1, width = "4.5cm") %>%
+  column_spec(
+    2:8,
+    width = "1.3cm"
+    ) %>%
+  row_spec(1, bold = TRUE) %>%
+  kableExtra::footnote(
+   number = note,
+   threeparttable = TRUE,
+   escape = FALSE,
+   fixed_small_size = TRUE
+  )
+
+# save_kable(
+#   year_tbl,
+#   file = here(path_ol, "tables/gen-pop-summary-year.tex")
+# )
+```
+
+
+## Export to flextable
+
+
+```{r}
+style_ft <- function(gt_obj, note_text, bold_rows = character(0),
+                     label_w = 2.2, data_w = 0.82, font = 8) {
+  ft <- gt_obj %>%
+    as_flex_table() %>%
+    align(align = "center", part = "header") %>%
+    align(j = 1, align = "left", part = "all") %>%
+    bold(part = "header") %>%
+    fontsize(size = font, part = "all") %>%
+    padding(padding = 2, part = "all") %>%
+    add_footer_lines(values = note_text) %>%
+    fontsize(size = 7, part = "footer")
+
+  if (length(bold_rows) > 0) {
+    body_labels <- ft$body$dataset[[1]]
+    idx <- which(body_labels %in% bold_rows)
+    if (length(idx) > 0) ft <- bold(ft, i = idx, bold = TRUE, part = "body")
+  }
+
+  ncol_ft <- flextable::ncol_keys(ft)          # total columns incl. label
+  ft %>%
+    width(j = 1, width = label_w) %>%
+    width(j = 2:ncol_ft, width = data_w)        # no fit_to_width, no font shrink
+}
+```
+
+
+```{r}
+# Table 1: 10 columns -> narrow data cols
+ft_gun <- style_ft(
+  year_tbl_gt1, note_text = note,
+  bold_rows =  "Observations",
+  label_w = 2.2, data_w = 0.82        # 2.2 + 9*0.82 = 9.58"
+)
+
+# Table A1: 8 columns -> can afford wider cols
+ft_gen <- style_ft(
+  year_tbl_gt2, note_text = note,
+  bold_rows = "Observations",
+  label_w = 2.4, data_w = 1.0         # 2.4 + 7*1.0 = 9.4"
+)
+
+# Landscape so the 10-column Table 1 fits
+landscape <- prop_section(
+  page_size = page_size(orient = "landscape"),
+  type      = "continuous"
+)
+
+save_as_docx(
+  "Table 1. Demographic Composition of US Adult Gun Owners, 2013–2025" = ft_gun,
+  "Table A1. Demographic Composition of US Adults, 2013–2025"          = ft_gen,
+  path       = here(path_ol, "tables/demographic-tables.docx"),
+  pr_section = landscape
 )
 ```
+
+
