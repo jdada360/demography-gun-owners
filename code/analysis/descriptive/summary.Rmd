@@ -53,7 +53,8 @@ gun <-
       altparty,
       levels =c("Republican", "Independent", "Democrat")
     )
-  )
+  ) |> 
+  set_variable_labels(altparty = "Political affiliation")
 
 genpop <- 
   read_rds(
@@ -666,60 +667,52 @@ year_tbl <-
 
 ## Export to flextable
 
-
 ```{r}
 style_ft <- function(gt_obj, note_text, bold_rows = character(0),
-                     label_w = 2.2, data_w = 0.82, font = 8) {
+                     total_w = 6.5, label_w = 1.7, font = 7) {
   ft <- gt_obj %>%
     as_flex_table() %>%
     align(align = "center", part = "header") %>%
     align(j = 1, align = "left", part = "all") %>%
     bold(part = "header") %>%
     fontsize(size = font, part = "all") %>%
-    padding(padding = 2, part = "all") %>%
+    padding(padding = 1, part = "all") %>%
     add_footer_lines(values = note_text) %>%
-    fontsize(size = 7, part = "footer")
+    fontsize(size = 6, part = "footer")
 
   if (length(bold_rows) > 0) {
-    body_labels <- ft$body$dataset[[1]]
-    idx <- which(body_labels %in% bold_rows)
+    idx <- which(ft$body$dataset[[1]] %in% bold_rows)
     if (length(idx) > 0) ft <- bold(ft, i = idx, bold = TRUE, part = "body")
   }
 
-  ncol_ft <- flextable::ncol_keys(ft)          # total columns incl. label
+  ncol_ft <- flextable::ncol_keys(ft)
+  data_w  <- (total_w - label_w) / (ncol_ft - 1)   # split what's left
+
   ft %>%
     width(j = 1, width = label_w) %>%
-    width(j = 2:ncol_ft, width = data_w)        # no fit_to_width, no font shrink
+    width(j = 2:ncol_ft, width = data_w) %>%
+    set_table_properties(layout = "fixed")          # stop Word re-flowing
 }
+
+sect_portrait <- prop_section(
+  page_size    = page_size(orient = "portrait", width = 8.5, height = 11),
+  page_margins = page_mar(top = 1, bottom = 1, left = 1, right = 1)
+)
 ```
 
 
 ```{r}
-# Table 1: 10 columns -> narrow data cols
-ft_gun <- style_ft(
-  year_tbl_gt1, note_text = note,
-  bold_rows =  "Observations",
-  label_w = 2.2, data_w = 0.82        # 2.2 + 9*0.82 = 9.58"
-)
+ft_gun <- style_ft(year_tbl_gt1, note_text = note,
+                   bold_rows = "Observations", label_w = 1.7, font = 7)
 
-# Table A1: 8 columns -> can afford wider cols
-ft_gen <- style_ft(
-  year_tbl_gt2, note_text = note,
-  bold_rows = "Observations",
-  label_w = 2.4, data_w = 1.0         # 2.4 + 7*1.0 = 9.4"
-)
-
-# Landscape so the 10-column Table 1 fits
-landscape <- prop_section(
-  page_size = page_size(orient = "landscape"),
-  type      = "continuous"
-)
+ft_gen <- style_ft(year_tbl_gt2, note_text = note,
+                   bold_rows = "Observations", label_w = 1.9, font = 7)
 
 save_as_docx(
   "Table 1. Demographic Composition of US Adult Gun Owners, 2013–2025" = ft_gun,
   "Table A1. Demographic Composition of US Adults, 2013–2025"          = ft_gen,
-  path       = here(path_ol, "tables/demographic-tables.docx"),
-  pr_section = landscape
+  path    = here(path_ol, "tables/demographic-tables.docx"),
+  pr_section = sect_portrait
 )
 ```
 
