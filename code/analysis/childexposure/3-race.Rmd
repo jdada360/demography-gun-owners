@@ -1,6 +1,6 @@
-# Summary of Number of Exposed Children
+# Race and ethnicity subgroup analysis
 
-This chapter creates a descriptive table that shows the demographics of households with children exposed to guns in the home. 
+This chapter explores time trends in differential household exposures by race and ethnicity.
 
 **Input**
 
@@ -22,6 +22,7 @@ packages <-
     "haven",
     "survey",
     "tidyr",
+    "ggthemes",
     "gtsummary",
     "janitor",
     "dplyr",
@@ -50,6 +51,12 @@ child <-
     )
 ```
 
+```{r}
+child %>%
+  filter(gunchild18un == "Yes") %>%
+  tabyl(racethnicity, year)
+```
+
 ## Survey designs
 
 ```{r}
@@ -59,443 +66,216 @@ ds <- svydesign(
   strata  = ~year,
   weights = ~weight
 )
+
+race_levels <- c(
+  "White, non-Hispanic",
+  "Black, non-Hispanic",
+  "Hispanic",
+  "Asian, non-Hispanic",
+  "Other, non-Hispanic",
+  "2+ Races, non-Hispanic"
+)
+
+ds_race <- update(
+  ds,
+  exposed_race = factor(
+    ifelse(gunchild18un == "Yes", as.character(racethnicity), "Not exposed"),
+    levels = c(race_levels, "Not exposed")
+  )
+)
 ```
 
 
-## Weighted share of exposed households with CIs
+## Racial composition among all households irrespective of ownership
+
 
 ```{r}
-children_exposure <- 
+comp_long <-
   svyby(
-    ~gunchild18un,
+    ~exposed_race,
     ~year,
-    ds,
+    ds_race,
     svymean,
-    vartype = c("se", "ci"),
-    level = 0.95
-  ) %>% 
-  clean_names() %>% 
-  transmute(
-    year,
-    prev_pct = gunchild18un_yes,
-    prev_se = se_gunchild18un_yes,
-    prev_lb = ci_l_gunchild18un_yes,
-    prev_ub = ci_u_gunchild18un_yes
-  )
-```
-
-## Average number of children in exposed households
-
-```{r}
-avg_child <-
-  svyby(
-    ~hh18un,
-    ~year,
-    subset(ds, gunchild18un == "Yes"),
-    svymean,
-    vartype = c("se", "ci"),
-    level = 0.95
-  ) %>% 
-  clean_names() %>%
-  mutate(across(-year, ~ .x)) %>%
-  transmute(
-    year,
-    avg_child = hh18un,
-    avg_child_se = se,
-    avg_child_lb = ci_l,
-    avg_child_ub = ci_u
-  ) 
-```
-
-## Get population estimates from the ACS
-
-I applied for an API key using this [website](https://api.census.gov/data/key_signup.html) and my jdada3@jh.edu email.
-
-2025 estimates are not available, so we use the 2024 estimates for that year.
-
-- [B11001_001](https://data.census.gov/table/ACSDT1Y2022.B11001)
-
-
-```{r, message = F, warning = F}
-census_estimates <- 
-  map_df(
-    c(seq(2013, 2023, 2), 2024),
-    ~ get_acs(
-      geography = "us",
-      variables = c(total_hh = "B11001_001"),  # Total households
-      year = .x,
-      survey = "acs1",
-      key = KEY
-    ) %>%
-    mutate(year = .x) %>%
-    select(year, estimate)
+    na.rm = TRUE
   ) %>%
-  rename(totalhh = estimate) %>%
-  select(year, totalhh) %>% 
-  mutate(year = ifelse(year == 2024, 2025, year))
-```
-
-
-## Combine Gun Survey and ACS estimates to compute the 95% CI of the number of children expose
-
-We use the conservative multiplication rule for combining uncertainty from 3 sources
-by multiplying the upper/lower bound estimates from each of the parameters included in the final calculation
-
-
-```{r}
- # 2024 National Firearm Survey estimate of unsafe firearm storage
-unsafe_prev <- 0.211
-unsafe_lb   <- 0.183
-unsafe_ub   <- 0.243
-```
-
-```{r}
-exposure_estimates <-
-  census_estimates %>%
-  left_join(children_exposure, by = "year") %>%
-  left_join(avg_child, by = "year") %>%
-  mutate(
-
-    # households with guns and children
-    hh_exposed = totalhh * prev_pct,
-
-    # children exposed to any gun
-    child_est = hh_exposed * avg_child,
-
-    # children exposed to loaded & unlocked firearms
-    unsafe_child_est = child_est * unsafe_prev,
-
-    # confidence intervals
-    child_lb = totalhh * prev_lb * avg_child_lb,
-    child_ub = totalhh * prev_ub * avg_child_ub,
-
-    unsafe_child_lb = totalhh * prev_lb * avg_child_lb * unsafe_lb,
-    unsafe_child_ub = totalhh * prev_ub * avg_child_ub * unsafe_ub
+  as_tibble() %>%
+  select(year, starts_with("exposed_race")) %>%      
+  pivot_longer(
+    -year,
+    names_to     = "race",
+    values_to    = "share",
+    names_prefix = "exposed_race"
   ) %>%
-  select(
-    year,
-    child_est,
-    child_lb,
-    child_ub,
-    unsafe_child_est,
-    unsafe_child_lb,
-    unsafe_child_ub
+  filter(race != "Not exposed") %>%
+  mutate(
+    race  = factor(race, levels = race_levels),
+    share = share * 100
   )
 ```
+
+
+### Stacked bar over time
 
 ```{r}
-exposure_estimates %>% 
-  mutate(
-    across(-year, ~ sjmisc::big_mark(.x))
+exposed_race_plot <-
+  comp_long |> 
+  filter(year != 2015) |> 
+  ggplot(aes(x = factor(year), y = share, fill = race)) +
+  geom_col(width = 0.7) +
+  scale_y_continuous(
+    labels = function(x) paste0(x, "%"),
+    expand = expansion(mult = c(0, 0.05))
+  ) +
+  scale_fill_economist() +
+  labs(
+    x    = NULL,
+    y    = "Share of all respondents",
+    fill = "Respondent race/ethnicity"
+  ) +
+  theme +
+  theme(
+    panel.grid.major.x = element_blank(),
+    legend.position    = "bottom"
   )
+
+exposed_race_plot
 ```
 
-## Child variables
+
+## Composition within gun-and-child households, with 95% CIs
 
 ```{R}
-childvars <-
-  c(
-    "gunhousehold",
-    "child18un",
-    "gunchild18un"
-  )
-```
+ds_exposed <- subset(ds, gunchild18un == "Yes")
 
-## Percentage of US households with guns and children in the home
+raw <- svyby(
+  ~racethnicity, ~year, ds_exposed, svymean,
+  vartype = "ci", na.rm = TRUE) %>% as_tibble()
 
-```{r}
-note <-
-  paste0(
-    "Data represent weighted prevalence estimates of US households. ",
-    "All estimates reflect the share of households with: (1) a gun in the home, ",
-    "(2) a child under 18 in the household, and (3) both a gun and a child under 18 ",
-    "in the home. Weights are based on general population survey weights and account ",
-    "for survey design and non-response. The 2015 survey measured ",
-    "personal gun ownership (respondent-owned guns), while 2013, 2017, 2019, 2021, 2023, ",
-    "and 2025 measured any guns in the home regardless of ownership. ",
-    "Estimated US children exposed to guns in the home is calculated by multiplying ",
-    "the total number of US households (from the Census Bureau American Community Survey), ",
-    "the prevalence of households with guns and children (survey estimate), and ",
-    "the average number of children per exposed household (survey estimate). ",
-    "Estimated children exposed to loaded and unlocked firearms additionally multiply ",
-    "these estimates by the 2024 National Firearm Survey estimate that 21.1% ",
-    "(95% CI, 18.3%–24.3%) of gun-owning households with children had at least one ",
-    "firearm stored loaded and unlocked, reported by Miller et al. (2026). ",
-    "Because 2025 American Community Survey estimates were not yet available, ",
-    "2024 ACS household estimates were used for the 2025 calculations. ",
-    "The 95 percent confidence intervals for estimated numbers of children use the conservative ",
-    "multiplication rule."
-  )
-```
-
-## Summary table
-
-```{r}
-# Calculate all proportion estimates with CIs
-proportion_estimates <- 
-  svyby(
-    ~gunhousehold + child18un + gunchild18un,
-    ~year,
-    ds,
-    svymean,
-    vartype = c("se", "ci"),
-    level = 0.95
-  ) %>% 
-  clean_names()
-
-# Add observations
-obs_counts <- tibble(
-  year = as.numeric(names(table(child$year))),
-  obs = as.numeric(table(child$year))
-)
-
-# Get unique years
-years <- sort(unique(proportion_estimates$year))
-
-# Create table structure
-share_tbl_simple <- tibble(
-  characteristic = c(
-    "Observations",
-    "Household has gun",
-    "Household has child under 18",
-    "Household has gun and child under 18",
-    "Estimated children exposed",
-    "Estimated children exposed to loaded and unlocked firearms"
-  )
-)
-
-# Add columns for each year
-for (yr in years) {
-  yr_data <- proportion_estimates %>% filter(year == yr)
-  yr_obs <- obs_counts %>% filter(year == yr) %>% pull(obs) %>% format(big.mark = ",")
-  
-  # Exposure estimates for this year
-  yr_exposure <- exposure_estimates %>% filter(year == yr)
-  exposure_est <- paste0(sjmisc::big_mark(round(yr_exposure$child_est / 1e6, 1)), " M")
-  exposure_ci <- paste0(sjmisc::big_mark(round(yr_exposure$child_lb / 1e6, 1)), "–", 
-                        sjmisc::big_mark(round(yr_exposure$child_ub / 1e6, 1)), " M")
-  
-  # Gun
-  gun_est <- paste0(round(yr_data$gunhousehold_yes * 100, 1), "%")
-  gun_ci <- paste0(round(yr_data$ci_l_gunhousehold_yes * 100, 1), "–", 
-                   round(yr_data$ci_u_gunhousehold_yes * 100, 1), "%")
-  
-  # Child
-  child_est <- paste0(round(yr_data$child18un_yes * 100, 1), "%")
-  child_ci <- paste0(round(yr_data$ci_l_child18un_yes * 100, 1), "–", 
-                     round(yr_data$ci_u_child18un_yes * 100, 1), "%")
-  
-  # Gun and child
-  gunchild_est <- paste0(round(yr_data$gunchild18un_yes * 100, 1), "%")
-  gunchild_ci <- paste0(round(yr_data$ci_l_gunchild18un_yes * 100, 1), "–", 
-                        round(yr_data$ci_u_gunchild18un_yes * 100, 1), "%")
-  
-  # unsafe estimate
-  unsafe_est <-
-  paste0(
-    sjmisc::big_mark(round(yr_exposure$unsafe_child_est / 1e6, 1)),
-    " M"
-  )
-
-unsafe_ci <-
-  paste0(
-    sjmisc::big_mark(round(yr_exposure$unsafe_child_lb / 1e6, 1)),
-    "–",
-    sjmisc::big_mark(round(yr_exposure$unsafe_child_ub / 1e6, 1)),
-    " M"
-  )
-  
-  # Add columns (Est, CI pairs for this year)
-  share_tbl_simple <- share_tbl_simple %>%
-    mutate(
-      !!paste0("y", yr, "_est") := case_when(
-        characteristic == "Observations" ~ yr_obs,
-        characteristic == "Household has gun" ~ gun_est,
-        characteristic == "Household has child under 18" ~ child_est,
-        characteristic == "Household has gun and child under 18" ~ gunchild_est,
-        characteristic == "Estimated children exposed" ~ exposure_est,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_est
-      ),
-      !!paste0("y", yr, "_ci") := case_when(
-        characteristic == "Observations" ~ "",
-        characteristic == "Household has gun" ~ gun_ci,
-        characteristic == "Household has child under 18" ~ child_ci,
-        characteristic == "Household has gun and child under 18" ~ gunchild_ci,
-        characteristic == "Estimated children exposed" ~ exposure_ci,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_ci
-        
-      )
-    )
+grab <- function(df, prefix, value_name) {
+  df %>% select(year, starts_with(prefix)) %>%
+    pivot_longer(-year, names_to = "race", values_to = value_name) %>%
+    mutate(race = str_remove(race, fixed(prefix)))
 }
 
-# Escape % for LaTeX
-share_tbl_simple <- share_tbl_simple %>%
+comp_ci <-
+  reduce(
+    list(
+      grab(raw, "racethnicity",      "share"),
+      grab(raw, "ci_l.racethnicity", "lb"),
+      grab(raw, "ci_u.racethnicity", "ub")
+    ),
+    left_join, by = c("year", "race")
+  ) %>%
   mutate(
-    across(
-      starts_with("y"),
-      ~ str_replace_all(., "%", "\\\\%")
-    )
-  )
-
-# Create column names for header (without year labels, those go in add_header_above)
-col_names <- c("Characteristic", rep(c("Est.", "95\\% CI"), length(years)))
-align_string <- paste0("l", paste0(rep("c", length(years) * 2), collapse = ""))
-
-share_tbl <- share_tbl_simple %>%
-  kable(
-    format = "latex",
-    booktabs = TRUE,
-    escape = FALSE,
-    caption = "Share of US Households with Guns and Children Under 18, 2013-2025",
-    label = "ShareYear",
-    col.names = col_names,
-    linesep = "",
-    align = align_string
+    race = factor(race, levels = race_levels),
+    across(c(share, lb, ub), ~ .x * 100),
+    across(c(lb, ub), ~ ifelse(is.nan(.x) | is.infinite(.x), NA, .x))
   ) %>%
-  kable_styling(
-    latex_options = c("hold_position", "scale_down"),
-    font_size = 8
-  ) %>%
-  row_spec(
-    row = 1,
-    bold = T
-  ) %>% 
-  add_header_above(
-    c(" " = 1, setNames(rep(2, length(years)), paste0(years)))
-  ) %>%
-  footnote(
-    number = note,
-    threeparttable = TRUE,
-    escape = FALSE,
-    fixed_small_size = TRUE
-  )
+  arrange(year, race)
 
-save_kable(
-  share_tbl,
-  file = here(path_ol, "tables/yearly-share.tex")
-)
+## Unweighted exposed cell size per year (for reading the CIs)
+exposed_n <- child %>% filter(gunchild18un == "Yes") %>% count(year, name = "n")
 ```
 
-## Appendix table: calculation inputs
 
-Seeing the all of the raw inputs allows us to know what is driving the increase
+### Export table
+```{r}
+years <- sort(unique(comp_ci$year))
+est_ci_order <- as.vector(rbind(paste0(years, "_est"), paste0(years, "_ci")))
 
+comp_wide <- comp_ci %>%
+  mutate(
+    est = sprintf("%.1f", share),
+    ci  = ifelse(is.na(lb), "—", sprintf("%.1f–%.1f", lb, ub))
+  ) %>%
+  select(race, year, est, ci) %>%
+  pivot_wider(names_from = year, values_from = c(est, ci),
+              names_glue = "{year}_{.value}") %>%
+  arrange(race) %>%
+  mutate(race = as.character(race)) %>%
+  select(race, all_of(est_ci_order))
 
-```{R}
-inputs_years <- sort(unique(children_exposure$year))
+obs_wide <- exposed_n %>%
+  mutate(est = format(n, big.mark = ","), ci = "") %>%
+  select(year, est, ci) %>%
+  pivot_wider(names_from = year, values_from = c(est, ci),
+              names_glue = "{year}_{.value}") %>%
+  mutate(race = "Observations (exposed households)") %>%
+  select(race, all_of(est_ci_order))
 
-inputs_tbl_simple <- tibble(
-  characteristic = c(
-    "Observations",
-    "Total US households",
-    "Household has gun and child under 18",
-    "Mean children per gun-owning household with children",
-    "Estimated children exposed",
-    "Estimated children exposed to loaded and unlocked firearms"
-  )
+comp_tbl <- bind_rows(obs_wide, comp_wide)
+
+col_names <- c("Respondent race/ethnicity",
+               rep(c("Est.", "95\\% CI"), length(years)))
+align_str <- paste0("l", paste0(rep("c", length(years) * 2), collapse = ""))
+
+comp_note <- paste0(
+  "Cells are weighted percentages (Est.\\ column) of gun-and-child households ",
+  "in each respondent race/ethnicity group, within survey wave; columns sum to ",
+  "100. Denominator is households with both a firearm and a child under 18. ",
+  "Race/ethnicity is that of the survey respondent, not the child. Estimates use ",
+  "general population survey weights and account for survey design and non-response. ",
+  "Racial and ethnic minority groups were not oversampled before 2021 (Black, ",
+  "non-Hispanic and Hispanic first oversampled in 2021; Asian, non-Hispanic in 2023), ",
+  "so pre-2021 minority segments derive from small unweighted cells and should be ",
+  "read as directional. ``—'' denotes a cell with too few observations to estimate. "
 )
 
-for (yr in inputs_years) {
+comp_latex <- comp_tbl %>%
+  kable(format = "latex", booktabs = TRUE, escape = FALSE, linesep = "",
+        caption = "Racial/Ethnic Composition of US Gun-and-Child Households, 2013-2025",
+        label = "ExposedRaceComp",
+        col.names = col_names, align = align_str) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, setNames(rep(2, length(years)), paste0(years)))) %>%
+  footnote(number = comp_note, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
 
-  yr_obs      <- obs_counts         %>% filter(year == yr) %>% pull(obs) %>% format(big.mark = ",")
-  yr_hh       <- census_estimates   %>% filter(year == yr)
-  yr_prev     <- children_exposure  %>% filter(year == yr)
-  yr_m        <- avg_child          %>% filter(year == yr)
-  yr_exposure <- exposure_estimates %>% filter(year == yr)
-
-  # Total US households (millions) — ACS point estimate, no CI
-  hh_est <- paste0(sjmisc::big_mark(round(yr_hh$totalhh / 1e6, 1)), " M")
-
-  # P(gun & child)
-  gc_est <- paste0(round(yr_prev$prev_pct * 100, 1), "%")
-  gc_ci  <- paste0(round(yr_prev$prev_lb * 100, 1), "–",
-                   round(yr_prev$prev_ub * 100, 1), "%")
-
-  # Mean children per exposed household
-  m_est <- sprintf("%.2f", yr_m$avg_child)
-  m_ci  <- paste0(sprintf("%.2f", yr_m$avg_child_lb), "–",
-                  sprintf("%.2f", yr_m$avg_child_ub))
-
-  # Children exposed
-  exp_est <- paste0(sjmisc::big_mark(round(yr_exposure$child_est / 1e6, 1)), " M")
-  exp_ci  <- paste0(sjmisc::big_mark(round(yr_exposure$child_lb / 1e6, 1)), "–",
-                    sjmisc::big_mark(round(yr_exposure$child_ub / 1e6, 1)), " M")
-
-  # Children exposed to loaded & unlocked
-  lu_est <- paste0(sjmisc::big_mark(round(yr_exposure$unsafe_child_est / 1e6, 1)), " M")
-  lu_ci  <- paste0(sjmisc::big_mark(round(yr_exposure$unsafe_child_lb / 1e6, 1)), "–",
-                   sjmisc::big_mark(round(yr_exposure$unsafe_child_ub / 1e6, 1)), " M")
-
-  inputs_tbl_simple <- inputs_tbl_simple %>%
-    mutate(
-      !!paste0("y", yr, "_est") := case_when(
-        characteristic == "Observations" ~ yr_obs,
-        characteristic == "Total US households" ~ hh_est,
-        characteristic == "Household has gun and child under 18" ~ gc_est,
-        characteristic == "Mean children per exposed household" ~ m_est,
-        characteristic == "Estimated children exposed" ~ exp_est,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ lu_est
-      ),
-      !!paste0("y", yr, "_ci") := case_when(
-        characteristic == "Observations" ~ "",
-        characteristic == "Total US households" ~ "",
-        characteristic == "Household has gun and child under 18" ~ gc_ci,
-        characteristic == "Mean children per exposed household" ~ m_ci,
-        characteristic == "Estimated children exposed" ~ exp_ci,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ lu_ci
-      )
-    )
-}
-
-# Escape % for LaTeX (same pattern as your share table)
-inputs_tbl_simple <- inputs_tbl_simple %>%
-  mutate(across(starts_with("y"), ~ str_replace_all(., "%", "\\\\%")))
-
-col_names_inputs <- c("Characteristic", rep(c("Est.", "95\\% CI"), length(inputs_years)))
-align_inputs     <- paste0("l", paste0(rep("c", length(inputs_years) * 2), collapse = ""))
-
-inputs_note <-
-  paste0(
-    "Table reports every quantity used to compute the estimated number of US ",
-    "children exposed to firearms in the home, by survey wave. Estimated children ",
-    "exposed = total US households (ACS) x weighted prevalence of households ",
-    "with a gun and a child under 18 (survey) x weighted mean children per ",
-    "exposed household (survey). Estimated children exposed to loaded and unlocked ",
-    "firearms additionally multiplies by the 2024 National Firearm Survey estimate ",
-    "that 21.1\\% (95\\% CI, 18.3\\%–24.3\\%) of gun-owning households with children ",
-    "had at least one firearm stored loaded and unlocked (Miller et al. 2026). ",
-    "Total US household counts are ACS 1-year estimates, 2024 ACS ",
-    "estimates were used for 2025."
-  )
-
-inputs_share_tbl <- inputs_tbl_simple %>%
-  kable(
-    format   = "latex",
-    booktabs = TRUE,
-    escape   = FALSE,
-    caption  = "Inputs to the Estimated Number of US Children Exposed to Firearms in the Home, 2013-2025",
-    label    = "ExposureInputs",
-    col.names = col_names_inputs,
-    linesep  = "",
-    align    = align_inputs
-  ) %>%
-  kable_styling(
-    latex_options = c("hold_position", "scale_down"),
-    font_size = 8
-  ) %>%
-  add_header_above(
-    c(" " = 1, setNames(rep(2, length(inputs_years)), paste0(inputs_years)))
-  ) %>%
-  footnote(
-    number = inputs_note,
-    threeparttable = TRUE,
-    escape = FALSE,
-    fixed_small_size = TRUE
-  )
-
-save_kable(
-  inputs_share_tbl,
-  file = here(path_ol, "tables/exposure-inputs.tex")
-)
+save_kable(comp_latex, file = here(path_ol, "tables", "exp-race-comp.tex"))
 ```
 
+### Stacked bar chart
+
+```{r}
+race_cols <- c(
+  "Black, non-Hispanic"    = "#1f4e5f",
+  "Hispanic"               = "#3fa7d6",
+  "Asian, non-Hispanic"    = "#e9a13b",
+  "2+ Races, non-Hispanic" = "#7d5ba6",
+  "Other, non-Hispanic"    = "#9bb0ba",
+  "White, non-Hispanic"    = "#c9d6dd"
+)
+plot_order <- names(race_cols)   # bottom -> top
+
+comp_plot_df <- comp_ci %>%
+  mutate(race = factor(as.character(race), levels = plot_order))
+
+exposed_comp_plot <-
+  ggplot(comp_plot_df, aes(x = factor(year), y = share, fill = race)) +
+  geom_col(width = 0.72, position = position_stack(reverse = TRUE)) +
+  geom_text(
+    aes(label = ifelse(share >= 3, sprintf("%.0f", share), "")),
+    position = position_stack(vjust = 0.5, reverse = TRUE),
+    size = 3, color = "black", fontface = "bold",
+    family = "serif"
+  ) +
+  scale_fill_manual(values = race_cols, breaks = plot_order) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.02))) +
+  labs(
+    x = NULL, y = "Share of firearm-owning households with children", fill = NULL
+  ) +
+  theme + 
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor   = element_blank(),
+    legend.position    = "bottom"
+  ) +
+  guides(fill = guide_legend(nrow = 1, reverse = FALSE))
+
+exposed_comp_plot
+
+ggsave(here(path_ol, "figures", "exposed-race-composition.png"),
+       exposed_comp_plot, width = 10, height = 5.5, dpi = 300)
+```
