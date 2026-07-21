@@ -55,6 +55,9 @@ genpop <-
       altparty,
       levels =c("Republican", "Independent", "Democrat")
     )
+  ) |> 
+  set_variable_labels(
+    altparty = "Political affiliation"
   )
 ```
 

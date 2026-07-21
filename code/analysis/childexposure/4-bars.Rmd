@@ -1,6 +1,6 @@
-# Race and ethnicity subgroup analysis
+# Subgroup analysis
 
-This chapter explores time trends in differential household exposures by race and ethnicity.
+This chapter explores time trends in differential household exposures by race and ethnicity, income and region.
 
 **Input**
 
@@ -279,3 +279,106 @@ exposed_comp_plot
 ggsave(here(path_ol, "figures", "exposed-race-composition.png"),
        exposed_comp_plot, width = 10, height = 5.5, dpi = 300)
 ```
+
+
+## Income
+
+
+```{r}
+comp_by <- function(design, var, levels_vec) {
+
+  raw <- svyby(
+    reformulate(var), ~year, design, svymean,
+    vartype = "ci", na.rm = TRUE
+  ) %>% as_tibble()
+
+  reduce(
+    list(
+      grab(raw, var,                  "share"),
+      grab(raw, paste0("ci_l.", var), "lb"),
+      grab(raw, paste0("ci_u.", var), "ub")
+    ),
+    left_join, by = c("year", "race")
+  ) %>%
+    rename(group = race) %>%
+    mutate(
+      group = factor(group, levels = levels_vec),
+      across(c(share, lb, ub), ~ .x * 100),
+      across(c(lb, ub), ~ ifelse(is.nan(.x) | is.infinite(.x), NA, .x))
+    ) %>%
+    arrange(year, group)
+}
+
+export_comp_plot <- function(comp_df, cols, y_lab, file,
+                             legend_rows = 1, label_cut = 3) {
+
+  plot_order <- names(cols)
+
+  p <- comp_df %>%
+    mutate(group = factor(as.character(group), levels = plot_order)) %>%
+    ggplot(aes(x = factor(year), y = share, fill = group)) +
+    geom_col(width = 0.72, position = position_stack(reverse = TRUE)) +
+    geom_text(
+      aes(label = ifelse(share >= label_cut, sprintf("%.0f", share), "")),
+      position = position_stack(vjust = 0.5, reverse = TRUE),
+      size = 3, color = "black", fontface = "bold", family = "serif"
+    ) +
+    scale_fill_manual(values = cols, breaks = plot_order) +
+    scale_y_continuous(labels = function(x) paste0(x, "%"),
+                       expand = expansion(mult = c(0, 0.02))) +
+    labs(x = NULL, y = y_lab, fill = NULL) +
+    theme +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor   = element_blank(),
+      legend.position    = "bottom"
+    ) +
+    guides(fill = guide_legend(nrow = legend_rows, reverse = FALSE))
+
+  ggsave(here(path_ol, "figures", file), p, width = 10, height = 5.5, dpi = 300)
+
+  p
+}
+
+```
+
+```{r}
+income_levels <- levels(droplevels(as_factor(child$income4)))
+
+comp_income <- comp_by(ds_exposed, "income4", income_levels)
+
+income_cols <- setNames(
+  c("#1f4e5f", "#3fa7d6", "#e9a13b", "#c9d6dd")[seq_along(income_levels)],
+  income_levels
+)
+
+income_comp_plot <- export_comp_plot(
+  comp_df = comp_income,
+  cols    = income_cols,
+  y_lab   = "Share of firearm-owning households with children",
+  file    = "exposed-income-composition.png"
+)
+```
+
+
+## Region
+
+```{r}
+region_levels <- levels(droplevels(as_factor(child$region4)))
+
+comp_region <- comp_by(ds_exposed, "region4", region_levels)
+
+
+region_cols <- setNames(
+  c("#1f4e5f", "#3fa7d6", "#e9a13b", "#7d5ba6")[seq_along(region_levels)],
+  region_levels
+)
+
+region_comp_plot <- export_comp_plot(
+  comp_df = comp_region,
+  cols    = region_cols,
+  y_lab   = "Share of firearm-owning households with children",
+  file    = "exposed-region-composition.png"
+)
+```
+

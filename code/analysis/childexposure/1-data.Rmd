@@ -3,6 +3,8 @@
 This script constructs variables related to child exposure to guns in the home using
 the 2013-2025 waves of the National Gun Policy Survey.
 
+We drop 2015 from this analysis because there is no household ownership variable in 2015.
+
 **Input**
 
 -   DemographyGunOwners/data/clean/gs-genpop.rds
@@ -84,9 +86,28 @@ genpop %>% tabyl(year, gunhh)
 
 ```{r}
 genpop %>%  select(starts_with("hh")) %>% names()
+
+genpop %>%
+  group_by(year) %>%
+  summarise(across(c(hh01, hh02, hh25, hh612, hh1317), ~ mean(is.na(.x)) * 100))
 ```
 
 There are lots of missing values in each year for different variables. In particular, lots of missing values in 2025. The only variable with no missing values across all years is `hh18un=hhsize-hh18ov` defined in `code/wrangling/gunsurvery/9-merge.Rmd.` Our primary specification uses `hh18un` to determine if children in are in the household.
+
+Max household size is top coded at 6
+
+```{r}
+genpop %>%
+  group_by(year) %>%
+  summarise(
+    n            = n(),
+    n_negative   = sum(hh18un < 0, na.rm = TRUE),
+    n_hhsize_top = sum(hhsize >= 6, na.rm = TRUE),
+    max_hhsize   = max(hhsize, na.rm = TRUE),
+    mean_18un    = mean(hh18un, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
 
 
 ```{r}
@@ -161,6 +182,48 @@ child <-
 ```{r}
 child %>% tabyl(child18un, gunhousehold) %>% adorn_totals() 
 child %>% tabyl(year, gunchild18un)
+```
+
+## Remove 2015
+
+```{r}
+child <-
+  child |> 
+  filter(year != 2015)
+```
+
+```{r}
+child |> tabyl(year)
+```
+
+## Label variables
+
+
+```{r}
+child <-
+  child |> 
+  set_variable_labels(
+    year = "Year",
+    gender = "Gender",
+    age = "Age",
+    age4 = "Age",
+    age7 = "Age",
+    educ5 = "Highest level of education",
+    educ = "Highest level of education",
+    employ = "Current employment status",
+    racethnicity = "Race and ethnicity",
+    marital = "Marital status",
+    income = "Household income",
+    income4 = "Household income",
+    income9 = "Household income",
+    state = "State",
+    region4 = "Region",
+    region9 = "Region",
+    metro = "Metropolitan area",
+    internet = "Household internet access?",
+    nranow = "National Rifle Association"
+  )
+
 ```
 
 ## Export data

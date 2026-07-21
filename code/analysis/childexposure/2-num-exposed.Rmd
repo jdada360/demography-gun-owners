@@ -24,6 +24,7 @@ packages <-
     "tidyr",
     "gtsummary",
     "janitor",
+    "patchwork",
     "dplyr",
     "here",
     "vtable",
@@ -436,20 +437,466 @@ save_kable(
 )
 ```
 
-## Appendix table: calculation inputs
 
-Seeing the all of the raw inputs allows us to know what is driving the increase
+## Use delta method on confidence interval
 
+```{r}
+ds_delta <- update(
+  ds,
+  child_exposed = ifelse(gunchild18un == "Yes", hh18un, 0)
+)
+
+## 2. A = E[children | any household]  (= p * m, with correct SE)
+A_hat <- svyby(
+  ~child_exposed, ~year, ds_delta, svymean,
+  vartype = "se", na.rm = TRUE
+) %>%
+  clean_names() %>%
+  transmute(year, A = child_exposed, A_se = se)
+
+## 3. Storage prevalence: back out SE from the published CI
+##    Miller et al. 2026: 21.1% (18.3-24.3%)
+s_hat <- 0.211
+s_se  <- (0.243 - 0.183) / (2 * qnorm(0.975))
+
+## 4. Combine on the log scale
+z <- qnorm(0.975)
+
+exposure_delta <-
+  census_estimates %>%
+  left_join(A_hat, by = "year") %>%
+  mutate(
+    ## --- children exposed to any firearm ---
+    child_est = totalhh * A,
+    rel_var_A = (A_se / A)^2,
+    child_lb  = child_est * exp(-z * sqrt(rel_var_A)),
+    child_ub  = child_est * exp( z * sqrt(rel_var_A)),
+
+    ## --- children exposed to loaded & unlocked ---
+    unsafe_child_est = child_est * s_hat,
+    rel_var_U        = rel_var_A + (s_se / s_hat)^2,
+    unsafe_child_lb  = unsafe_child_est * exp(-z * sqrt(rel_var_U)),
+    unsafe_child_ub  = unsafe_child_est * exp( z * sqrt(rel_var_U)),
+
+    ## --- as share of all US children ---
+    across(
+      c(child_est, child_lb, child_ub,
+        unsafe_child_est, unsafe_child_lb, unsafe_child_ub),
+      ~ .x / children,
+      .names = "pct_{.col}"
+    )
+  )
+
+## 5. Sanity check against the old intervals
+exposure_delta %>%
+  transmute(
+    year,
+    est   = round(child_est / 1e6, 1),
+    delta = paste0(round(child_lb / 1e6, 1), "-", round(child_ub / 1e6, 1)),
+    A, A_se
+  )
+```
+
+
+```{r}
+exposure_estimates_delta <-
+  exposure_delta %>%
+  transmute(
+    year,
+    child_est,
+    child_lb,
+    child_ub,
+    unsafe_child_est,
+    unsafe_child_lb,
+    unsafe_child_ub,
+    pct_children_exposed    = pct_child_est,
+    pct_children_exposed_lb = pct_child_lb,
+    pct_children_exposed_ub = pct_child_ub,
+    pct_children_unsafe     = pct_unsafe_child_est,
+    pct_children_unsafe_lb  = pct_unsafe_child_lb,
+    pct_children_unsafe_ub  = pct_unsafe_child_ub
+  ) %>%
+  filter(!is.na(child_est))
+
+
+note_delta <-
+  paste0(
+    "Data represent weighted prevalence estimates of US households. ",
+    "All estimates reflect the share of households with: (1) a gun in the home, ",
+    "(2) a child under 18 in the household, and (3) both a gun and a child under 18 ",
+    "in the home. Weights are based on general population survey weights and account ",
+    "for survey design and non-response. The 2015 survey measured ",
+    "personal gun ownership (respondent-owned guns) and was excluded from the analysis. ",
+    "Estimated US children exposed to guns in the home is calculated by multiplying ",
+    "the total number of US households (from the Census Bureau American Community Survey) ",
+    "by the weighted mean number of children living in households with both a gun and a ",
+    "child under 18 (survey estimate), which is algebraically equal to the product of the ",
+    "prevalence of such households and the mean number of children per such household. ",
+    "Estimated children exposed to loaded and unlocked firearms additionally multiply ",
+    "these estimates by the 2024 National Firearm Survey estimate that 21.1\\% ",
+    "(95\\% CI, 18.3\\%–24.3\\%) of gun-owning households with children had at least one ",
+    "firearm stored loaded and unlocked, reported by Miller et al. (2026). ",
+    "Because 2025 American Community Survey estimates were not yet available, ",
+    "2024 ACS household estimates were used for the 2025 calculations. ",
+    "Confidence intervals for estimated numbers of children combine design-based ",
+    "variance for the survey component with the published variance of the storage ",
+    "estimate using the delta method on the log scale, treating American Community ",
+    "Survey totals as fixed."
+  )
+```
+
+```{r}
+years_delta <- sort(unique(exposure_estimates_delta$year))
+
+share_tbl_delta_simple <- tibble(
+  characteristic = c(
+    "Observations",
+    "Household has gun",
+    "Household has child under 18",
+    "Household has gun and child under 18",
+    "Estimated children exposed",
+    "Children exposed (\\% of US children)",
+    "Estimated children exposed to loaded and unlocked firearms",
+    "Children exposed to loaded and unlocked firearms (\\% of US children)"
+  )
+)
+
+for (yr in years_delta) {
+
+  yr_data     <- proportion_estimates       %>% filter(year == yr)
+  yr_obs      <- obs_counts                 %>% filter(year == yr) %>% pull(obs) %>% format(big.mark = ",")
+  yr_exposure <- exposure_estimates_delta   %>% filter(year == yr)
+
+  exposure_est <- paste0(sjmisc::big_mark(round(yr_exposure$child_est / 1e6, 1)), " M")
+  exposure_ci  <- paste0(sjmisc::big_mark(round(yr_exposure$child_lb / 1e6, 1)), "M–",
+                         sjmisc::big_mark(round(yr_exposure$child_ub / 1e6, 1)), " M")
+
+  gun_est <- paste0(round(yr_data$gunhousehold_yes * 100, 1), "%")
+  gun_ci  <- paste0(round(yr_data$ci_l_gunhousehold_yes * 100, 1), "–",
+                    round(yr_data$ci_u_gunhousehold_yes * 100, 1), "%")
+
+  child_est <- paste0(round(yr_data$child18un_yes * 100, 1), "%")
+  child_ci  <- paste0(round(yr_data$ci_l_child18un_yes * 100, 1), "%–",
+                      round(yr_data$ci_u_child18un_yes * 100, 1), "%")
+
+  gunchild_est <- paste0(round(yr_data$gunchild18un_yes * 100, 1), "%")
+  gunchild_ci  <- paste0(round(yr_data$ci_l_gunchild18un_yes * 100, 1), "%–",
+                         round(yr_data$ci_u_gunchild18un_yes * 100, 1), "%")
+
+  unsafe_est <- paste0(sjmisc::big_mark(round(yr_exposure$unsafe_child_est / 1e6, 1)), " M")
+  unsafe_ci  <- paste0(sjmisc::big_mark(round(yr_exposure$unsafe_child_lb / 1e6, 1)), "M–",
+                       sjmisc::big_mark(round(yr_exposure$unsafe_child_ub / 1e6, 1)), " M")
+
+  exp_pct_est <- paste0(round(yr_exposure$pct_children_exposed * 100, 1), "%")
+  exp_pct_ci  <- paste0(round(yr_exposure$pct_children_exposed_lb * 100, 1), "%–",
+                        round(yr_exposure$pct_children_exposed_ub * 100, 1), "%")
+
+  unsafe_pct_est <- paste0(round(yr_exposure$pct_children_unsafe * 100, 1), "%")
+  unsafe_pct_ci  <- paste0(round(yr_exposure$pct_children_unsafe_lb * 100, 1), "%–",
+                           round(yr_exposure$pct_children_unsafe_ub * 100, 1), "%")
+
+  share_tbl_delta_simple <- share_tbl_delta_simple %>%
+    mutate(
+      !!paste0("y", yr, "_est") := case_when(
+        characteristic == "Observations" ~ yr_obs,
+        characteristic == "Household has gun" ~ gun_est,
+        characteristic == "Household has child under 18" ~ child_est,
+        characteristic == "Household has gun and child under 18" ~ gunchild_est,
+        characteristic == "Estimated children exposed" ~ exposure_est,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_est,
+        characteristic == "Children exposed (\\% of US children)" ~ exp_pct_est,
+        characteristic ==
+          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ unsafe_pct_est
+      ),
+      !!paste0("y", yr, "_ci") := case_when(
+        characteristic == "Observations" ~ "",
+        characteristic == "Household has gun" ~ gun_ci,
+        characteristic == "Household has child under 18" ~ child_ci,
+        characteristic == "Household has gun and child under 18" ~ gunchild_ci,
+        characteristic == "Estimated children exposed" ~ exposure_ci,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_ci,
+        characteristic == "Children exposed (\\% of US children)" ~ exp_pct_ci,
+        characteristic ==
+          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ unsafe_pct_ci
+      )
+    )
+}
+
+share_tbl_delta_simple <- share_tbl_delta_simple %>%
+  mutate(across(starts_with("y"), ~ str_replace_all(., "%", "\\\\%")))
+
+col_names_delta   <- c("Characteristic", rep(c("Est.", "95\\% CI"), length(years_delta)))
+align_string_delta <- paste0("l", paste0(rep("c", length(years_delta) * 2), collapse = ""))
+
+share_tbl_delta <- share_tbl_delta_simple %>%
+  kable(
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    caption   = "Share of US Households with Guns and Children Under 18, 2013-2025",
+    label     = "ShareYearDelta",
+    col.names = col_names_delta,
+    linesep   = "",
+    align     = align_string_delta
+  ) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, setNames(rep(2, length(years_delta)), paste0(years_delta)))) %>%
+  footnote(number = note_delta, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
+
+save_kable(
+  share_tbl_delta,
+  file = here(path_ol, "tables/yearly-share-delta.tex")
+)
+```
+
+```{r}
+left_join(
+  exposure_estimates       %>% transmute(year, old = paste0(round(child_lb/1e6,1), "–", round(child_ub/1e6,1))),
+  exposure_estimates_delta %>% transmute(year, delta = paste0(round(child_lb/1e6,1), "–", round(child_ub/1e6,1))),
+  by = "year"
+)
+```
+
+
+## Sensitivity analysis
+
+Project project 2025 ACS totals from the 2013-2024 series instead of substituting the 2024 values
+
+We fit the data using a log linear trend. 
 
 ```{R}
-inputs_years <- sort(unique(children_exposure$year))
+acs_series <- census_estimates %>%
+  mutate(acs_year = if_else(year == 2025, 2024, year))
+
+fit_hh    <- lm(log(totalhh)  ~ acs_year, data = acs_series)
+fit_child <- lm(log(children) ~ acs_year, data = acs_series)
+
+proj_2025 <- tibble(
+  totalhh_proj  = exp(predict(fit_hh,    newdata = tibble(acs_year = 2025))),
+  children_proj = exp(predict(fit_child, newdata = tibble(acs_year = 2025)))
+)
+
+growth_hh    <- exp(coef(fit_hh)["acs_year"])    - 1
+growth_child <- exp(coef(fit_child)["acs_year"]) - 1
+
+tibble(
+  quantity = c("Households", "Children under 18"),
+  acs_2024 = c(acs_series$totalhh[acs_series$acs_year == 2024],
+               acs_series$children[acs_series$acs_year == 2024]),
+  proj_2025 = c(proj_2025$totalhh_proj, proj_2025$children_proj),
+  annual_growth = c(growth_hh, growth_child)
+)
+```
+
+
+```{r}
+
+A_2025 <- A_hat %>% filter(year == 2025)
+
+recompute <- function(N_hh, N_child, A, A_se, s = s_hat, s_sd = s_se) {
+  z         <- qnorm(0.975)
+  rel_var_A <- (A_se / A)^2
+  rel_var_U <- rel_var_A + (s_sd / s)^2
+
+  tibble(
+    child_est        = N_hh * A,
+    child_lb         = N_hh * A * exp(-z * sqrt(rel_var_A)),
+    child_ub         = N_hh * A * exp( z * sqrt(rel_var_A)),
+    unsafe_child_est = N_hh * A * s,
+    unsafe_child_lb  = N_hh * A * s * exp(-z * sqrt(rel_var_U)),
+    unsafe_child_ub  = N_hh * A * s * exp( z * sqrt(rel_var_U))
+  ) %>%
+    mutate(
+      across(everything(), ~ .x / N_child, .names = "pct_{.col}"),
+      totalhh  = N_hh,
+      children = N_child
+    )
+}
+
+sens_2025 <- bind_rows(
+  recompute(
+    N_hh    = census_estimates$totalhh[census_estimates$year == 2025],
+    N_child = census_estimates$children[census_estimates$year == 2025],
+    A       = A_2025$A,
+    A_se    = A_2025$A_se
+  ) %>% mutate(spec = "2024 ACS estimates"),
+
+  recompute(
+    N_hh    = proj_2025$totalhh_proj,
+    N_child = proj_2025$children_proj,
+    A       = A_2025$A,
+    A_se    = A_2025$A_se
+  ) %>% mutate(spec = "Projected 2025 totals")
+) %>%
+  select(spec, everything())
+```
+
+```{r}
+fmt_m   <- function(x) paste0(sjmisc::big_mark(round(x / 1e6, 1)), " M")
+fmt_pct <- function(x) paste0(round(x * 100, 1), "\\%")
+
+sens_tbl <- tibble(
+  characteristic = c(
+    "Total US households",
+    "US population under 18",
+    "Estimated children exposed",
+    "Children exposed (\\% of US children)",
+    "Estimated children exposed to loaded and unlocked firearms",
+    "Children exposed to loaded and unlocked firearms (\\% of US children)"
+  )
+)
+
+for (sp in unique(sens_2025$spec)) {
+  d <- sens_2025 %>% filter(spec == sp)
+
+  sens_tbl <- sens_tbl %>%
+    mutate(
+      !!paste0(make.names(sp), "_est") := c(
+        fmt_m(d$totalhh),
+        fmt_m(d$children),
+        fmt_m(d$child_est),
+        fmt_pct(d$pct_child_est),
+        fmt_m(d$unsafe_child_est),
+        fmt_pct(d$pct_unsafe_child_est)
+      ),
+      !!paste0(make.names(sp), "_ci") := c(
+        "", "",
+        paste0(fmt_m(d$child_lb), "–", fmt_m(d$child_ub)),
+        paste0(fmt_pct(d$pct_child_lb), "–", fmt_pct(d$pct_child_ub)),
+        paste0(fmt_m(d$unsafe_child_lb), "–", fmt_m(d$unsafe_child_ub)),
+        paste0(fmt_pct(d$pct_unsafe_child_lb), "-", fmt_pct(d$pct_unsafe_child_ub))
+      )
+    )
+}
+
+sens_note <- paste0(
+  "Table compares estimated numbers of US children exposed to firearms in the home ",
+  "in 2025 under two assumptions about American Community Survey totals, United States, 2025. ",
+  "The first column pair substitutes 2024 American Community Survey estimates, which ",
+  "is the specification used in the main analysis because 2025 estimates were not yet ",
+  "available. The second projects 2025 totals by fitting a log-linear trend to the ",
+  "2013--2024 American Community Survey series separately for total households and for ",
+  "the population younger than 18 years, implying annual growth of ",
+  sprintf("%.2f\\%%", growth_hh * 100), " in households and ",
+  sprintf("%.2f\\%%", growth_child * 100), " in the child population. ",
+  "Survey-based inputs are identical across columns; only the American Community Survey ",
+  "totals differ. Confidence intervals use the delta method on the log scale and are ",
+  "therefore of identical relative width in both columns."
+)
+
+sens_latex <- sens_tbl %>%
+  kable(
+    format = "latex", booktabs = TRUE, escape = FALSE, linesep = "",
+    caption = "Sensitivity of 2025 Estimates to American Community Survey Totals",
+    label = "SensACS",
+    col.names = c("Characteristic", rep(c("Est.", "95\\% CI"), 2)),
+    align = "lcccc"
+  ) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  add_header_above(
+    c(" " = 1, "2024 ACS estimates" = 2, "Projected 2025 totals" = 2)
+  ) %>%
+  footnote(number = sens_note, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
+
+save_kable(sens_latex, file = here(path_ol, "tables", "sensitivity-acs.tex"))
+```
+
+
+## Plot over time
+
+
+```{r}
+prev_long <-
+  proportion_estimates %>%
+  transmute(
+    year,
+    `Firearm in the home`        = gunhousehold_yes,
+    `Firearm and child under 18` = gunchild18un_yes,
+    lb_gun = ci_l_gunhousehold_yes, ub_gun = ci_u_gunhousehold_yes,
+    lb_bth = ci_l_gunchild18un_yes, ub_bth = ci_u_gunchild18un_yes
+  ) %>%
+  pivot_longer(c(`Firearm in the home`, `Firearm and child under 18`),
+               names_to = "measure", values_to = "est") %>%
+  mutate(
+    lb = if_else(measure == "Firearm in the home", lb_gun, lb_bth),
+    ub = if_else(measure == "Firearm in the home", ub_gun, ub_bth),
+    across(c(est, lb, ub), ~ .x * 100),
+    measure = factor(measure, levels = c("Firearm in the home",
+                                         "Firearm and child under 18"))
+  ) %>%
+  filter(year != 2015)
+
+hh_cols <- c("Firearm in the home"        = "#1f4e5f",
+             "Firearm and child under 18" = "#e9a13b")
+
+## Panel A
+prev_long <- prev_long %>% mutate(year_f = factor(year))
+
+p_prev <-
+  ggplot(prev_long, aes(year_f, est, color = measure, fill = measure,
+                        group = measure)) +
+  geom_ribbon(aes(ymin = lb, ymax = ub), alpha = 0.15, color = NA) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 2) +
+  geom_text(
+    data = prev_long %>% filter(year == max(year)),
+    aes(label = measure), hjust = 1, vjust = -1.2,
+    size = 3.2, family = "serif", show.legend = FALSE
+  ) +
+  scale_color_manual(values = hh_cols) +
+  scale_fill_manual(values = hh_cols) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0.08, 0.12))) +
+  labs(x = NULL, y = "Share of US households") +
+  theme +
+  theme(panel.grid.minor = element_blank(),
+        legend.position  = "none")
+
+## Panel B
+exp_df <- exp_df %>% mutate(year_f = factor(year))
+
+p_exp <-
+  ggplot(exp_df, aes(year_f, est, group = 1)) +
+  geom_ribbon(aes(ymin = lb, ymax = ub), fill = "#1f4e5f", alpha = 0.15) +
+  geom_line(color = "#1f4e5f", linewidth = 0.9) +
+  geom_point(color = "#1f4e5f", size = 2) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0.08, 0.12))) +
+  labs(x = NULL, y = "Share of US children living\nin a household with a firearm") +
+  theme +
+  theme(panel.grid.minor = element_blank())
+
+main_results_plot <- p_prev / p_exp
+
+ggsave(
+  here(path_ol, "figures", "household-prevalence-over-time.png"),
+  p_prev, width = 8, height = 4, dpi = 300
+)
+
+ggsave(
+  here(path_ol, "figures", "children-exposed-over-time.png"),
+  p_exp, width = 8, height = 4, dpi = 300
+)
+```
+
+
+## Appendix table: calculation inputs
+
+Seeing the all of the raw inputs allows us to know what is driving the increase.
+
+```{R}
+inputs_years <- sort(unique(A_hat$year))
 
 inputs_tbl_simple <- tibble(
   characteristic = c(
     "Observations",
     "Total US households",
     "Household has gun and child under 18",
-    "Mean children per gun-owning household with children",
+    "Mean children per exposed household",
+    "Mean exposed children per US household",
     "Estimated children exposed",
     "Estimated children exposed to loaded and unlocked firearms"
   )
@@ -457,31 +904,31 @@ inputs_tbl_simple <- tibble(
 
 for (yr in inputs_years) {
 
-  yr_obs      <- obs_counts         %>% filter(year == yr) %>% pull(obs) %>% format(big.mark = ",")
-  yr_hh       <- census_estimates   %>% filter(year == yr)
-  yr_prev     <- children_exposure  %>% filter(year == yr)
-  yr_m        <- avg_child          %>% filter(year == yr)
-  yr_exposure <- exposure_estimates %>% filter(year == yr)
+  yr_obs      <- obs_counts        %>% filter(year == yr) %>% pull(obs) %>% format(big.mark = ",")
+  yr_hh       <- census_estimates  %>% filter(year == yr)
+  yr_prev     <- children_exposure %>% filter(year == yr)
+  yr_m        <- avg_child         %>% filter(year == yr)
+  yr_A        <- A_hat             %>% filter(year == yr)
+  yr_exposure <- exposure_delta    %>% filter(year == yr)
 
-  # Total US households (millions) — ACS point estimate, no CI
   hh_est <- paste0(sjmisc::big_mark(round(yr_hh$totalhh / 1e6, 1)), " M")
 
-  # P(gun & child)
   gc_est <- paste0(round(yr_prev$prev_pct * 100, 1), "%")
   gc_ci  <- paste0(round(yr_prev$prev_lb * 100, 1), "–",
                    round(yr_prev$prev_ub * 100, 1), "%")
 
-  # Mean children per exposed household
   m_est <- sprintf("%.2f", yr_m$avg_child)
   m_ci  <- paste0(sprintf("%.2f", yr_m$avg_child_lb), "–",
                   sprintf("%.2f", yr_m$avg_child_ub))
 
-  # Children exposed
+  A_est <- sprintf("%.3f", yr_A$A)
+  A_ci  <- paste0(sprintf("%.3f", yr_A$A - qnorm(0.975) * yr_A$A_se), "–",
+                  sprintf("%.3f", yr_A$A + qnorm(0.975) * yr_A$A_se))
+
   exp_est <- paste0(sjmisc::big_mark(round(yr_exposure$child_est / 1e6, 1)), " M")
   exp_ci  <- paste0(sjmisc::big_mark(round(yr_exposure$child_lb / 1e6, 1)), "–",
                     sjmisc::big_mark(round(yr_exposure$child_ub / 1e6, 1)), " M")
 
-  # Children exposed to loaded & unlocked
   lu_est <- paste0(sjmisc::big_mark(round(yr_exposure$unsafe_child_est / 1e6, 1)), " M")
   lu_ci  <- paste0(sjmisc::big_mark(round(yr_exposure$unsafe_child_lb / 1e6, 1)), "–",
                    sjmisc::big_mark(round(yr_exposure$unsafe_child_ub / 1e6, 1)), " M")
@@ -493,6 +940,7 @@ for (yr in inputs_years) {
         characteristic == "Total US households" ~ hh_est,
         characteristic == "Household has gun and child under 18" ~ gc_est,
         characteristic == "Mean children per exposed household" ~ m_est,
+        characteristic == "Mean exposed children per US household" ~ A_est,
         characteristic == "Estimated children exposed" ~ exp_est,
         characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ lu_est
       ),
@@ -501,13 +949,13 @@ for (yr in inputs_years) {
         characteristic == "Total US households" ~ "",
         characteristic == "Household has gun and child under 18" ~ gc_ci,
         characteristic == "Mean children per exposed household" ~ m_ci,
+        characteristic == "Mean exposed children per US household" ~ A_ci,
         characteristic == "Estimated children exposed" ~ exp_ci,
         characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ lu_ci
       )
     )
 }
 
-# Escape % for LaTeX (same pattern as your share table)
 inputs_tbl_simple <- inputs_tbl_simple %>%
   mutate(across(starts_with("y"), ~ str_replace_all(., "%", "\\\\%")))
 
@@ -516,46 +964,68 @@ align_inputs     <- paste0("l", paste0(rep("c", length(inputs_years) * 2), colla
 
 inputs_note <-
   paste0(
-    "Table reports every quantity used to compute the estimated number of US ",
-    "children exposed to firearms in the home, by survey wave. Estimated children ",
-    "exposed = total US households (ACS) x weighted prevalence of households ",
-    "with a gun and a child under 18 (survey) x weighted mean children per ",
-    "exposed household (survey). Estimated children exposed to loaded and unlocked ",
-    "firearms additionally multiplies by the 2024 National Firearm Survey estimate ",
-    "that 21.1\\% (95\\% CI, 18.3\\%–24.3\\%) of gun-owning households with children ",
-    "had at least one firearm stored loaded and unlocked (Miller et al. 2026). ",
-    "Total US household counts are ACS 1-year estimates, 2024 ACS ",
-    "estimates were used for 2025."
+    "Table reports every quantity entering the estimated number of US children ",
+    "exposed to firearms in the home, by survey wave, United States, 2013--2025. ",
+    "Estimated children exposed = total US households (American Community Survey) ",
+    "$\\times$ mean exposed children per US household (survey). The latter is ",
+    "algebraically equal to the prevalence of households with a gun and a child ",
+    "under 18 multiplied by the mean number of children in those households, both ",
+    "of which are reported above so that changes across waves can be attributed to ",
+    "each component; it is estimated directly so that its standard error accounts ",
+    "for the covariance between them. Estimated children exposed to loaded and ",
+    "unlocked firearms additionally multiplies by the 2024 National Firearm Survey ",
+    "estimate that 21.1\\% (95\\% CI, 18.3\\%--24.3\\%) of gun-owning households with ",
+    "children had at least one firearm stored loaded and unlocked (Miller et al.\\ 2026). ",
+    "Total US household counts are American Community Survey 1-year estimates; 2024 ",
+    "estimates were used for 2025. Confidence intervals for the derived counts use ",
+    "the delta method."
   )
 
 inputs_share_tbl <- inputs_tbl_simple %>%
   kable(
-    format   = "latex",
-    booktabs = TRUE,
-    escape   = FALSE,
-    caption  = "Inputs to the Estimated Number of US Children Exposed to Firearms in the Home, 2013-2025",
-    label    = "ExposureInputs",
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    caption   = "Inputs to the Estimated Number of US Children Exposed to Firearms in the Home, 2013-2025",
+    label     = "ExposureInputs",
     col.names = col_names_inputs,
-    linesep  = "",
-    align    = align_inputs
+    linesep   = "",
+    align     = align_inputs
   ) %>%
-  kable_styling(
-    latex_options = c("hold_position", "scale_down"),
-    font_size = 8
-  ) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
   add_header_above(
     c(" " = 1, setNames(rep(2, length(inputs_years)), paste0(inputs_years)))
   ) %>%
-  footnote(
-    number = inputs_note,
-    threeparttable = TRUE,
-    escape = FALSE,
-    fixed_small_size = TRUE
-  )
+  footnote(number = inputs_note, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
 
-save_kable(
-  inputs_share_tbl,
-  file = here(path_ol, "tables/exposure-inputs.tex")
+save_kable(inputs_share_tbl, file = here(path_ol, "tables/exposure-inputs.tex"))
+```
+
+## Test: does the association between having a firearm and a child in the household change over time
+
+```{r}
+
+ds <- svydesign(
+  ~1,
+  data    = child,
+  strata  = ~year,
+  weights = ~weight
 )
+
+## P(gun | child) by year, with CIs
+gun_by_child <- svyby(
+  ~gunhousehold, ~year + child18un, ds, svymean,
+  vartype = c("se", "ci")
+) %>% clean_names()
+
+## Formal test: has the child-firearm association changed over time?
+ds_ends <- subset(ds, year %in% c(2013, 2025))
+
+m <- svyglm(
+  I(gunhousehold == "Yes") ~ child18un * factor(year),
+  design = ds_ends, family = quasibinomial()
+)
+summary(m)
 ```
 
