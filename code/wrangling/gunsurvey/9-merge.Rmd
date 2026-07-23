@@ -168,7 +168,8 @@ merge %>% tabyl(hhsize)
 merge <-
   merge %>%  
   mutate( 
-    hh18un = hhsize - hh18ov, 
+    hh18un = hhsize - hh18ov, # hhsize is topcoded at 6 so this gives
+    # negative values, fix it in child exposure data
     hhsize4 = 
       xtile(hhsize, wt = weight1, n = 3) %>% 
       factor(

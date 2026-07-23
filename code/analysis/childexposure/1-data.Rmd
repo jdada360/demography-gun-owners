@@ -47,7 +47,7 @@ gun <-
     "clean",
     "gs-gun-owners.rds"
     )
-  )
+  )|> filter(year !=2015)
 ```
 
 ```{r}
@@ -59,7 +59,7 @@ genpop <-
     "clean",
     "gs-gen-pop.rds"
     )
-  )
+  ) |> filter(year !=2015)
 ```
 
 ## Construct binary indicator regarding children in the home
@@ -89,12 +89,12 @@ genpop %>%  select(starts_with("hh")) %>% names()
 
 genpop %>%
   group_by(year) %>%
-  summarise(across(c(hh01, hh02, hh25, hh612, hh1317), ~ mean(is.na(.x)) * 100))
+  summarise(across(c(hh01, hh02, hh25, hh612, hh1317, hh18ov, hhsize), ~ mean(is.na(.x)) * 100))
 ```
 
 There are lots of missing values in each year for different variables. In particular, lots of missing values in 2025. The only variable with no missing values across all years is `hh18un=hhsize-hh18ov` defined in `code/wrangling/gunsurvery/9-merge.Rmd.` Our primary specification uses `hh18un` to determine if children in are in the household.
 
-Max household size is top coded at 6
+Max household size is top coded at 6 for some years so hh18ov > hhsize, in these cases impute, as the median number of children among households with at least 1 child for that survey year. In all survey years, this number is 2.
 
 ```{r}
 genpop %>%
@@ -109,10 +109,44 @@ genpop %>%
   )
 ```
 
+```{r}
+issues <- 
+  nrow(filter(genpop, hh18un < 0))
+```
+
+We do this for `r issues` observations,mostly in 2023, or `r round((issues/nrow(genpop)*100), 2)`\% of observations.
+
+```{r}
+genpop |> 
+  filter(hh18un < 0) |> 
+  tabyl(hh18ov)
+```
+
+```{r}
+impute <-
+  genpop |> 
+  filter(
+    # strictly positive because we know that if hh18un, we know that there is
+    # at least 1 child in the home
+    hh18un > 0
+  ) |> 
+  group_by(year) |> 
+  summarise(hh18un = median(hh18un))
+
+impute_hh18un <-
+  genpop |>
+  filter(
+    hh18un < 0 
+  ) |> 
+  select(-hh18un) |> 
+  inner_join(impute, by = "year")
+```
 
 ```{r}
 child <-
   genpop %>% 
+  filter(hh18un >= 0) |> 
+  bind_rows(impute_hh18un) |> 
   mutate(
     across(
       c("hh01","hh02","hh25", "hh612", "hh1317", "hh18un"),
@@ -124,8 +158,7 @@ child <-
     gunhousehold = 
       case_when(
         year == 2013 & (gunhh == "Yes" | gun == "Yes") ~ 1,
-        year == 2015 & gun == "Yes" ~ 1,
-        year > 2015 & gunhome == "Yes" ~ 1, 
+        year > 2013 & gunhome == "Yes" ~ 1, 
         TRUE ~ 0
       ),
     # create child x gun household interaction
@@ -144,6 +177,10 @@ child <-
         )
       )
     )
+```
+
+```{r}
+nrow(child) == nrow(genpop)
 ```
 
 
@@ -182,18 +219,6 @@ child <-
 ```{r}
 child %>% tabyl(child18un, gunhousehold) %>% adorn_totals() 
 child %>% tabyl(year, gunchild18un)
-```
-
-## Remove 2015
-
-```{r}
-child <-
-  child |> 
-  filter(year != 2015)
-```
-
-```{r}
-child |> tabyl(year)
 ```
 
 ## Label variables

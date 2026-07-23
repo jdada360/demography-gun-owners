@@ -220,7 +220,7 @@ make_table <- function(
 ```{r}
 make_table(
   design  = ds,
-  caption = "Characteristics of US Households Overall and Among Households with a Firearm, by Presence of Children, Pooled 2013--2025",
+  caption = "Characteristics of US Adults Overall and Among Households with a Firearm, by Presence of Children, Pooled 2013--2025",
   label   = "HHCharPooled",
   file    = "household-characteristics-pooled.tex",
   subtitle_note = "Estimates pool all survey waves from 2013 to 2025. "
@@ -228,7 +228,7 @@ make_table(
 
 make_table(
   design  = subset_design(ds, quote(year == 2013)),
-  caption = "Characteristics of US Households Overall and Among Households with a Firearm, by Presence of Children, 2013",
+  caption = "Characteristics of US Adults Overall and Among Households with a Firearm, by Presence of Children, 2013",
   label   = "HHChar2013",
   file    = "household-characteristics-2013.tex",
   subtitle_note = "Estimates are from the 2013 survey wave. "
@@ -236,7 +236,7 @@ make_table(
 
 make_table(
   design  = subset_design(ds, quote(year == 2025)),
-  caption = "Characteristics of US Households Overall and Among Households with a Firearm, by Presence of Children, 2025",
+  caption = "Characteristics of US Adults Overall and Among Households with a Firearm, by Presence of Children, 2025",
   label   = "HHChar2025",
   file    = "household-characteristics-2025.tex",
   subtitle_note = "Estimates are from the 2025 survey wave. "
@@ -271,7 +271,7 @@ child_outer <- c(" " = 3, "Households with children" = 6)
 
 make_table(
   design  = ds,
-  caption = "Characteristics of US Households Overall and Among Households with Children, by Presence of a Firearm, Pooled 2013--2025",
+  caption = "Characteristics of US Adults Overall and Among Households with Children, by Presence of a Firearm, Pooled 2013--2025",
   label   = "HHChildCharPooled",
   file    = "household-child-characteristics-pooled.tex",
   subtitle_note = "Estimates pool all survey waves from 2013 to 2025. ",
@@ -281,7 +281,7 @@ make_table(
 
 make_table(
   design  = subset_design(ds, quote(year == 2013)),
-  caption = "Characteristics of US Households Overall and Among Households with Children, by Presence of a Firearm, 2013",
+  caption = "Characteristics of US Adults Overall and Among Households with Children, by Presence of a Firearm, 2013",
   label   = "HHChildChar2013",
   file    = "household-child-characteristics-2013.tex",
   subtitle_note = "Estimates are from the 2013 survey wave. ",
@@ -291,7 +291,7 @@ make_table(
 
 make_table(
   design  = subset_design(ds, quote(year == 2025)),
-  caption = "Characteristics of US Households Overall and Among Households with Children, by Presence of a Firearm, 2025",
+  caption = "Characteristics of US Adults Overall and Among Households with Children, by Presence of a Firearm, 2025",
   label   = "HHChildChar2025",
   file    = "household-child-characteristics-2025.tex",
   subtitle_note = "Estimates are from the 2025 survey wave. ",

@@ -554,7 +554,7 @@ share_tbl_delta_simple <- tibble(
     "Household has gun",
     "Household has child under 18",
     "Household has gun and child under 18",
-    "Estimated children exposed",
+    "Estimated children exposed to firearms in household",
     "Children exposed (\\% of US children)",
     "Estimated children exposed to loaded and unlocked firearms",
     "Children exposed to loaded and unlocked firearms (\\% of US children)"
@@ -856,7 +856,15 @@ p_prev <-
         legend.position  = "none")
 
 ## Panel B
-exp_df <- exp_df %>% mutate(year_f = factor(year))
+
+exp_df <-
+  exposure_delta %>%
+  filter(!is.na(child_est)) %>%
+  transmute(year,
+            est = pct_child_est * 100,
+            lb  = pct_child_lb  * 100,
+            ub  = pct_child_ub  * 100,
+            year_f = factor(year))
 
 p_exp <-
   ggplot(exp_df, aes(year_f, est, group = 1)) +
