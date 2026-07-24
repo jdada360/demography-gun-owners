@@ -906,16 +906,29 @@ raw <-
     hh612 = t612,
     hh1317 = t1317,
     hh18ov = t18ov,
-  ) %>% 
+  )  |> 
+  rowwise() |> 
+  mutate(hh18un = sum(c(hh02, hh25, hh612, hh1317))) |> 
+  ungroup() |> 
   set_variable_labels(
     hhsize = "Household size (including children)",
     hh02 = "Number of HH members age 0-2",
     hh25 = "Number of HH members age 2-5",
     hh612 = "Number of HH members age 6-12",
     hh1317 = "Number of HH members age 13-17",
-    hh18ov = "Number of HH members age 18+"
-  )
+    hh18ov = "Number of HH members age 18+",
+    hh18un = "Number of HH members under 18"
+  ) 
 ```
+
+```{R}
+colSums(is.na(raw))
+```
+
+```{r}
+hist(raw$hh18un)
+```
+
 
 ### Parental status
 

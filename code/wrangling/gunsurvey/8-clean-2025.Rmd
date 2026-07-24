@@ -931,17 +931,39 @@ raw %>% tabyl(firstgun7)
 
 There are so many missing values for these age groups for some reason.
 
+So for this year we define hhun18 = hhsize - hh18ov and then for negative values we replace with the modal hhun18 val = 2.
+
+```{r}
+colSums(is.na(raw))
+```
+
 ```{r}
 raw <-
-  raw %>% 
+  raw |> 
+  mutate(
+    hh18un = hhsize - hh18ov,
+    hh18un = ifelse(hh18un < 0, 2, hh18un)
+  ) |>
   set_variable_labels(
     hhsize = "Household size (including children)",
     hh01 = "Number of HH members age 0-1",
     hh25 = "Number of HH members age 2-5",
     hh612 = "Number of HH members age 6-12",
     hh1317 = "Number of HH members age 13-17",
-    hh18ov = "Number of HH members age 18+"
-  )
+    hh18ov = "Number of HH members age 18+",
+    hh18un = "Number of HH members under 18"
+  ) 
+```
+
+
+
+
+```{r}
+hist(raw$hh18un)
+```
+
+```{r}
+nrow(filter(raw, hh18un < 0) ) == 0
 ```
 
 ## Weights

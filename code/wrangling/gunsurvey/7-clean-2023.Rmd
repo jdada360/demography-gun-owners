@@ -1194,18 +1194,34 @@ walk(
 ```
 
 ## Household size
-
 ```{r}
 raw <-
-  raw %>% 
+  raw %>%  
+  rowwise() |> 
+  mutate(hh18un = sum(c(hh01, hh25, hh612, hh1317))) |> 
+  ungroup() |> 
   set_variable_labels(
     hhsize = "Household size (including children)",
     hh01 = "Number of HH members age 0-1",
     hh25 = "Number of HH members age 2-5",
     hh612 = "Number of HH members age 6-12",
     hh1317 = "Number of HH members age 13-17",
-    hh18ov = "Number of HH members age 18+"
+    hh18ov = "Number of HH members age 18+",
+    hh18un = "Number of HH members under 18"
   )
+```
+
+
+```{r}
+colSums(is.na(raw))
+```
+
+```{r}
+hist(raw$hh18un)
+```
+
+```{r}
+nrow(filter(raw, hh18un < 0) ) == 0
 ```
 
 ## Weights
