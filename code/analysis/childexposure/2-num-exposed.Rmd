@@ -48,7 +48,8 @@ child <-
       "clean", 
       "gs-child.rds"
       )
-    )
+    ) |> 
+  drop_na(hh18un)
 ```
 
 ## Survey designs
@@ -159,9 +160,6 @@ census_estimates <-
 
 
 ## Combine Gun Survey and ACS estimates to compute the 95% CI of the number of children expose
-
-We use the conservative multiplication rule for combining uncertainty from 3 sources
-by multiplying the upper/lower bound estimates from each of the parameters included in the final calculation
 
 
 ```{r}
@@ -602,7 +600,7 @@ for (yr in years_delta) {
         characteristic == "Household has gun" ~ gun_est,
         characteristic == "Household has child under 18" ~ child_est,
         characteristic == "Household has gun and child under 18" ~ gunchild_est,
-        characteristic == "Estimated children exposed" ~ exposure_est,
+        characteristic == "Estimated children exposed to firearms in household" ~ exposure_est,
         characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_est,
         characteristic == "Children exposed (\\% of US children)" ~ exp_pct_est,
         characteristic ==
@@ -613,7 +611,7 @@ for (yr in years_delta) {
         characteristic == "Household has gun" ~ gun_ci,
         characteristic == "Household has child under 18" ~ child_ci,
         characteristic == "Household has gun and child under 18" ~ gunchild_ci,
-        characteristic == "Estimated children exposed" ~ exposure_ci,
+        characteristic == "Estimated children exposed to firearms in household" ~ exposure_ci,
         characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_ci,
         characteristic == "Children exposed (\\% of US children)" ~ exp_pct_ci,
         characteristic ==
@@ -645,10 +643,10 @@ share_tbl_delta <- share_tbl_delta_simple %>%
   footnote(number = note_delta, threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
-# save_kable(
-#   share_tbl_delta,
-#   file = here(path_ol, "tables/yearly-share-delta.tex")
-# )
+save_kable(
+  share_tbl_delta,
+  file = here(path_ol, "tables/yearly-share-delta.tex")
+)
 ```
 
 ```{r}
@@ -801,7 +799,7 @@ sens_latex <- sens_tbl %>%
   footnote(number = sens_note, threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
-# save_kable(sens_latex, file = here(path_ol, "tables", "sensitivity-acs.tex"))
+save_kable(sens_latex, file = here(path_ol, "tables", "sensitivity-acs.tex"))
 ```
 
 

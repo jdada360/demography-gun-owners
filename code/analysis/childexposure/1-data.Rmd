@@ -111,43 +111,22 @@ genpop %>%
 
 ```{r}
 issues <- 
-  nrow(filter(genpop, hh18un < 0))
+ filter(genpop, hhsize <  hh18ov)
 ```
 
-We do this for `r issues` observations,mostly in 2023, or `r round((issues/nrow(genpop)*100), 2)`\% of observations.
+We do this for `r nrow(issues)` observations, mostly in 2025, or `r round((nrow(issues)/nrow(genpop)*100), 2)`\% of observations. This step is done in the 2025 cleaning file.
 
 ```{r}
-genpop |> 
-  filter(hh18un < 0) |> 
-  tabyl(hh18ov)
-```
-
-```{r}
-impute <-
-  genpop |> 
-  filter(
-    # strictly positive because we know that if hh18un, we know that there is
-    # at least 1 child in the home
-    hh18un > 0
-  ) |> 
-  group_by(year) |> 
-  summarise(hh18un = median(hh18un))
-
-impute_hh18un <-
-  genpop |>
-  filter(
-    hh18un < 0 
-  ) |> 
-  select(-hh18un) |> 
-  inner_join(impute, by = "year")
+issues |> tabyl(year)
 ```
 
 ```{r}
 child <-
   genpop %>% 
-  filter(hh18un >= 0) |> 
-  bind_rows(impute_hh18un) |> 
   mutate(
+    # put back the wrong number again.
+    hh18un = hhsize-hh18ov,
+    hh18un = ifelse(hh18un < 0, 2, hh18un),
     across(
       c("hh01","hh02","hh25", "hh612", "hh1317", "hh18un"),
       # unknown is grouped together with No
@@ -222,7 +201,6 @@ child %>% tabyl(year, gunchild18un)
 ```
 
 ## Label variables
-
 
 ```{r}
 child <-
