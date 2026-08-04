@@ -1691,31 +1691,31 @@ save_kable(main_latex, file = here(path_ol, "tables", "main-poststrat.tex"))
 
 ## Figure: estimates and 95% CIs by estimator
 
-Two panels: (A) the share of US households with both a firearm and a child under
-18, and (B) the share of US children exposed to a loaded and unlocked firearm.
-Within each panel the three estimators are distinguished by colour and shape.
+Three panels: (A) the share of US households with both a firearm and a child
+under 18, (B) the share of US children living in a household with a firearm, and
+(C) the share of US children exposed to a loaded and unlocked firearm. Estimators
+are distinguished by colour and shape.
 
 The ratio estimator only changes how the child-level share is constructed; the
-household-level prevalence is a plain weighted proportion of households, which
-the main and ratio specifications draw from the same unadjusted design. Panel A
-therefore shows a single unadjusted series rather than two identical ones, and
-only post-stratification moves that estimate. Points are dodged so overlapping
+household-level prevalence is a plain weighted proportion of households, so the
+unadjusted and ratio specifications give the identical number in Panel A. Panel A
+therefore carries the unadjusted and post-stratified series only, and the ratio
+estimator appears in the two child-level panels. Points are dodged so overlapping
 estimators remain visible.
 
 ```{r}
-unadj_label <- "Main and ratio (unadjusted design)"
-
-estimator_levels <- c("Main", "Ratio", unadj_label, "Post-stratified")
+estimator_levels <- c("Unadjusted", "Ratio", "Post-stratified")
 
 ## Panel A: household has a firearm and a child under 18 -----------------------
 ## proportion_estimates is the unadjusted design, and is what both the delta
-## (main) and the ratio table report for the household rows, so it enters once.
+## and the ratio table report for the household rows, so the ratio estimator is
+## not a separate series here.
 panel_a <-
   bind_rows(
     proportion_estimates %>%
       transmute(
         year,
-        estimator = unadj_label,
+        estimator = "Unadjusted",
         est = gunchild18un_yes,
         lb  = ci_l_gunchild18un_yes,
         ub  = ci_u_gunchild18un_yes
@@ -1731,13 +1731,43 @@ panel_a <-
   ) %>%
   mutate(panel = "Household has a firearm and a child under 18")
 
-## Panel B: children exposed to loaded and unlocked firearms -------------------
+## Panel B: children living in a household with a firearm ----------------------
 panel_b <-
   bind_rows(
     exposure_delta %>%
       transmute(
         year,
-        estimator = "Main",
+        estimator = "Unadjusted",
+        est = pct_child_est,
+        lb  = pct_child_lb,
+        ub  = pct_child_ub
+      ),
+    exposure_ratio %>%
+      transmute(
+        year,
+        estimator = "Ratio",
+        est = pct_children_exposed,
+        lb  = pct_children_exposed_lb,
+        ub  = pct_children_exposed_ub
+      ),
+    exposure_ps %>%
+      transmute(
+        year,
+        estimator = "Post-stratified",
+        est = pct,
+        lb  = pct_lb,
+        ub  = pct_ub
+      )
+  ) %>%
+  mutate(panel = "Children living in a household with a firearm")
+
+## Panel C: children exposed to loaded and unlocked firearms -------------------
+panel_c <-
+  bind_rows(
+    exposure_delta %>%
+      transmute(
+        year,
+        estimator = "Unadjusted",
         est = pct_unsafe_child_est,
         lb  = pct_unsafe_child_lb,
         ub  = pct_unsafe_child_ub
@@ -1762,7 +1792,7 @@ panel_b <-
   mutate(panel = "Children exposed to loaded and unlocked firearms")
 
 estimator_df <-
-  bind_rows(panel_a, panel_b) %>%
+  bind_rows(panel_a, panel_b, panel_c) %>%
   filter(year != 2015, !is.na(est)) %>%
   mutate(
     across(c(est, lb, ub), ~ .x * 100),
@@ -1771,19 +1801,19 @@ estimator_df <-
     panel     = factor(
       panel,
       levels = c("Household has a firearm and a child under 18",
+                 "Children living in a household with a firearm",
                  "Children exposed to loaded and unlocked firearms")
     )
   )
 
 estimator_cols <- setNames(
-  c("#1f4e5f", "#e9a13b", "#3b3b3b", "#3fa7d6"),
+  c("#1f4e5f", "#e9a13b", "#3fa7d6"),
   estimator_levels
 )
 
 estimator_shapes <- setNames(
-  c(16,   # circle   - main
+  c(16,   # circle   - unadjusted
     17,   # triangle - ratio
-    18,   # diamond  - main and ratio, household level
     15),  # square   - post-stratified
   estimator_levels
 )
@@ -1839,6 +1869,6 @@ estimator_plot
 
 ggsave(
   here(path_ol, "figures", "estimator-comparison-over-time.png"),
-  estimator_plot, width = 8, height = 7, dpi = 300
+  estimator_plot, width = 8, height = 9.5, dpi = 300
 )
 ```
