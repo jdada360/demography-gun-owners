@@ -443,10 +443,10 @@ share_tbl <- share_tbl_simple %>%
     fixed_small_size = TRUE
   )
 
-# save_kable(
-#   share_tbl,
-#   file = here(path_ol, "tables/yearly-share.tex")
-# )
+save_kable(
+  share_tbl,
+  file = here(path_ol, "tables/yearly-share.tex")
+)
 ```
 
 
