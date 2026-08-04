@@ -1797,9 +1797,10 @@ estimator_plot <-
     linewidth = 0.6,
     show.legend = FALSE
   ) +
-  geom_linerange(
+  geom_errorbar(
     aes(ymin = lb, ymax = ub),
     position = dodge,
+    width = 0.25,
     linewidth = 0.6,
     show.legend = FALSE
   ) +
