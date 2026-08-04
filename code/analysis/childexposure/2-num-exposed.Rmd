@@ -1695,29 +1695,27 @@ Two panels: (A) the share of US households with both a firearm and a child under
 18, and (B) the share of US children exposed to a loaded and unlocked firearm.
 Within each panel the three estimators are distinguished by colour and shape.
 
-Note that the main and ratio estimators use the same (unadjusted) survey design,
-so their household-level estimates in Panel A coincide; only the
-post-stratified estimator differs there. Points are dodged so overlapping
+The ratio estimator only changes how the child-level share is constructed; the
+household-level prevalence is a plain weighted proportion of households, which
+the main and ratio specifications draw from the same unadjusted design. Panel A
+therefore shows a single unadjusted series rather than two identical ones, and
+only post-stratification moves that estimate. Points are dodged so overlapping
 estimators remain visible.
 
 ```{r}
-estimator_levels <- c("Main", "Ratio", "Post-stratified")
+unadj_label <- "Main and ratio (unadjusted design)"
+
+estimator_levels <- c("Main", "Ratio", unadj_label, "Post-stratified")
 
 ## Panel A: household has a firearm and a child under 18 -----------------------
+## proportion_estimates is the unadjusted design, and is what both the delta
+## (main) and the ratio table report for the household rows, so it enters once.
 panel_a <-
   bind_rows(
     proportion_estimates %>%
       transmute(
         year,
-        estimator = "Main",
-        est = gunchild18un_yes,
-        lb  = ci_l_gunchild18un_yes,
-        ub  = ci_u_gunchild18un_yes
-      ),
-    proportion_estimates %>%
-      transmute(
-        year,
-        estimator = "Ratio",
+        estimator = unadj_label,
         est = gunchild18un_yes,
         lb  = ci_l_gunchild18un_yes,
         ub  = ci_u_gunchild18un_yes
@@ -1777,16 +1775,17 @@ estimator_df <-
     )
   )
 
-estimator_cols <- c(
-  "Main"            = "#1f4e5f",
-  "Ratio"           = "#e9a13b",
-  "Post-stratified" = "#3fa7d6"
+estimator_cols <- setNames(
+  c("#1f4e5f", "#e9a13b", "#3b3b3b", "#3fa7d6"),
+  estimator_levels
 )
 
-estimator_shapes <- c(
-  "Main"            = 16,   # circle
-  "Ratio"           = 17,   # triangle
-  "Post-stratified" = 15    # square
+estimator_shapes <- setNames(
+  c(16,   # circle   - main
+    17,   # triangle - ratio
+    18,   # diamond  - main and ratio, household level
+    15),  # square   - post-stratified
+  estimator_levels
 )
 ```
 
