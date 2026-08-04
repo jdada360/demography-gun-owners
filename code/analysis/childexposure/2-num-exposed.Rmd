@@ -35,6 +35,17 @@ pacman::p_load(packages, character.only = TRUE)
 
 #api key for the Census Data
 KEY = "5cc38485c4b3852e79d4c13a6f8f5095d2f89db8"
+
+## kableExtra::footnote(threeparttable = TRUE) strips one level of backslashes
+## from the note text even when escape = FALSE, so "\\%" reaches the .tex file
+## as a bare "%", which comments out the rest of the footnote, and "$\\times$"
+## arrives as "$times$". Escape any bare percent signs, then double every
+## backslash so one survives.
+esc_note <- function(x) {
+  x %>%
+    str_replace_all("(?<!\\\\)%", "\\\\%") %>%
+    str_replace_all(fixed("\\"), "\\\\")
+}
 ```
 
 ## Load data
@@ -426,7 +437,7 @@ share_tbl <- share_tbl_simple %>%
     c(" " = 1, setNames(rep(2, length(years)), paste0(years)))
   ) %>%
   footnote(
-    number = note,
+    number = esc_note(note),
     threeparttable = TRUE,
     escape = FALSE,
     fixed_small_size = TRUE
@@ -643,7 +654,7 @@ share_tbl_delta <- share_tbl_delta_simple %>%
   kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
   row_spec(1, bold = TRUE) %>%
   add_header_above(c(" " = 1, setNames(rep(2, length(years_delta)), paste0(years_delta)))) %>%
-  footnote(number = note_delta, threeparttable = TRUE,
+  footnote(number = esc_note(note_delta), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(
@@ -799,7 +810,7 @@ sens_latex <- sens_tbl %>%
   add_header_above(
     c(" " = 1, "2024 ACS estimates" = 2, "Projected 2025 totals" = 2)
   ) %>%
-  footnote(number = sens_note, threeparttable = TRUE,
+  footnote(number = esc_note(sens_note), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(sens_latex, file = here(path_ol, "tables", "sensitivity-acs.tex"))
@@ -1011,7 +1022,7 @@ inputs_share_tbl <- inputs_tbl_simple %>%
   add_header_above(
     c(" " = 1, setNames(rep(2, length(inputs_years)), paste0(inputs_years)))
   ) %>%
-  footnote(number = inputs_note, threeparttable = TRUE,
+  footnote(number = esc_note(inputs_note), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(inputs_share_tbl, file = here(path_ol, "tables/exposure-inputs.tex"))
@@ -1236,7 +1247,7 @@ tbl_ratio <- tbl_ratio_simple %>%
   kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
   row_spec(1, bold = TRUE) %>%
   add_header_above(c(" " = 1, setNames(rep(2, length(years_r)), paste0(years_r)))) %>%
-  footnote(number = note_ratio, threeparttable = TRUE,
+  footnote(number = esc_note(note_ratio), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(tbl_ratio, file = here(path_ol, "tables/yearly-share-ratio.tex"))
@@ -1314,7 +1325,7 @@ calib_latex <- calib_tbl %>%
   add_header_above(
     c(" " = 1, "Children per household" = 4, " " = 2)
   ) %>%
-  footnote(number = calib_note, threeparttable = TRUE,
+  footnote(number = esc_note(calib_note), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(calib_latex, file = here(path_ol, "tables", "calibration-hh.tex"))
@@ -1522,7 +1533,7 @@ compare_latex <-
   add_header_above(
     c(" " = 1, "Share of US children living with a firearm" = 3, " " = 1)
   ) %>%
-  footnote(number = compare_note, threeparttable = TRUE,
+  footnote(number = esc_note(compare_note), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(compare_latex, file = here(path_ol, "tables", "estimator-comparison.tex"))
@@ -1670,7 +1681,7 @@ main_latex <- main_tbl %>%
   kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
   row_spec(1, bold = TRUE) %>%
   add_header_above(c(" " = 1, setNames(rep(2, length(years_ps)), as.character(years_ps)))) %>%
-  footnote(number = note_ps, threeparttable = TRUE,
+  footnote(number = esc_note(note_ps), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(main_latex, file = here(path_ol, "tables", "main-poststrat.tex"))

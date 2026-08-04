@@ -115,6 +115,16 @@ esc_tex <- function(x) {
     str_replace_all("([&%$#_{}])", "\\\\\\1")
 }
 
+## kableExtra::footnote(threeparttable = TRUE) strips one level of backslashes
+## from the note text even when escape = FALSE, so "\\%" reaches the .tex file
+## as a bare "%", which comments out the rest of the footnote. Escape any bare
+## percent signs, then double every backslash so one survives.
+esc_note <- function(x) {
+  x %>%
+    str_replace_all("(?<!\\\\)%", "\\\\%") %>%
+    str_replace_all(fixed("\\"), "\\\\")
+}
+
 fmt_pct <- function(x) ifelse(is.na(x), "--", paste0(sprintf("%.1f", x), "\\%"))
 fmt_ci   <- function(lb, ub) {
   ifelse(is.na(lb), "--",
@@ -213,7 +223,7 @@ make_table <- function(
 
   out <- out %>%
     footnote(
-      number = note,
+      number = esc_note(note),
       threeparttable = TRUE,
       escape = FALSE,
       fixed_small_size = TRUE
@@ -397,12 +407,12 @@ year_tbl <-
           label != "Non-Metro"
           ) %>%
         mutate(
-           # escape LaTeX specials ($ in the income levels) before indenting,
-           # because the table is written with escape = FALSE
+           # gtsummary already escapes these labels (the income levels arrive
+           # as "\\$30,000-60,000"), so do not escape them a second time
            label = ifelse(
             row_type == "level" & label != "Observations",
-            paste0("  ", esc_tex(label)),
-            esc_tex(label)),
+            paste0("  ", label),
+            label),
            across(
              c(stat_5, stat_6),
              ~ ifelse(
@@ -452,7 +462,7 @@ year_tbl <-
     ) %>%
   row_spec(1, bold = TRUE) %>%
   footnote(
-   number = note,
+   number = esc_note(note),
    threeparttable = TRUE,
    escape = FALSE,
    fixed_small_size = TRUE
