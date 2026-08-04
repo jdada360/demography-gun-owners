@@ -282,16 +282,18 @@ obs_counts <- tibble(
 years <- sort(unique(proportion_estimates$year))
 
 # Create table structure
+# Row order is shared with the delta, ratio and post-stratified tables:
+# percentage first, then the corresponding estimated count.
 share_tbl_simple <- tibble(
   characteristic = c(
     "Observations",
-    "Household has gun",
-    "Household has child under 18",
-    "Household has gun and child under 18",
-    "Estimated children exposed",
+    "Household has a firearm",
+    "Household has a child under 18",
+    "Household has a firearm and a child under 18",
     "Children exposed (\\% of US children)",
-    "Estimated children exposed to loaded and unlocked firearms",
-    "Children exposed to loaded and unlocked firearms (\\% of US children)"
+    "Estimated children exposed",
+    "Children exposed to loaded and unlocked firearms (\\% of US children)",
+    "Estimated children exposed to loaded and unlocked firearms"
   )
 )
 # Add columns for each year
@@ -363,26 +365,27 @@ for (yr in years) {
     mutate(
       !!paste0("y", yr, "_est") := case_when(
         characteristic == "Observations" ~ yr_obs,
-        characteristic == "Household has gun" ~ gun_est,
-        characteristic == "Household has child under 18" ~ child_est,
-        characteristic == "Household has gun and child under 18" ~ gunchild_est,
-        characteristic == "Estimated children exposed" ~ exposure_est,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_est,
+        characteristic == "Household has a firearm" ~ gun_est,
+        characteristic == "Household has a child under 18" ~ child_est,
+        characteristic == "Household has a firearm and a child under 18" ~ gunchild_est,
         characteristic == "Children exposed (\\% of US children)" ~ exp_pct_est,
+        characteristic == "Estimated children exposed" ~ exposure_est,
         characteristic ==
-          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ 
-          unsafe_pct_est
+          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~
+          unsafe_pct_est,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_est
       ),
       !!paste0("y", yr, "_ci") := case_when(
         characteristic == "Observations" ~ "",
-        characteristic == "Household has gun" ~ gun_ci,
-        characteristic == "Household has child under 18" ~ child_ci,
-        characteristic == "Household has gun and child under 18" ~ gunchild_ci,
-        characteristic == "Estimated children exposed" ~ exposure_ci,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_ci,
+        characteristic == "Household has a firearm" ~ gun_ci,
+        characteristic == "Household has a child under 18" ~ child_ci,
+        characteristic == "Household has a firearm and a child under 18" ~ gunchild_ci,
         characteristic == "Children exposed (\\% of US children)" ~ exp_pct_ci,
-        characteristic == "Children exposed to loaded and unlocked firearms (\\% of US children)"
-        ~ unsafe_pct_ci
+        characteristic == "Estimated children exposed" ~ exposure_ci,
+        characteristic ==
+          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~
+          unsafe_pct_ci,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_ci
       )
     )
 }
@@ -405,7 +408,7 @@ share_tbl <- share_tbl_simple %>%
     format = "latex",
     booktabs = TRUE,
     escape = FALSE,
-    caption = "Share of US Households with Guns and Children Under 18, 2013-2025",
+    caption = "Household Firearm Prevalence and Children's Firearm Exposure, 2013-2025",
     label = "ShareYear",
     col.names = col_names,
     linesep = "",
@@ -549,13 +552,13 @@ years_delta <- sort(unique(exposure_estimates_delta$year))
 share_tbl_delta_simple <- tibble(
   characteristic = c(
     "Observations",
-    "Household has gun",
-    "Household has child under 18",
-    "Household has gun and child under 18",
-    "Estimated children exposed to firearms in household",
+    "Household has a firearm",
+    "Household has a child under 18",
+    "Household has a firearm and a child under 18",
     "Children exposed (\\% of US children)",
-    "Estimated children exposed to loaded and unlocked firearms",
-    "Children exposed to loaded and unlocked firearms (\\% of US children)"
+    "Estimated children exposed",
+    "Children exposed to loaded and unlocked firearms (\\% of US children)",
+    "Estimated children exposed to loaded and unlocked firearms"
   )
 )
 
@@ -597,25 +600,25 @@ for (yr in years_delta) {
     mutate(
       !!paste0("y", yr, "_est") := case_when(
         characteristic == "Observations" ~ yr_obs,
-        characteristic == "Household has gun" ~ gun_est,
-        characteristic == "Household has child under 18" ~ child_est,
-        characteristic == "Household has gun and child under 18" ~ gunchild_est,
-        characteristic == "Estimated children exposed to firearms in household" ~ exposure_est,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_est,
+        characteristic == "Household has a firearm" ~ gun_est,
+        characteristic == "Household has a child under 18" ~ child_est,
+        characteristic == "Household has a firearm and a child under 18" ~ gunchild_est,
         characteristic == "Children exposed (\\% of US children)" ~ exp_pct_est,
+        characteristic == "Estimated children exposed" ~ exposure_est,
         characteristic ==
-          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ unsafe_pct_est
+          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ unsafe_pct_est,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_est
       ),
       !!paste0("y", yr, "_ci") := case_when(
         characteristic == "Observations" ~ "",
-        characteristic == "Household has gun" ~ gun_ci,
-        characteristic == "Household has child under 18" ~ child_ci,
-        characteristic == "Household has gun and child under 18" ~ gunchild_ci,
-        characteristic == "Estimated children exposed to firearms in household" ~ exposure_ci,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_ci,
+        characteristic == "Household has a firearm" ~ gun_ci,
+        characteristic == "Household has a child under 18" ~ child_ci,
+        characteristic == "Household has a firearm and a child under 18" ~ gunchild_ci,
         characteristic == "Children exposed (\\% of US children)" ~ exp_pct_ci,
+        characteristic == "Estimated children exposed" ~ exposure_ci,
         characteristic ==
-          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ unsafe_pct_ci
+          "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ unsafe_pct_ci,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ unsafe_ci
       )
     )
 }
@@ -631,7 +634,7 @@ share_tbl_delta <- share_tbl_delta_simple %>%
     format    = "latex",
     booktabs  = TRUE,
     escape    = FALSE,
-    caption   = "Share of US Households with Guns and Children Under 18, 2013-2025",
+    caption   = "Household Firearm Prevalence and Children's Firearm Exposure, 2013-2025",
     label     = "ShareYearDelta",
     col.names = col_names_delta,
     linesep   = "",
@@ -906,7 +909,7 @@ inputs_tbl_simple <- tibble(
   characteristic = c(
     "Observations",
     "Total US households",
-    "Household has gun and child under 18",
+    "Household has a firearm and a child under 18",
     "Mean children per exposed household",
     "Mean exposed children per US household",
     "Estimated children exposed",
@@ -950,7 +953,7 @@ for (yr in inputs_years) {
       !!paste0("y", yr, "_est") := case_when(
         characteristic == "Observations" ~ yr_obs,
         characteristic == "Total US households" ~ hh_est,
-        characteristic == "Household has gun and child under 18" ~ gc_est,
+        characteristic == "Household has a firearm and a child under 18" ~ gc_est,
         characteristic == "Mean children per exposed household" ~ m_est,
         characteristic == "Mean exposed children per US household" ~ A_est,
         characteristic == "Estimated children exposed" ~ exp_est,
@@ -959,7 +962,7 @@ for (yr in inputs_years) {
       !!paste0("y", yr, "_ci") := case_when(
         characteristic == "Observations" ~ "",
         characteristic == "Total US households" ~ "",
-        characteristic == "Household has gun and child under 18" ~ gc_ci,
+        characteristic == "Household has a firearm and a child under 18" ~ gc_ci,
         characteristic == "Mean children per exposed household" ~ m_ci,
         characteristic == "Mean exposed children per US household" ~ A_ci,
         characteristic == "Estimated children exposed" ~ exp_ci,
@@ -1041,3 +1044,776 @@ m <- svyglm(
 summary(m)
 ```
 
+## Ratio estimator
+
+Our numerator comes from the survey. Our denominator comes from the ACS. And the survey and the ACS disagree about how many children exist in America so our estimates are biased.
+
+
+```{r}
+child %>%
+  count(child18un, hh18un_zero = hh18un == 0, hh18un_na = is.na(hh18un))
+
+svyby(~hh18un, ~year, ds, svymean, vartype = "se")
+```
+
+
+
+### Derive estimator
+
+
+```{r}
+z     <- qnorm(0.975)
+s_hat <- 0.211
+s_se  <- (0.243 - 0.183) / (2 * z)
+
+ds_ratio <- update(
+  ds,
+  child_exposed = ifelse(gunhousehold == "Yes", hh18un, 0)
+)
+
+# P_t = sum(w * c * g) / sum(w * c)
+# svyratio propagates the covariance between numerator and denominator
+P_hat <- map_df(
+  sort(unique(child$year)),
+  function(yr) {
+    r <- svyratio(~child_exposed, ~hh18un, subset(ds_ratio, year == yr))
+    tibble(
+      year = yr,
+      P    = as.numeric(coef(r)),
+      P_se = as.numeric(SE(r))
+    )
+  }
+)
+
+P_hat
+```
+### Combine with ACS
+
+```{r}
+exposure_ratio <-
+  census_estimates %>%
+  left_join(P_hat, by = "year") %>%
+  mutate(
+    rel_var_P = (P_se / P)^2,
+    rel_var_U = rel_var_P + (s_se / s_hat)^2,
+
+    ## share of US children exposed — pure survey quantity, no ACS
+    pct_children_exposed    = P,
+    pct_children_exposed_lb = P * exp(-z * sqrt(rel_var_P)),
+    pct_children_exposed_ub = P * exp( z * sqrt(rel_var_P)),
+
+    ## counts: ACS child population enters only here
+    child_est = children * P,
+    child_lb  = children * pct_children_exposed_lb,
+    child_ub  = children * pct_children_exposed_ub,
+
+    ## loaded & unlocked
+    pct_children_unsafe    = P * s_hat,
+    pct_children_unsafe_lb = P * s_hat * exp(-z * sqrt(rel_var_U)),
+    pct_children_unsafe_ub = P * s_hat * exp( z * sqrt(rel_var_U)),
+
+    unsafe_child_est = children * pct_children_unsafe,
+    unsafe_child_lb  = children * pct_children_unsafe_lb,
+    unsafe_child_ub  = children * pct_children_unsafe_ub
+  ) %>%
+  filter(!is.na(P))
+
+```
+
+
+### Main table
+
+```{R}
+years_r <- sort(unique(exposure_ratio$year))
+
+tbl_ratio_simple <- tibble(
+  characteristic = c(
+    "Observations",
+    "Household has a firearm",
+    "Household has a child under 18",
+    "Household has a firearm and a child under 18",
+    "Children living with a firearm (\\% of US children)",
+    "Estimated children exposed to firearms in household",
+    "Children exposed to loaded and unlocked firearms (\\% of US children)",
+    "Estimated children exposed to loaded and unlocked firearms"
+  )
+)
+
+fmt_m   <- function(x) paste0(sjmisc::big_mark(round(x / 1e6, 1)), " M")
+fmt_pct <- function(x) paste0(round(x * 100, 1), "%")
+
+for (yr in years_r) {
+
+  yr_data <- proportion_estimates %>% filter(year == yr)
+  yr_obs  <- obs_counts %>% filter(year == yr) %>% pull(obs) %>% format(big.mark = ",")
+  yr_exp  <- exposure_ratio %>% filter(year == yr)
+
+  gun_est      <- fmt_pct(yr_data$gunhousehold_yes)
+  gun_ci       <- paste0(fmt_pct(yr_data$ci_l_gunhousehold_yes), "–",
+                         fmt_pct(yr_data$ci_u_gunhousehold_yes))
+  child_est    <- fmt_pct(yr_data$child18un_yes)
+  child_ci     <- paste0(fmt_pct(yr_data$ci_l_child18un_yes), "–",
+                         fmt_pct(yr_data$ci_u_child18un_yes))
+  gunchild_est <- fmt_pct(yr_data$gunchild18un_yes)
+  gunchild_ci  <- paste0(fmt_pct(yr_data$ci_l_gunchild18un_yes), "–",
+                         fmt_pct(yr_data$ci_u_gunchild18un_yes))
+
+  exp_pct_est <- fmt_pct(yr_exp$pct_children_exposed)
+  exp_pct_ci  <- paste0(fmt_pct(yr_exp$pct_children_exposed_lb), "–",
+                        fmt_pct(yr_exp$pct_children_exposed_ub))
+  exp_n_est   <- fmt_m(yr_exp$child_est)
+  exp_n_ci    <- paste0(fmt_m(yr_exp$child_lb), "–", fmt_m(yr_exp$child_ub))
+
+  uns_pct_est <- fmt_pct(yr_exp$pct_children_unsafe)
+  uns_pct_ci  <- paste0(fmt_pct(yr_exp$pct_children_unsafe_lb), "–",
+                        fmt_pct(yr_exp$pct_children_unsafe_ub))
+  uns_n_est   <- fmt_m(yr_exp$unsafe_child_est)
+  uns_n_ci    <- paste0(fmt_m(yr_exp$unsafe_child_lb), "–", fmt_m(yr_exp$unsafe_child_ub))
+
+  tbl_ratio_simple <- tbl_ratio_simple %>%
+    mutate(
+      !!paste0("y", yr, "_est") := case_when(
+        characteristic == "Observations" ~ yr_obs,
+        characteristic == "Household has a firearm" ~ gun_est,
+        characteristic == "Household has a child under 18" ~ child_est,
+        characteristic == "Household has a firearm and a child under 18" ~ gunchild_est,
+        characteristic == "Children living with a firearm (\\% of US children)" ~ exp_pct_est,
+        characteristic == "Estimated children exposed to firearms in household" ~ exp_n_est,
+        characteristic == "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ uns_pct_est,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ uns_n_est
+      ),
+      !!paste0("y", yr, "_ci") := case_when(
+        characteristic == "Observations" ~ "",
+        characteristic == "Household has a firearm" ~ gun_ci,
+        characteristic == "Household has a child under 18" ~ child_ci,
+        characteristic == "Household has a firearm and a child under 18" ~ gunchild_ci,
+        characteristic == "Children living with a firearm (\\% of US children)" ~ exp_pct_ci,
+        characteristic == "Estimated children exposed to firearms in household" ~ exp_n_ci,
+        characteristic == "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ uns_pct_ci,
+        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ uns_n_ci
+      )
+    )
+}
+
+tbl_ratio_simple <- tbl_ratio_simple %>%
+  mutate(across(starts_with("y"), ~ str_replace_all(., "%", "\\\\%")))
+
+note_ratio <- paste0(
+  "Data represent weighted estimates from the National Survey of Gun Policy, ",
+  "United States, 2013--2025. Household-level rows report the weighted share of ",
+  "US households with (1) a gun in the home, (2) a child under 18, and (3) both. ",
+  "The share of US children living in a household with a firearm is estimated as a ",
+  "ratio: the weighted number of children in respondent households with a firearm ",
+  "divided by the weighted number of children in all respondent households. ",
+  "This ratio form is used in place of scaling a per-household mean by American ",
+  "Community Survey household totals, because the survey over-represents households ",
+  "containing children relative to the American Community Survey and the degree of ",
+  "over-representation varies across waves; the over-representation largely cancels ",
+  "between the numerator and denominator of the ratio (Appendix Table). ",
+  "Estimated counts of exposed children apply this share to the American Community ",
+  "Survey population younger than 18 years. Children exposed to loaded and unlocked ",
+  "firearms additionally multiply by the 2024 National Firearm Survey estimate that ",
+  "21.1\\% (95\\% CI, 18.3\\%--24.3\\%) of gun-owning households with children had at ",
+  "least one firearm stored loaded and unlocked (Miller et al.\\ 2026); this rate is ",
+  "assumed constant across waves. Because 2025 American Community Survey estimates ",
+  "were not yet available, 2024 estimates were used for 2025. The 2015 wave is excluded ",
+  "because no household-level firearm ownership measure was collected. Confidence ",
+  "intervals use the delta method, treating American Community Survey ",
+  "totals as fixed and the storage estimate as independent of the survey estimates."
+)
+
+tbl_ratio <- tbl_ratio_simple %>%
+  kable(
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    caption   = "Household Firearm Prevalence and Children's Firearm Exposure, 2013-2025",
+    label     = "ShareYearRatio",
+    col.names = c("Characteristic", rep(c("Est.", "95\\% CI"), length(years_r))),
+    linesep   = "",
+    align     = paste0("l", strrep("c", length(years_r) * 2))
+  ) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, setNames(rep(2, length(years_r)), paste0(years_r)))) %>%
+  footnote(number = note_ratio, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
+
+save_kable(tbl_ratio, file = here(path_ol, "tables/yearly-share-ratio.tex"))
+```
+
+
+### Calibration diagnostic
+
+This is the table that justifies the switch. Put it in the appendix.
+
+```{r}
+## ---- Calibration of the survey household frame against the ACS -------------
+
+## Survey-implied children per household, by wave
+survey_cph <-
+  svyby(~hh18un, ~year, ds, svymean, vartype = "se") %>%
+  clean_names() %>%
+  transmute(year, survey_cph = hh18un, survey_cph_se = se)
+
+calib <-
+  survey_cph %>%
+  left_join(census_estimates, by = "year") %>%
+  mutate(
+    acs_cph          = children / totalhh,
+    implied_children = totalhh * survey_cph,
+    ratio            = survey_cph / acs_cph
+  )
+
+calib_tbl <- calib %>%
+  transmute(
+    Year        = as.character(year),
+    survey_est  = sprintf("%.3f", survey_cph),
+    survey_ci   = sprintf("%.3f--%.3f",
+                          survey_cph - qnorm(0.975) * survey_cph_se,
+                          survey_cph + qnorm(0.975) * survey_cph_se),
+    acs_est     = sprintf("%.3f", acs_cph),
+    ratio_est   = sprintf("%.2f", ratio),
+    implied_pop = paste0(sjmisc::big_mark(round(implied_children / 1e6, 1)), " M"),
+    acs_pop     = paste0(sjmisc::big_mark(round(children / 1e6, 1)), " M")
+  )
+
+calib_note <- paste0(
+  "Table compares the number of children younger than 18 years per household implied ",
+  "by the National Survey of Gun Policy with the corresponding American Community ",
+  "Survey figure, by survey wave, United States, 2013--2025. The survey quantity is the ",
+  "weighted mean of the household child count across all respondent households; the ",
+  "American Community Survey quantity is the population younger than 18 years divided ",
+  "by total households.",
+  "The survey sample contains a higher proportion of households with children than the American Community Survey in all waves, with the largest divergence in 2021 and 2023. This reflects the composition of the recruited panel rather than the survey weights, which adjust child-containing households by a factor between 0.98 and 1.20 across waves. Because the source of the imbalance is the achieved sample rather than any single adjustment, estimates of the share of US children living in a household with a firearm are computed as a ratio of weighted child counts within the survey, so that the imbalance cancels between numerator and denominator.",
+  "Confidence ",
+  "intervals for the survey quantity are design-based; American Community Survey totals ",
+  "are treated as fixed. The 2015 wave is excluded because no household-level firearm ",
+  "ownership measure was collected."
+)
+
+calib_latex <- calib_tbl %>%
+  kable(
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    linesep   = "",
+    caption   = "Calibration of Survey Household Composition Against American Community Survey Totals, 2013-2025",
+    label     = "CalibHH",
+    col.names = c("Year", "Est.", "95\\% CI", "Est.", "Ratio", "Survey-implied", "ACS"),
+    align     = "lcccccc"
+  ) %>%
+  kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
+  add_header_above(
+    c(" " = 1,
+      "Survey" = 2,
+      "ACS" = 1,
+      "Survey / ACS" = 1,
+      "Population under 18" = 2)
+  ) %>%
+  add_header_above(
+    c(" " = 1, "Children per household" = 4, " " = 2)
+  ) %>%
+  footnote(number = calib_note, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
+
+save_kable(calib_latex, file = here(path_ol, "tables", "calibration-hh.tex"))
+```
+
+
+## Post stratification
+
+The issue of differential recruitment of households with children in the survey
+could be driving the bias we see. As a solution, post stratify using ACS targets for the number of children in the household.
+
+```{r, warning = F, message = F}
+acs_years <- c(2013, 2017, 2019, 2021, 2023, 2024)
+
+acs_child_hh <-
+  map_df(
+    acs_years,
+    ~ get_acs(
+        geography = "us",
+        table     = "B11005",
+        year      = .x,
+        survey    = "acs1",
+        key       = KEY,
+        cache_table = TRUE
+      ) %>%
+      filter(variable %in% c("B11005_001", "B11005_002")) %>%
+      select(variable, estimate) %>%
+      pivot_wider(names_from = variable, values_from = estimate) %>%
+      transmute(
+        year        = .x,
+        total_hh    = B11005_001,
+        hh_child    = B11005_002,
+        hh_nochild  = B11005_001 - B11005_002,
+        share_child = B11005_002 / B11005_001
+      )
+  ) %>%
+  mutate(year = if_else(year == 2024, 2025, year))
+
+acs_child_hh
+```
+
+
+```{r}
+## Build the joint year × child18un target table
+ps_targets <-
+  acs_child_hh %>%
+  pivot_longer(c(hh_child, hh_nochild),
+               names_to = "child18un", values_to = "Freq") %>%
+  mutate(
+    child18un = factor(if_else(child18un == "hh_child", "Yes", "No"),
+                       levels = levels(child$child18un)),
+    year      = as.integer(year),
+    Freq      = as.numeric(Freq)
+  ) %>%
+  select(year, child18un, Freq) %>%
+  arrange(year, child18un)
+
+## verify alignment before post-stratifying
+setdiff(unique(child$year), unique(ps_targets$year))   # should be empty
+setdiff(unique(ps_targets$year), unique(child$year))   # should be empty
+ps_targets
+
+ds_ps <- svydesign(~1, data = child, strata = ~year, weights = ~weight) %>%
+  postStratify(strata = ~ year + child18un, population = ps_targets)
+```
+
+```{r}
+ps_targets %>%
+  pivot_wider(names_from = child18un, values_from = Freq) %>%
+  mutate(share_child = round(100 * Yes / (Yes + No), 1))
+```
+
+
+### Compare weights
+
+
+```{r}
+
+## 1. How much did the weights actually move?
+w_old <- weights(ds)
+w_new <- weights(ds_ps)
+
+tibble(year = child$year, child = child$child18un, w_old, w_new) %>%
+  group_by(year, child) %>%
+  summarise(factor = round(mean(w_new) / mean(w_old), 2), .groups = "drop") %>%
+  pivot_wider(names_from = child, values_from = factor)
+
+## 2. Extreme weights?
+tibble(year = child$year, w_new) %>%
+  group_by(year) %>%
+  summarise(
+    max_w  = round(max(w_new), 1),
+    p99    = round(quantile(w_new, .99), 1),
+    deff   = round(1 + (sd(w_new) / mean(w_new))^2, 2)   # weighting design effect
+  )
+
+```
+
+
+### Compare to prior design
+
+```{r}
+
+ds_ps <- update(ds_ps, child_exposed = ifelse(gunhousehold == "Yes", hh18un, 0))
+
+exposed <- svyby(~child_exposed, ~year, ds_ps, svytotal, vartype = "se") %>%
+  clean_names() %>%
+  transmute(year, N = child_exposed, N_se = se)
+
+z <- qnorm(0.975); s_hat <- 0.211; s_se <- (0.243 - 0.183) / (2 * z)
+
+exposure_ps <-
+  exposed %>%
+  left_join(census_estimates %>% select(year, children), by = "year") %>%
+  mutate(
+    rel_var  = (N_se / N)^2,
+    N_lb     = N * exp(-z * sqrt(rel_var)),
+    N_ub     = N * exp( z * sqrt(rel_var)),
+    pct      = N / children,
+    pct_lb   = N_lb / children,
+    pct_ub   = N_ub / children,
+    U        = N * s_hat,
+    rel_varU = rel_var + (s_se / s_hat)^2,
+    U_lb     = U * exp(-z * sqrt(rel_varU)),
+    U_ub     = U * exp( z * sqrt(rel_varU)),
+    pctU     = U / children,
+    pctU_lb  = U_lb / children,
+    pctU_ub  = U_ub / children
+  )
+
+exposure_ps %>%
+  transmute(year,
+            N   = round(N / 1e6, 1),
+            pct = round(100 * pct, 1),
+            ci  = paste0(round(100 * pct_lb, 1), "–", round(100 * pct_ub, 1)))
+
+```
+
+
+```{r}
+compare_specs <-
+  list(
+    orig  = exposure_delta %>% transmute(year, pct = pct_child_est),
+    ratio = exposure_ratio %>% transmute(year, pct = pct_children_exposed),
+    ps    = exposure_ps    %>% transmute(year, pct = pct)
+  ) %>%
+  bind_rows(.id = "spec") %>%
+  pivot_wider(names_from = spec, values_from = pct)
+
+## adjustment factor from the post-stratification, for context
+adj <-
+  tibble(year = child$year, ch = child$child18un,
+         w_old = weights(ds), w_new = weights(ds_ps)) %>%
+  group_by(year) %>%
+  summarise(
+    adj_child = (sum(w_new[ch == "Yes"]) / sum(w_old[ch == "Yes"])) /
+                (sum(w_new) / sum(w_old)),
+    .groups = "drop"
+  )
+
+compare_tbl <-
+  compare_specs %>%
+  left_join(adj, by = "year") %>%
+  filter(year != 2015) |> 
+  transmute(
+    Year  = as.character(year),
+    orig  = sprintf("%.1f\\%%", 100 * orig),
+    ratio = sprintf("%.1f\\%%", 100 * ratio),
+    ps    = sprintf("%.1f\\%%", 100 * ps),
+    adj   = sprintf("%.2f", adj_child)
+  ) 
+
+compare_note <- paste0(
+  "Table compares three estimators of the share of US children younger than 18 years ",
+  "living in a household with a firearm, by survey wave, United States, 2013--2025. ",
+  "The household-scaled estimator multiplies the weighted mean number of ",
+  "firearm-exposed children per respondent household by the American Community Survey ",
+  "estimate of total US households, and divides by the American Community Survey ",
+  "population younger than 18 years. The ratio estimator divides the weighted number ",
+  "of children in respondent households with a firearm by the weighted number of ",
+  "children in all respondent households. The post-stratified estimator applies the ",
+  "household-scaled calculation after reweighting each wave to American Community ",
+  "Survey counts of households with and without people younger than 18 years. ",
+  "The final column reports the post-stratification adjustment applied to households ",
+  "with children in each wave, relative to the wave as a whole; values below one ",
+  "indicate that such households were over-represented in the achieved sample. ",
+  "The 2015 wave is excluded because no household-level firearm ownership measure ",
+  "was collected."
+)
+
+compare_latex <-
+  compare_tbl %>%
+  kable(
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    linesep   = "",
+    caption   = "Comparison of Estimators of Children's Firearm Exposure, 2013-2025",
+    label     = "SpecCompare",
+    col.names = c("Year", "Household-scaled", "Ratio", "Post-stratified",
+                  "Adjustment factor"),
+    align     = "lcccc"
+  ) %>%
+  kable_styling(latex_options = "hold_position", font_size = 9) %>%
+  add_header_above(
+    c(" " = 1, "Share of US children living with a firearm" = 3, " " = 1)
+  ) %>%
+  footnote(number = compare_note, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
+
+save_kable(compare_latex, file = here(path_ol, "tables", "estimator-comparison.tex"))
+```
+
+
+### Main table
+
+```{r}
+## Design with the derived variable
+ds_ps <- update(ds_ps, child_exposed = ifelse(gunhousehold == "Yes", hh18un, 0))
+
+z     <- qnorm(0.975)
+s_hat <- 0.211
+s_se  <- (0.243 - 0.183) / (2 * z)
+
+
+## Household-level proportions
+prop_ps <-
+  svyby(~gunhousehold + child18un + gunchild18un, ~year, ds_ps,
+        svymean, vartype = c("se", "ci"), level = 0.95) %>%
+  clean_names()
+
+## Exposed children as a population total — no ACS household count needed
+exposed_ps <-
+  svyby(~child_exposed, ~year, ds_ps, svytotal, vartype = "se") %>%
+  clean_names() %>%
+  transmute(year, N = child_exposed, N_se = se)
+
+## Unweighted observation counts
+obs_counts <- child %>% count(year, name = "obs")
+
+## Combine with ACS child population for the share
+exposure_ps <-
+  exposed_ps %>%
+  left_join(census_estimates %>% select(year, children), by = "year") %>%
+  mutate(
+    rel_var  = (N_se / N)^2,
+    N_lb     = N * exp(-z * sqrt(rel_var)),
+    N_ub     = N * exp( z * sqrt(rel_var)),
+    pct      = N    / children,
+    pct_lb   = N_lb / children,
+    pct_ub   = N_ub / children,
+
+    U        = N * s_hat,
+    rel_varU = rel_var + (s_se / s_hat)^2,
+    U_lb     = U * exp(-z * sqrt(rel_varU)),
+    U_ub     = U * exp( z * sqrt(rel_varU)),
+    pctU     = U    / children,
+    pctU_lb  = U_lb / children,
+    pctU_ub  = U_ub / children
+  )
+
+fmt_m   <- function(x) paste0(sjmisc::big_mark(round(x / 1e6, 1)), " M")
+fmt_pct <- function(x) paste0(round(x * 100, 1), "%")
+
+years_ps <- sort(unique(exposure_ps$year))
+
+main_tbl <- tibble(
+  characteristic = c(
+    "Observations",
+    "Household has a firearm",
+    "Household has a child under 18",
+    "Household has a firearm and a child under 18",
+    "Children living with a firearm (\\% of US children)",
+    "Estimated children living with a firearm",
+    "Children living with a loaded and unlocked firearm (\\% of US children)",
+    "Estimated children living with a loaded and unlocked firearm"
+  )
+)
+
+for (yr in years_ps) {
+
+  p <- prop_ps    %>% filter(year == yr)
+  e <- exposure_ps %>% filter(year == yr)
+  o <- obs_counts %>% filter(year == yr) %>% pull(obs) %>% format(big.mark = ",")
+
+  vals <- c(
+    o,
+    fmt_pct(p$gunhousehold_yes),
+    fmt_pct(p$child18un_yes),
+    fmt_pct(p$gunchild18un_yes),
+    fmt_pct(e$pct),
+    fmt_m(e$N),
+    fmt_pct(e$pctU),
+    fmt_m(e$U)
+  )
+
+  cis <- c(
+    "",
+    paste0(fmt_pct(p$ci_l_gunhousehold_yes), "–", fmt_pct(p$ci_u_gunhousehold_yes)),
+    paste0(fmt_pct(p$ci_l_child18un_yes),    "–", fmt_pct(p$ci_u_child18un_yes)),
+    paste0(fmt_pct(p$ci_l_gunchild18un_yes), "–", fmt_pct(p$ci_u_gunchild18un_yes)),
+    paste0(fmt_pct(e$pct_lb),  "–", fmt_pct(e$pct_ub)),
+    paste0(fmt_m(e$N_lb),      "–", fmt_m(e$N_ub)),
+    paste0(fmt_pct(e$pctU_lb), "–", fmt_pct(e$pctU_ub)),
+    paste0(fmt_m(e$U_lb),      "–", fmt_m(e$U_ub))
+  )
+
+  main_tbl <- main_tbl %>%
+    mutate(
+      !!paste0("y", yr, "_est") := vals,
+      !!paste0("y", yr, "_ci")  := cis
+    )
+}
+
+main_tbl <- main_tbl %>%
+  mutate(across(starts_with("y"), ~ str_replace_all(.x, "%", "\\\\%")))
+
+
+note_ps <- paste0(
+  "Data represent weighted estimates from the National Survey of Gun Policy, United ",
+  "States, 2013--2025. Survey weights were post-stratified within each wave to ",
+  "American Community Survey counts of households with and without people younger ",
+  "than 18 years, because the achieved sample contained a higher ",
+  "proportion of households with children than the US household population in every ",
+  "wave. The share of households with a child ",
+  "under 18 therefore reproduces the American Community Survey benchmark by ",
+  "construction. Estimated numbers of children are weighted population totals from ",
+  "the post-stratified design; shares divide these by the American Community Survey ",
+  "population younger than 18 years, treated as fixed. Estimates for children living ",
+  "with a loaded and unlocked firearm additionally multiply by the 2024 National ",
+  "Firearm Survey estimate that 21.1\\% (95\\% CI, 18.3\\%--24.3\\%) of gun-owning ",
+  "households with children had at least one firearm stored loaded and unlocked ",
+  "(Miller et al.\\ 2026); this proportion is assumed constant across waves and its ",
+  "interval reflects sampling error in that estimate only. Because 2025 American ",
+  "Community Survey estimates were not yet available, 2024 estimates were used for ",
+  "2025. The 2015 wave is excluded because no household-level firearm ownership ",
+  "measure was collected. Confidence intervals use the delta method on the log scale ",
+  "and incorporate the post-stratification adjustment in the design-based variance. ",
+  "Observation counts are unweighted."
+)
+
+main_latex <- main_tbl %>%
+  kable(
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    linesep   = "",
+    caption   = "Household Firearm Prevalence and Children's Firearm Exposure, 2013-2025",
+    label     = "MainPS",
+    col.names = c("Characteristic", rep(c("Est.", "95\\% CI"), length(years_ps))),
+    align     = paste0("l", strrep("c", 2 * length(years_ps)))
+  ) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, setNames(rep(2, length(years_ps)), as.character(years_ps)))) %>%
+  footnote(number = note_ps, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
+
+save_kable(main_latex, file = here(path_ol, "tables", "main-poststrat.tex"))
+
+```
+
+
+## Figure: estimates and 95% CIs by estimator
+
+Two panels: (A) the share of US households with both a firearm and a child under
+18, and (B) the share of US children exposed to a loaded and unlocked firearm.
+Within each panel the three estimators are distinguished by colour and shape.
+
+Note that the main and ratio estimators use the same (unadjusted) survey design,
+so their household-level estimates in Panel A coincide; only the
+post-stratified estimator differs there. Points are dodged so overlapping
+estimators remain visible.
+
+```{r}
+estimator_levels <- c("Main", "Ratio", "Post-stratified")
+
+## Panel A: household has a firearm and a child under 18 -----------------------
+panel_a <-
+  bind_rows(
+    proportion_estimates %>%
+      transmute(
+        year,
+        estimator = "Main",
+        est = gunchild18un_yes,
+        lb  = ci_l_gunchild18un_yes,
+        ub  = ci_u_gunchild18un_yes
+      ),
+    proportion_estimates %>%
+      transmute(
+        year,
+        estimator = "Ratio",
+        est = gunchild18un_yes,
+        lb  = ci_l_gunchild18un_yes,
+        ub  = ci_u_gunchild18un_yes
+      ),
+    prop_ps %>%
+      transmute(
+        year,
+        estimator = "Post-stratified",
+        est = gunchild18un_yes,
+        lb  = ci_l_gunchild18un_yes,
+        ub  = ci_u_gunchild18un_yes
+      )
+  ) %>%
+  mutate(panel = "Household has a firearm and a child under 18")
+
+## Panel B: children exposed to loaded and unlocked firearms -------------------
+panel_b <-
+  bind_rows(
+    exposure_delta %>%
+      transmute(
+        year,
+        estimator = "Main",
+        est = pct_unsafe_child_est,
+        lb  = pct_unsafe_child_lb,
+        ub  = pct_unsafe_child_ub
+      ),
+    exposure_ratio %>%
+      transmute(
+        year,
+        estimator = "Ratio",
+        est = pct_children_unsafe,
+        lb  = pct_children_unsafe_lb,
+        ub  = pct_children_unsafe_ub
+      ),
+    exposure_ps %>%
+      transmute(
+        year,
+        estimator = "Post-stratified",
+        est = pctU,
+        lb  = pctU_lb,
+        ub  = pctU_ub
+      )
+  ) %>%
+  mutate(panel = "Children exposed to loaded and unlocked firearms")
+
+estimator_df <-
+  bind_rows(panel_a, panel_b) %>%
+  filter(year != 2015, !is.na(est)) %>%
+  mutate(
+    across(c(est, lb, ub), ~ .x * 100),
+    estimator = factor(estimator, levels = estimator_levels),
+    year_f    = factor(year),
+    panel     = factor(
+      panel,
+      levels = c("Household has a firearm and a child under 18",
+                 "Children exposed to loaded and unlocked firearms")
+    )
+  )
+
+estimator_cols <- c(
+  "Main"            = "#1f4e5f",
+  "Ratio"           = "#e9a13b",
+  "Post-stratified" = "#3fa7d6"
+)
+
+estimator_shapes <- c(
+  "Main"            = 16,   # circle
+  "Ratio"           = 17,   # triangle
+  "Post-stratified" = 15    # square
+)
+
+estimator_plot <-
+  ggplot(
+    estimator_df,
+    aes(year_f, est,
+        color = estimator, shape = estimator, group = estimator)
+  ) +
+  geom_linerange(
+    aes(ymin = lb, ymax = ub),
+    position = position_dodge(width = 0.5),
+    linewidth = 0.6
+  ) +
+  geom_point(
+    position = position_dodge(width = 0.5),
+    size = 2.2
+  ) +
+  facet_wrap(~ panel, ncol = 1, scales = "free_y") +
+  scale_color_manual(values = estimator_cols) +
+  scale_shape_manual(values = estimator_shapes) +
+  scale_y_continuous(
+    labels = function(x) paste0(x, "%"),
+    expand = expansion(mult = c(0.10, 0.12))
+  ) +
+  labs(x = NULL, y = "Weighted percentage (95% CI)") +
+  theme +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position  = "bottom",
+    legend.title     = element_blank(),
+    text             = element_text(size = 14),
+    legend.text      = element_text(size = 12)
+  )
+
+estimator_plot
+
+ggsave(
+  here(path_ol, "figures", "estimator-comparison-over-time.png"),
+  estimator_plot, width = 8, height = 7, dpi = 300
+)
+```

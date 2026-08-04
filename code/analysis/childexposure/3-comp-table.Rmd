@@ -106,6 +106,15 @@ wtd_dist <- function(design, vars) {
   })
 }
 
+## Tables are written with escape = FALSE so that the manually escaped percent
+## signs survive; that means characteristic labels have to be escaped by hand.
+## Household income levels (e.g. "$50,000-74,999") otherwise open LaTeX math mode.
+esc_tex <- function(x) {
+  x %>%
+    str_replace_all(fixed("\\"), "\\textbackslash{}") %>%
+    str_replace_all("([&%$#_{}])", "\\\\\\1")
+}
+
 fmt_pct <- function(x) ifelse(is.na(x), "--", paste0(sprintf("%.1f", x), "\\%"))
 fmt_ci   <- function(lb, ub) {
   ifelse(is.na(lb), "--",
@@ -149,7 +158,8 @@ make_table <- function(
 
   body <- build_panel(design) %>%
     mutate(row   = row_number(),
-           label = if_else(variable == "Observations", "Observations", level))
+           label = if_else(variable == "Observations", "Observations",
+                           esc_tex(level)))
 
   var_idx <- body %>%
     filter(variable != "Observations") %>%
@@ -387,10 +397,12 @@ year_tbl <-
           label != "Non-Metro"
           ) %>%
         mutate(
+           # escape LaTeX specials ($ in the income levels) before indenting,
+           # because the table is written with escape = FALSE
            label = ifelse(
             row_type == "level" & label != "Observations",
-            paste0("  ", label),
-            label),
+            paste0("  ", esc_tex(label)),
+            esc_tex(label)),
            across(
              c(stat_5, stat_6),
              ~ ifelse(
