@@ -55,7 +55,7 @@ child <-
 ## Household characteristics by children
 
 ```{r}
-vars <- c(
+vars_default <- c(
   gender       = "Gender",
   age4         = "Age",
   racethnicity = "Race and ethnicity",
@@ -71,7 +71,7 @@ vars <- c(
 child <-
   child |> 
   mutate(
-    across(all_of(names(vars)), ~ droplevels(.x))
+    across(all_of(names(vars_default)), ~ droplevels(.x))
   )
 ds <- svydesign(~1, data = child, strata = ~year, weights = ~weight)
 ```
@@ -106,6 +106,21 @@ wtd_dist <- function(design, vars) {
   })
 }
 
+## A single continuous-variable row per column (e.g. mean number of children),
+## reported alongside the categorical rows rather than as its own header block.
+wtd_mean_row <- function(design, mean_vars) {
+  map_dfr(names(mean_vars), function(v) {
+    est <- svymean(reformulate(v), design, na.rm = TRUE)
+    ci  <- confint(est, level = 0.95)
+    tibble(
+      variable = v,
+      level    = v,
+      est      = sprintf("%.2f", as.numeric(coef(est))),
+      ci       = sprintf("%.2f--%.2f", ci[1, 1], ci[1, 2])
+    )
+  })
+}
+
 ## Tables are written with escape = FALSE so that the manually escaped percent
 ## signs survive; that means characteristic labels have to be escaped by hand.
 ## Household income levels (e.g. "$50,000-74,999") otherwise open LaTeX math mode.
@@ -131,7 +146,7 @@ fmt_ci   <- function(lb, ub) {
          paste0(sprintf("%.1f", lb), "--", sprintf("%.1f", ub), "\\%"))
 }
 
-build_panel <- function(design) {
+build_panel <- function(design, vars, mean_vars = NULL) {
 
   pieces <- imap(col_defs, function(expr, nm) {
     d <- subset_design(design, expr)
@@ -148,7 +163,14 @@ build_panel <- function(design) {
       ci       = ""
     )
 
-    bind_rows(obs, dist) %>%
+    means <- if (is.null(mean_vars)) {
+      tibble(variable = character(), level = character(),
+             est = character(), ci = character())
+    } else {
+      wtd_mean_row(d, mean_vars)
+    }
+
+    bind_rows(obs, dist, means) %>%
       rename(!!paste0(nm, "_est") := est,
              !!paste0(nm, "_ci")  := ci)
   })
@@ -160,19 +182,62 @@ build_panel <- function(design) {
 make_table <- function(
     design, caption, label, file, subtitle_note = "",
     outer_header = c(" " = 3, "Households with a firearm" = 6),
-    note_intro = 
+    note_intro =
       paste0("Table reports weighted demographic characteristics of US households, ",
              "overall and among households with a firearm in the home, by presence of ",
              "a child under 18, United States, 2013--2025. "
-                       )) {
+                       ),
+    vars = vars_default,
+    mean_vars = NULL,
+    group_of = NULL,
+    drop_zero_rows = FALSE) {
 
-  body <- build_panel(design) %>%
+  body <- build_panel(design, vars, mean_vars)
+
+  ## Precomputed as plain vectors, not inline in case_when: when mean_vars is
+  ## NULL, the corresponding branch must still type-check as a character
+  ## vector, even though it is never selected.
+  is_mean_row <- if (is.null(mean_vars)) {
+    rep(FALSE, nrow(body))
+  } else {
+    body$variable %in% names(mean_vars)
+  }
+  mean_label <- if (is.null(mean_vars)) {
+    rep(NA_character_, nrow(body))
+  } else {
+    unname(mean_vars[body$variable])
+  }
+
+  body <- body %>%
     mutate(row   = row_number(),
-           label = if_else(variable == "Observations", "Observations",
-                           esc_tex(level)))
+           label = case_when(
+             variable == "Observations" ~ "Observations",
+             is_mean_row                ~ mean_label,
+             TRUE                       ~ esc_tex(level)
+           ))
+
+  ## Drop categorical levels that are zero in every column of THIS design (for
+  ## instance a marital-status category not fielded in a given wave), rather
+  ## than showing a row of zeroes. Observations and continuous rows are never
+  ## eligible, since they are not fmt_pct-formatted percentages.
+  if (drop_zero_rows) {
+    est_cols <- paste0(names(col_defs), "_est")
+    zero_levels <- body %>%
+      filter(variable != "Observations",
+             is.null(mean_vars) | !(variable %in% names(mean_vars))) %>%
+      rowwise() %>%
+      mutate(all_zero = all(c_across(all_of(est_cols)) %in% c("0.0\\%", NA))) %>%
+      ungroup() %>%
+      filter(all_zero) %>%
+      select(variable, level)
+
+    body <- anti_join(body, zero_levels, by = c("variable", "level")) %>%
+      mutate(row = row_number())
+  }
 
   var_idx <- body %>%
-    filter(variable != "Observations") %>%
+    filter(variable != "Observations",
+           is.null(mean_vars) | !(variable %in% names(mean_vars))) %>%
     group_by(variable) %>%
     summarise(start = min(row), end = max(row), .groups = "drop") %>%
     mutate(label = vars[variable]) %>%
@@ -190,6 +255,15 @@ make_table <- function(
     "survey weights and may not sum to 100 because of rounding and item ",
     "nonresponse; observation counts are unweighted. Confidence intervals are ",
     "95 percent Wald intervals from the survey design and are truncated at 0 and 100. ",
+    if (!is.null(mean_vars)) {
+      paste0("Rows reporting a mean number of children give the weighted mean ",
+             "and a 95 percent Wald confidence interval on that mean, not a ",
+             "percentage. ")
+    },
+    if (drop_zero_rows) {
+      paste0("Categories with zero weighted respondents in this survey wave ",
+             "are omitted rather than shown as zero. ")
+    },
     "The 2015 wave is excluded because no household-level firearm ownership ",
     "measure was collected."
   )
@@ -215,10 +289,43 @@ make_table <- function(
     add_header_above(outer_header) %>%
     row_spec(1, bold = TRUE)
 
-  for (i in seq_len(nrow(var_idx))) {
-    out <- pack_rows(out, var_idx$label[i], var_idx$start[i], var_idx$end[i],
-                     bold = TRUE, italic = FALSE, indent = FALSE,
-                     latex_gap_space = "0.4em")
+  ## Section headers (e.g. "Respondent characteristics") are added before the
+  ## nested variable headers (e.g. "Gender") so the section header renders
+  ## above them; both reference row numbers in the original, unpacked body,
+  ## which kableExtra requires regardless of call order.
+  if (!is.null(group_of)) {
+
+    mean_idx <- if (is.null(mean_vars)) {
+      tibble(variable = character(), start = integer(), end = integer())
+    } else {
+      body %>% filter(variable %in% names(mean_vars)) %>%
+        transmute(variable, start = row, end = row)
+    }
+
+    section_idx <- bind_rows(var_idx %>% select(variable, start, end), mean_idx) %>%
+      mutate(section = group_of[variable]) %>%
+      group_by(section) %>%
+      summarise(start = min(start), end = max(end), .groups = "drop") %>%
+      arrange(start)
+
+    for (i in seq_len(nrow(section_idx))) {
+      out <- pack_rows(out, section_idx$section[i], section_idx$start[i],
+                       section_idx$end[i], bold = TRUE, italic = FALSE,
+                       indent = FALSE, latex_gap_space = "0.6em")
+    }
+
+    for (i in seq_len(nrow(var_idx))) {
+      out <- pack_rows(out, var_idx$label[i], var_idx$start[i], var_idx$end[i],
+                       bold = FALSE, italic = TRUE, indent = TRUE,
+                       latex_gap_space = "0.4em")
+    }
+
+  } else {
+    for (i in seq_len(nrow(var_idx))) {
+      out <- pack_rows(out, var_idx$label[i], var_idx$start[i], var_idx$end[i],
+                       bold = TRUE, italic = FALSE, indent = FALSE,
+                       latex_gap_space = "0.4em")
+    }
   }
 
   out <- out %>%
@@ -289,14 +396,79 @@ child_note_intro <- paste0(
 
 child_outer <- c(" " = 3, "Households with children" = 6)
 
+## All four household-child-characteristics tables group characteristics into
+## "Respondent characteristics" (including marital status, moved up from the
+## household group below) and "Household characteristics" (which gains a row
+## reporting the mean number of children per household). "Living with partner"
+## is zero in both 2023 and 2025 (it was not fielded those waves); dropping
+## zero rows is therefore only requested for those two, since the pooled and
+## 2013 estimates are nonzero for every category.
+resp_vars <- c(
+  gender       = "Gender",
+  age4         = "Age",
+  racethnicity = "Race and ethnicity",
+  altparty     = "Political affiliation",
+  educ5        = "Highest level of education",
+  employ       = "Current employment status",
+  marital      = "Marital status"
+)
+hh_vars <- c(
+  income4 = "Household income",
+  metro   = "Metropolitan area",
+  region4 = "Region"
+)
+vars_grouped <- c(resp_vars, hh_vars)
+
+group_of <- c(
+  setNames(rep("Respondent characteristics", length(resp_vars)), names(resp_vars)),
+  setNames(rep("Household characteristics",  length(hh_vars)),   names(hh_vars)),
+  hh18un = "Household characteristics"
+)
+
+mean_vars <- c(hh18un = "Mean number of children in household")
+
+## Pooling adjustment for the pooled table only. Each wave's weight is already
+## normalised to that wave's own sample (mean weight ~1 per year), so stacking
+## six waves without adjustment inflates the pooled weight total to roughly six
+## waves' worth rather than one. The standard fix is to divide every
+## observation's weight by the number of pooled waves, equivalently rescaling
+## so the pooled weights sum to one wave's population rather than six stacked
+## on top of each other.
+##
+## This changes nothing this table actually reports: every quantity here is a
+## svymean() proportion or the svymean()-based mean-children row, and both are
+## exactly invariant to multiplying every weight by the same constant (it
+## cancels in the sum(w*x)/sum(w) ratio, and in its design-based variance).
+## The adjustment is applied anyway because it is the correct convention for a
+## pooled multi-wave design, and it is what protects any total-based quantity
+## (svytotal, a weighted population count) that might be added to this design
+## later from being silently off by a factor of six; it is inert here only
+## because nothing in this specific table is a total.
+n_waves_pooled <- length(unique(child$year))
+ds_pooled <- svydesign(
+  ~1,
+  data    = child %>% mutate(weight = weight / n_waves_pooled),
+  strata  = ~year,
+  weights = ~weight
+)
+
 make_table(
-  design  = ds,
+  design  = ds_pooled,
   caption = "Characteristics of US Adults Overall and Among Households with Children, by Presence of a Firearm, Pooled 2013--2025",
   label   = "HHChildCharPooled",
   file    = "household-child-characteristics-pooled.tex",
-  subtitle_note = "Estimates pool all survey waves from 2013 to 2025. ",
+  subtitle_note = paste0(
+    "Estimates pool all survey waves from 2013 to 2025. Each wave's survey ",
+    "weight is divided by the number of pooled waves (", n_waves_pooled,
+    ") before pooling, so that the combined weights represent a single wave's ",
+    "population rather than six waves stacked together; this rescaling does ",
+    "not change any percentage or mean reported here. "
+  ),
   outer_header  = child_outer,
-  note_intro    = child_note_intro
+  note_intro    = child_note_intro,
+  vars          = vars_grouped,
+  mean_vars     = mean_vars,
+  group_of      = group_of
 )
 
 make_table(
@@ -306,7 +478,24 @@ make_table(
   file    = "household-child-characteristics-2013.tex",
   subtitle_note = "Estimates are from the 2013 survey wave. ",
   outer_header  = child_outer,
-  note_intro    = child_note_intro
+  note_intro    = child_note_intro,
+  vars          = vars_grouped,
+  mean_vars     = mean_vars,
+  group_of      = group_of
+)
+
+make_table(
+  design  = subset_design(ds, quote(year == 2023)),
+  caption = "Characteristics of US Adults Overall and Among Households with Children, by Presence of a Firearm, 2023",
+  label   = "HHChildChar2023",
+  file    = "household-child-characteristics-2023.tex",
+  subtitle_note = "Estimates are from the 2023 survey wave. ",
+  outer_header  = child_outer,
+  note_intro    = child_note_intro,
+  vars          = vars_grouped,
+  mean_vars     = mean_vars,
+  group_of      = group_of,
+  drop_zero_rows = TRUE
 )
 
 make_table(
@@ -316,7 +505,11 @@ make_table(
   file    = "household-child-characteristics-2025.tex",
   subtitle_note = "Estimates are from the 2025 survey wave. ",
   outer_header  = child_outer,
-  note_intro    = child_note_intro
+  note_intro    = child_note_intro,
+  vars          = vars_grouped,
+  mean_vars     = mean_vars,
+  group_of      = group_of,
+  drop_zero_rows = TRUE
 )
 ```
 

@@ -705,41 +705,52 @@ tibble(
 
 ```{r}
 
-A_2025 <- A_hat %>% filter(year == 2025)
+## Ratio estimator for 2025: a pure survey quantity, computed here directly
+## from ds_delta rather than reusing the P_hat built later in the document,
+## because this chunk runs earlier. child_exposed on ds_delta is defined from
+## gunchild18un, but since hh18un is 0 whenever child18un is "No", this is
+## numerically identical to the gunhousehold-based definition used to build
+## P_hat below, so the two are the same quantity computed twice.
+ratio_2025  <- svyratio(~child_exposed, ~hh18un, subset(ds_delta, year == 2025))
+P_2025      <- as.numeric(coef(ratio_2025))
+P_2025_se   <- as.numeric(SE(ratio_2025))
 
-recompute <- function(N_hh, N_child, A, A_se, s = s_hat, s_sd = s_se) {
+## Unlike the household-scaled estimator this table previously reported, the
+## ratio estimator's child-level share is a ratio of two survey-weighted sums
+## and does not involve the American Community Survey household total at all;
+## only the population younger than 18 years enters, to convert the share into
+## a count. Total US households is therefore dropped from this table rather
+## than shown as an unused row.
+recompute_ratio <- function(N_child, P, P_se, s = s_hat, s_sd = s_se) {
   z         <- qnorm(0.975)
-  rel_var_A <- (A_se / A)^2
-  rel_var_U <- rel_var_A + (s_sd / s)^2
+  rel_var_P <- (P_se / P)^2
+  rel_var_U <- rel_var_P + (s_sd / s)^2
 
   tibble(
-    child_est        = N_hh * A,
-    child_lb         = N_hh * A * exp(-z * sqrt(rel_var_A)),
-    child_ub         = N_hh * A * exp( z * sqrt(rel_var_A)),
-    unsafe_child_est = N_hh * A * s,
-    unsafe_child_lb  = N_hh * A * s * exp(-z * sqrt(rel_var_U)),
-    unsafe_child_ub  = N_hh * A * s * exp( z * sqrt(rel_var_U))
+    child_est        = N_child * P,
+    child_lb         = N_child * P * exp(-z * sqrt(rel_var_P)),
+    child_ub         = N_child * P * exp( z * sqrt(rel_var_P)),
+    unsafe_child_est = N_child * P * s,
+    unsafe_child_lb  = N_child * P * s * exp(-z * sqrt(rel_var_U)),
+    unsafe_child_ub  = N_child * P * s * exp( z * sqrt(rel_var_U))
   ) %>%
     mutate(
       across(everything(), ~ .x / N_child, .names = "pct_{.col}"),
-      totalhh  = N_hh,
       children = N_child
     )
 }
 
 sens_2025 <- bind_rows(
-  recompute(
-    N_hh    = census_estimates$totalhh[census_estimates$year == 2025],
+  recompute_ratio(
     N_child = census_estimates$children[census_estimates$year == 2025],
-    A       = A_2025$A,
-    A_se    = A_2025$A_se
+    P       = P_2025,
+    P_se    = P_2025_se
   ) %>% mutate(spec = "2024 ACS estimates"),
 
-  recompute(
-    N_hh    = proj_2025$totalhh_proj,
+  recompute_ratio(
     N_child = proj_2025$children_proj,
-    A       = A_2025$A,
-    A_se    = A_2025$A_se
+    P       = P_2025,
+    P_se    = P_2025_se
   ) %>% mutate(spec = "Projected 2025 totals")
 ) %>%
   select(spec, everything())
@@ -751,12 +762,11 @@ fmt_pct <- function(x) paste0(round(x * 100, 1), "\\%")
 
 sens_tbl <- tibble(
   characteristic = c(
-    "Total US households",
     "US population under 18",
+    "Children living with a firearm (\\% of US children)",
     "Estimated children exposed",
-    "Children exposed (\\% of US children)",
-    "Estimated children exposed to loaded and unlocked firearms",
-    "Children exposed to loaded and unlocked firearms (\\% of US children)"
+    "Children exposed to loaded and unlocked firearms (\\% of US children)",
+    "Estimated children exposed to loaded and unlocked firearms"
   )
 )
 
@@ -766,42 +776,49 @@ for (sp in unique(sens_2025$spec)) {
   sens_tbl <- sens_tbl %>%
     mutate(
       !!paste0(make.names(sp), "_est") := c(
-        fmt_m(d$totalhh),
         fmt_m(d$children),
-        fmt_m(d$child_est),
         fmt_pct(d$pct_child_est),
-        fmt_m(d$unsafe_child_est),
-        fmt_pct(d$pct_unsafe_child_est)
+        fmt_m(d$child_est),
+        fmt_pct(d$pct_unsafe_child_est),
+        fmt_m(d$unsafe_child_est)
       ),
       !!paste0(make.names(sp), "_ci") := c(
-        "", "",
-        paste0(fmt_m(d$child_lb), "–", fmt_m(d$child_ub)),
+        "",
         paste0(fmt_pct(d$pct_child_lb), "–", fmt_pct(d$pct_child_ub)),
-        paste0(fmt_m(d$unsafe_child_lb), "–", fmt_m(d$unsafe_child_ub)),
-        paste0(fmt_pct(d$pct_unsafe_child_lb), "-", fmt_pct(d$pct_unsafe_child_ub))
+        paste0(fmt_m(d$child_lb), "–", fmt_m(d$child_ub)),
+        paste0(fmt_pct(d$pct_unsafe_child_lb), "-", fmt_pct(d$pct_unsafe_child_ub)),
+        paste0(fmt_m(d$unsafe_child_lb), "–", fmt_m(d$unsafe_child_ub))
       )
     )
 }
 
 sens_note <- paste0(
-  "Table compares estimated numbers of US children exposed to firearms in the home ",
-  "in 2025 under two assumptions about American Community Survey totals, United States, 2025. ",
-  "The first column pair substitutes 2024 American Community Survey estimates, which ",
-  "is the specification used in the main analysis because 2025 estimates were not yet ",
-  "available. The second projects 2025 totals by fitting a log-linear trend to the ",
-  "2013--2024 American Community Survey series separately for total households and for ",
-  "the population younger than 18 years, implying annual growth of ",
-  sprintf("%.2f\\%%", growth_hh * 100), " in households and ",
-  sprintf("%.2f\\%%", growth_child * 100), " in the child population. ",
-  "Survey-based inputs are identical across columns; only the American Community Survey ",
-  "totals differ. Confidence intervals use the delta method on the log scale and are ",
-  "therefore of identical relative width in both columns."
+  "Table compares estimated numbers of US children living with a firearm in ",
+  "2025, from the ratio estimator, under two assumptions about American ",
+  "Community Survey totals, United States, 2025. The first column pair ",
+  "substitutes 2024 American Community Survey estimates, which is the ",
+  "specification used in the main analysis because 2025 estimates were not ",
+  "yet available. The second projects 2025 totals by fitting a log-linear ",
+  "trend to the 2013--2024 American Community Survey series separately for ",
+  "total households and for the population younger than 18 years, implying ",
+  "annual growth of ", sprintf("%.2f\\%%", growth_hh * 100), " in households ",
+  "and ", sprintf("%.2f\\%%", growth_child * 100), " in the child population; ",
+  "only the child-population growth rate is relevant here. The ratio ",
+  "estimator divides the weighted number of children in respondent households ",
+  "with a firearm by the weighted number of children in all respondent ",
+  "households, a quantity computed entirely from the survey; the American ",
+  "Community Survey population younger than 18 years enters only to convert ",
+  "that share into a count, so it is identical across both columns and the ",
+  "percentage rows are unaffected by which American Community Survey ",
+  "assumption is used. Total US households is therefore not shown, as it does ",
+  "not enter this specification. Confidence intervals use the delta method on ",
+  "the log scale and are of identical relative width in both columns."
 )
 
 sens_latex <- sens_tbl %>%
   kable(
     format = "latex", booktabs = TRUE, escape = FALSE, linesep = "",
-    caption = "Sensitivity of 2025 Estimates to American Community Survey Totals",
+    caption = "Sensitivity of 2025 Ratio-Estimator Estimates to American Community Survey Totals",
     label = "SensACS",
     col.names = c("Characteristic", rep(c("Est.", "95\\% CI"), 2)),
     align = "lcccc"
@@ -1212,25 +1229,26 @@ tbl_ratio_simple <- tbl_ratio_simple %>%
 note_ratio <- paste0(
   "Data represent weighted estimates from the National Survey of Gun Policy, ",
   "United States, 2013--2025. Household-level rows report the weighted share of ",
-  "US households with (1) a gun in the home, (2) a child under 18, and (3) both. ",
-  "The share of US children living in a household with a firearm is estimated as a ",
-  "ratio: the weighted number of children in respondent households with a firearm ",
-  "divided by the weighted number of children in all respondent households. ",
-  "This ratio form is used in place of scaling a per-household mean by American ",
-  "Community Survey household totals, because the survey over-represents households ",
-  "containing children relative to the American Community Survey and the degree of ",
-  "over-representation varies across waves; the over-representation largely cancels ",
-  "between the numerator and denominator of the ratio (Appendix Table). ",
-  "Estimated counts of exposed children apply this share to the American Community ",
-  "Survey population younger than 18 years. Children exposed to loaded and unlocked ",
-  "firearms additionally multiply by the 2024 National Firearm Survey estimate that ",
-  "21.1\\% (95\\% CI, 18.3\\%--24.3\\%) of gun-owning households with children had at ",
-  "least one firearm stored loaded and unlocked (Miller et al.\\ 2026); this rate is ",
-  "assumed constant across waves. Because 2025 American Community Survey estimates ",
-  "were not yet available, 2024 estimates were used for 2025. The 2015 wave is excluded ",
-  "because no household-level firearm ownership measure was collected. Confidence ",
-  "intervals use the delta method, treating American Community Survey ",
-  "totals as fixed and the storage estimate as independent of the survey estimates."
+  "survey respondents whose household has (1) a gun in the home, (2) a child ",
+  "under 18, and (3) both a gun and a child under 18; these are respondent-level ",
+  "survey estimates, not counts of US households, and no American Community ",
+  "Survey total enters them. The share of US children living in a household with ",
+  "a firearm is estimated as the ratio of the weighted number of children in ",
+  "respondent households with a firearm to the weighted number of children in ",
+  "all respondent households, a quantity computed entirely from the survey. ",
+  "Estimated counts of exposed children apply this share to the American ",
+  "Community Survey population younger than 18 years, the only point at which ",
+  "an American Community Survey total enters the calculation. Children exposed ",
+  "to loaded and unlocked firearms additionally multiply by the 2024 National ",
+  "Firearm Survey estimate that 21.1\\% (95\\% CI, 18.3\\%--24.3\\%) of ",
+  "gun-owning households with children had at least one firearm stored loaded ",
+  "and unlocked (Miller et al.\\ 2026); this rate is assumed constant across ",
+  "waves. Because 2025 American Community Survey estimates were not yet ",
+  "available, 2024 estimates were used for 2025. The 2015 wave is excluded ",
+  "because no household-level firearm ownership measure was collected. ",
+  "Confidence intervals use the delta method, treating American Community ",
+  "Survey totals as fixed and the storage estimate as independent of the ",
+  "survey estimates."
 )
 
 tbl_ratio <- tbl_ratio_simple %>%
@@ -1295,8 +1313,12 @@ calib_note <- paste0(
   "Survey figure, by survey wave, United States, 2013--2025. The survey quantity is the ",
   "weighted mean of the household child count across all respondent households; the ",
   "American Community Survey quantity is the population younger than 18 years divided ",
-  "by total households.",
-  "The survey sample contains a higher proportion of households with children than the American Community Survey in all waves, with the largest divergence in 2021 and 2023. This reflects the composition of the recruited panel rather than the survey weights, which adjust child-containing households by a factor between 0.98 and 1.20 across waves. Because the source of the imbalance is the achieved sample rather than any single adjustment, estimates of the share of US children living in a household with a firearm are computed as a ratio of weighted child counts within the survey, so that the imbalance cancels between numerator and denominator.",
+  "by total households. The column labelled $\\lambda$ is the ratio of the two, ",
+  "equivalently the survey-implied population younger than 18 years divided by the ",
+  "American Community Survey population younger than 18 years; $\\lambda$ equals one ",
+  "when the survey accounts for exactly as many children as the American Community ",
+  "Survey. ",
+  "The survey sample contains a higher proportion of households with children than the American Community Survey in all waves, with the largest divergence in 2021 and 2023. This reflects the composition of the recruited panel rather than the survey weights, which adjust child-containing households by a factor between 0.98 and 1.20 across waves. Because the source of the imbalance is the achieved sample rather than any single adjustment, estimates of the share of US children living in a household with a firearm are computed as a ratio of weighted child counts within the survey, so that the imbalance cancels between numerator and denominator. ",
   "Confidence ",
   "intervals for the survey quantity are design-based; American Community Survey totals ",
   "are treated as fixed. The 2015 wave is excluded because no household-level firearm ",
@@ -1311,7 +1333,7 @@ calib_latex <- calib_tbl %>%
     linesep   = "",
     caption   = "Calibration of Survey Household Composition Against American Community Survey Totals, 2013-2025",
     label     = "CalibHH",
-    col.names = c("Year", "Est.", "95\\% CI", "Est.", "Ratio", "Survey-implied", "ACS"),
+    col.names = c("Year", "Est.", "95\\% CI", "Est.", "$\\lambda$", "Survey-implied", "ACS"),
     align     = "lcccccc"
   ) %>%
   kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
@@ -1536,7 +1558,15 @@ compare_latex <-
   footnote(number = esc_note(compare_note), threeparttable = TRUE,
            escape = FALSE, fixed_small_size = TRUE)
 
-save_kable(compare_latex, file = here(path_ol, "tables", "estimator-comparison.tex"))
+## This version compares against the binary presence/absence post-stratification
+## and carries the adjustment-factor column. The manuscript table,
+## tables/estimator-comparison.tex, is written by 02_child_count_calibration.R:
+## it reports estimates with 95% confidence intervals for all three estimators,
+## uses the child-count calibration for the post-stratified column, and has no
+## adjustment-factor column. The two write to different files so that neither
+## overwrites the other, whichever order they are run in.
+save_kable(compare_latex,
+           file = here(path_ol, "tables", "estimator-comparison-binary-ps.tex"))
 ```
 
 
@@ -1867,8 +1897,14 @@ estimator_plot <-
 
 estimator_plot
 
+## This version of the figure uses the binary presence/absence
+## post-stratification. The manuscript figure,
+## figures/estimator-comparison-over-time.png, is written by
+## 02_child_count_calibration.R and uses the child-count calibration for its
+## post-stratified series. The two write to different files so that neither
+## overwrites the other, whichever order they are run in.
 ggsave(
-  here(path_ol, "figures", "estimator-comparison-over-time.png"),
+  here(path_ol, "figures", "estimator-comparison-over-time-binary-ps.png"),
   estimator_plot, width = 8, height = 9.5, dpi = 300
 )
 ```
