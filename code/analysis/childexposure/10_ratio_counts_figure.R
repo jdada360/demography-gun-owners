@@ -29,9 +29,13 @@
 ##
 ## Output
 ##  - here(path_ol, "figures", "ratio-estimator-counts-over-time.png")
+##  - here(path_ol, "figures", "ratio-estimator-share-labeled.png")
+##  - here(path_ol, "figures", "ratio-estimator-share-dual-axis.png")
+##  - here(path_ol, "figures", "ratio-estimator-share-and-millions-panels.png")
 ##  - here(path_ol, "tables", "ratio-estimator-counts-over-time.tex")
 
-packages <- c("tidyverse", "survey", "here", "janitor", "kableExtra", "ggthemes")
+packages <- c("tidyverse", "survey", "here", "janitor", "kableExtra", "ggthemes",
+             "patchwork")
 pacman::p_load(packages, character.only = TRUE)
 
 if (!exists("path_od")) {
@@ -159,17 +163,17 @@ endpoint_df <- share_df %>% filter(year %in% c(min(year), max(year)))
 ## family has to be set on the geom itself.
 share_plot <-
   ggplot(share_df, aes(year_f, est, group = 1)) +
-  geom_ribbon(aes(ymin = lb, ymax = ub), fill = "#01a2d9", alpha = 0.2) +
-  geom_line(color = "#01a2d9", linewidth = 0.6) +
-  geom_point(color = "#01a2d9", size = 2.6) +
+  geom_ribbon(aes(ymin = lb, ymax = ub), fill = "grey70", alpha = 0.5) +
+  geom_line(color = "black", linewidth = 0.6) +
+  geom_point(color = "black", size = 2.6) +
   geom_text(
     data = endpoint_df, aes(label = label, y = ub),
-    vjust = -0.9, size = 4.2, fontface = "bold", color = "#01a2d9",
+    vjust = -0.9, size = 4.2, fontface = "bold", color = "black",
     family = "Times New Roman"
   ) +
   scale_y_continuous(labels = function(x) paste0(x, "%"),
                      limits = c(20, 60), breaks = seq(20, 60, 10)) +
-  labs(x = NULL, y = "Children living with a firearm\n(% of US children, 95% CI)") +
+  labs(x = NULL, y = "Share of US children living in a household with a firearm") +
   theme +
   theme(
     panel.grid.minor = element_blank(),
@@ -179,6 +183,127 @@ share_plot <-
 ggsave(
   here(path_ol, "figures", "ratio-estimator-share-labeled.png"),
   share_plot, width = 8, height = 6, dpi = 300
+)
+
+## ---- figure: same as above, with a secondary millions axis on the right ------------
+## ggplot2's sec_axis() can only relabel the primary axis with a fixed linear
+## transform - it cannot plot a second, independently-varying series - so the
+## right axis uses a single scaling factor (the average ACS population under
+## 18 across waves, ~73.1M) to convert percent to millions. That factor is not
+## exact for every wave, because the ACS population under 18 varies slightly
+## year to year (72.6-73.6M); the discrepancy is under 0.15M at either
+## endpoint. The endpoint text labels are not read off this approximate axis -
+## they use the exact per-year child_est, the same values as in
+## ratio-estimator-share-labeled.png and tables/yearly-share-ratio.tex.
+sec_factor <- mean(acs_children$acs_children) / 1e6 / 100
+
+share_dual_plot <-
+  ggplot(share_df, aes(year_f, est, group = 1)) +
+  geom_ribbon(aes(ymin = lb, ymax = ub), fill = "grey70", alpha = 0.5) +
+  geom_line(color = "black", linewidth = 0.6) +
+  geom_point(color = "black", size = 2.6) +
+  geom_text(
+    data = endpoint_df, aes(label = label, y = ub),
+    vjust = -0.9, size = 4.2, fontface = "bold", color = "black",
+    family = "Times New Roman"
+  ) +
+  scale_y_continuous(
+    labels = function(x) paste0(x, "%"),
+    limits = c(20, 60), breaks = seq(20, 60, 10),
+    sec.axis = sec_axis(~ . * sec_factor,
+                        name = "Children living in a household with a firearm, millions",
+                        breaks = seq(15, 45, 5))
+  ) +
+  labs(x = NULL, y = "Share of US children living in a household with a firearm") +
+  theme +
+  theme(
+    panel.grid.minor = element_blank(),
+    text             = element_text(family = "Times New Roman", size = 14)
+  )
+
+ggsave(
+  here(path_ol, "figures", "ratio-estimator-share-dual-axis.png"),
+  share_dual_plot, width = 9, height = 6, dpi = 300
+)
+
+## ---- figure: two-panel, share (A) and millions (B), shared x-axis ------------------
+## JAMA Pediatrics-style two-panel figure: Panel A is the share of US children,
+## Panel B is the estimated count in millions - the same "children living with
+## a firearm" quantity on two scales, not two different quantities. No
+## household-ownership measure and no loaded-and-unlocked estimate here; this
+## figure is scoped to the single headline series.
+##
+## NOTE ON THE REQUESTED 2013 LABEL: the request specifies 2013 = 31.3% /
+## 22.2M, but 22.2M is this analysis's 2017 count (30.1% x ACS population),
+## not 2013's. The verified 2013 count consistent with 31.3% is 23.0M
+## (31.3% x the 2013 ACS population under 18) - the same value already used in
+## ratio-estimator-share-labeled.png above and in tables/yearly-share-ratio.tex.
+## 23.0M is used below rather than 22.2M so the two figures do not contradict
+## each other; flagged here and in the chat response rather than silently
+## substituted.
+panel_df <- counts %>%
+  transmute(
+    year, year_f = factor(year),
+    pct_est = 100 * P,
+    pct_lb  = 100 * P * exp(-z * sqrt(rel_var_P)),
+    pct_ub  = 100 * P * exp( z * sqrt(rel_var_P)),
+    m_est   = child_est / 1e6,
+    m_lb    = child_lb  / 1e6,
+    m_ub    = child_ub  / 1e6
+  )
+
+panel_endpoints <- panel_df %>% filter(year %in% c(min(year), max(year)))
+
+## A minimal, gridline-free theme in the JAMA Pediatrics house style: serif
+## throughout, black axis lines and ticks, no panel border, no legend (single
+## series per panel).
+jama_theme <- theme_classic(base_family = "Times New Roman", base_size = 14) +
+  theme(
+    axis.line        = element_line(color = "black", linewidth = 0.4),
+    axis.ticks       = element_line(color = "black", linewidth = 0.4),
+    axis.text        = element_text(color = "black"),
+    plot.title       = element_text(face = "bold", size = 14, hjust = 0),
+    plot.margin      = margin(10, 16, 6, 6)
+  )
+
+panel_a <-
+  ggplot(panel_df, aes(year_f, pct_est, group = 1)) +
+  geom_ribbon(aes(ymin = pct_lb, ymax = pct_ub), fill = "grey70", alpha = 0.5) +
+  geom_line(color = "black", linewidth = 0.6) +
+  geom_point(color = "black", size = 2.6) +
+  geom_text(
+    data = panel_endpoints, aes(label = sprintf("%.1f%%", pct_est), y = pct_ub),
+    vjust = -0.9, size = 4.0, fontface = "bold", color = "black",
+    family = "Times New Roman"
+  ) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     limits = c(20, 60), breaks = seq(20, 60, 10)) +
+  labs(title = "A", x = NULL,
+       y = "Children Living in a Household\nWith a Firearm, %") +
+  jama_theme +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        axis.line.x = element_blank())
+
+panel_b <-
+  ggplot(panel_df, aes(year_f, m_est, group = 1)) +
+  geom_ribbon(aes(ymin = m_lb, ymax = m_ub), fill = "grey70", alpha = 0.5) +
+  geom_line(color = "black", linewidth = 0.6) +
+  geom_point(color = "black", size = 2.6) +
+  geom_text(
+    data = panel_endpoints, aes(label = sprintf("%.1fM", m_est), y = m_ub),
+    vjust = -0.9, size = 4.0, fontface = "bold", color = "black",
+    family = "Times New Roman"
+  ) +
+  scale_y_continuous(limits = c(15, 40), breaks = seq(15, 40, 5)) +
+  labs(title = "B", x = NULL,
+       y = "Children Living in a Household\nWith a Firearm, Millions") +
+  jama_theme
+
+share_millions_panels <- panel_a / panel_b
+
+ggsave(
+  here(path_ol, "figures", "ratio-estimator-share-and-millions-panels.png"),
+  share_millions_panels, width = 7, height = 8.5, dpi = 300
 )
 
 ## ---- table ---------------------------------------------------------------------------

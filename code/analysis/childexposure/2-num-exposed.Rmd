@@ -757,16 +757,16 @@ sens_2025 <- bind_rows(
 ```
 
 ```{r}
-fmt_m   <- function(x) paste0(sjmisc::big_mark(round(x / 1e6, 1)), " M")
-fmt_pct <- function(x) paste0(round(x * 100, 1), "\\%")
+## sprintf, not round()+paste0: round(45, 1) drops the trailing zero when
+## coerced to character ("45", not "45.0").
+fmt_m   <- function(x) paste0(sprintf("%.1f", x / 1e6), " M")
+fmt_pct <- function(x) paste0(sprintf("%.1f", x * 100), "\\%")
 
 sens_tbl <- tibble(
   characteristic = c(
     "US population under 18",
-    "Children living with a firearm (\\% of US children)",
-    "Estimated children exposed",
-    "Children exposed to loaded and unlocked firearms (\\% of US children)",
-    "Estimated children exposed to loaded and unlocked firearms"
+    "Children living in a household with a firearm, millions",
+    "Children living in a household with a firearm stored loaded and unlocked, millions"
   )
 )
 
@@ -777,48 +777,36 @@ for (sp in unique(sens_2025$spec)) {
     mutate(
       !!paste0(make.names(sp), "_est") := c(
         fmt_m(d$children),
-        fmt_pct(d$pct_child_est),
         fmt_m(d$child_est),
-        fmt_pct(d$pct_unsafe_child_est),
         fmt_m(d$unsafe_child_est)
       ),
       !!paste0(make.names(sp), "_ci") := c(
         "",
-        paste0(fmt_pct(d$pct_child_lb), "–", fmt_pct(d$pct_child_ub)),
         paste0(fmt_m(d$child_lb), "–", fmt_m(d$child_ub)),
-        paste0(fmt_pct(d$pct_unsafe_child_lb), "-", fmt_pct(d$pct_unsafe_child_ub)),
         paste0(fmt_m(d$unsafe_child_lb), "–", fmt_m(d$unsafe_child_ub))
       )
     )
 }
 
 sens_note <- paste0(
-  "Table compares estimated numbers of US children living with a firearm in ",
-  "2025, from the ratio estimator, under two assumptions about American ",
-  "Community Survey totals, United States, 2025. The first column pair ",
-  "substitutes 2024 American Community Survey estimates, which is the ",
-  "specification used in the main analysis because 2025 estimates were not ",
-  "yet available. The second projects 2025 totals by fitting a log-linear ",
-  "trend to the 2013--2024 American Community Survey series separately for ",
-  "total households and for the population younger than 18 years, implying ",
-  "annual growth of ", sprintf("%.2f\\%%", growth_hh * 100), " in households ",
-  "and ", sprintf("%.2f\\%%", growth_child * 100), " in the child population; ",
-  "only the child-population growth rate is relevant here. The ratio ",
-  "estimator divides the weighted number of children in respondent households ",
-  "with a firearm by the weighted number of children in all respondent ",
-  "households, a quantity computed entirely from the survey; the American ",
-  "Community Survey population younger than 18 years enters only to convert ",
-  "that share into a count, so it is identical across both columns and the ",
-  "percentage rows are unaffected by which American Community Survey ",
-  "assumption is used. Total US households is therefore not shown, as it does ",
-  "not enter this specification. Confidence intervals use the delta method on ",
-  "the log scale and are of identical relative width in both columns."
+  "The table compares estimates of the number of US children living in ",
+  "households with a firearm in 2025 using two approaches to the ACS ",
+  "population younger than 18 years. The primary analysis uses the 2024 ACS ",
+  "estimate because 2025 ACS estimates were not yet available. The ",
+  "sensitivity analysis projects the 2025 child population by fitting a ",
+  "log-linear trend to 2013--2024 ACS estimates. The estimated share of ",
+  "children living in households with a firearm is derived entirely from the ",
+  "survey and is therefore identical under both approaches; only the ",
+  "population total used to convert this share to a number of children ",
+  "differs. The same approach is used to estimate children living with a ",
+  "firearm stored loaded and unlocked. Confidence intervals use the delta ",
+  "method and are identical in relative width across columns."
 )
 
 sens_latex <- sens_tbl %>%
   kable(
     format = "latex", booktabs = TRUE, escape = FALSE, linesep = "",
-    caption = "Sensitivity of 2025 Ratio-Estimator Estimates to American Community Survey Totals",
+    caption = "Sensitivity of 2025 Estimates to American Community Survey Population Totals",
     label = "SensACS",
     col.names = c("Characteristic", rep(c("Est.", "95\\% CI"), 2)),
     align = "lcccc"
@@ -1157,18 +1145,18 @@ years_r <- sort(unique(exposure_ratio$year))
 tbl_ratio_simple <- tibble(
   characteristic = c(
     "Observations",
-    "Household has a firearm",
-    "Household has a child under 18",
-    "Household has a firearm and a child under 18",
-    "Children living with a firearm (\\% of US children)",
-    "Estimated children exposed to firearms in household",
-    "Children exposed to loaded and unlocked firearms (\\% of US children)",
-    "Estimated children exposed to loaded and unlocked firearms"
+    "Children living in a household with a firearm, \\%",
+    "Children living in a household with a firearm, millions",
+    "Children living in a household with a firearm stored loaded and unlocked, \\%",
+    "Children living in a household with a firearm stored loaded and unlocked, millions"
   )
 )
 
-fmt_m   <- function(x) paste0(sjmisc::big_mark(round(x / 1e6, 1)), " M")
-fmt_pct <- function(x) paste0(round(x * 100, 1), "%")
+## sprintf, not round()+paste0: round(45, 1) drops the trailing zero when
+## coerced to character ("45", not "45.0"), so every value must show exactly
+## one decimal place, even whole numbers.
+fmt_m   <- function(x) paste0(sprintf("%.1f", x / 1e6), " M")
+fmt_pct <- function(x) paste0(sprintf("%.1f", x * 100), "%")
 
 for (yr in years_r) {
 
@@ -1202,23 +1190,17 @@ for (yr in years_r) {
     mutate(
       !!paste0("y", yr, "_est") := case_when(
         characteristic == "Observations" ~ yr_obs,
-        characteristic == "Household has a firearm" ~ gun_est,
-        characteristic == "Household has a child under 18" ~ child_est,
-        characteristic == "Household has a firearm and a child under 18" ~ gunchild_est,
-        characteristic == "Children living with a firearm (\\% of US children)" ~ exp_pct_est,
-        characteristic == "Estimated children exposed to firearms in household" ~ exp_n_est,
-        characteristic == "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ uns_pct_est,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ uns_n_est
+        characteristic == "Children living in a household with a firearm, \\%" ~ exp_pct_est,
+        characteristic == "Children living in a household with a firearm, millions" ~ exp_n_est,
+        characteristic == "Children living in a household with a firearm stored loaded and unlocked, \\%" ~ uns_pct_est,
+        characteristic == "Children living in a household with a firearm stored loaded and unlocked, millions" ~ uns_n_est
       ),
       !!paste0("y", yr, "_ci") := case_when(
         characteristic == "Observations" ~ "",
-        characteristic == "Household has a firearm" ~ gun_ci,
-        characteristic == "Household has a child under 18" ~ child_ci,
-        characteristic == "Household has a firearm and a child under 18" ~ gunchild_ci,
-        characteristic == "Children living with a firearm (\\% of US children)" ~ exp_pct_ci,
-        characteristic == "Estimated children exposed to firearms in household" ~ exp_n_ci,
-        characteristic == "Children exposed to loaded and unlocked firearms (\\% of US children)" ~ uns_pct_ci,
-        characteristic == "Estimated children exposed to loaded and unlocked firearms" ~ uns_n_ci
+        characteristic == "Children living in a household with a firearm, \\%" ~ exp_pct_ci,
+        characteristic == "Children living in a household with a firearm, millions" ~ exp_n_ci,
+        characteristic == "Children living in a household with a firearm stored loaded and unlocked, \\%" ~ uns_pct_ci,
+        characteristic == "Children living in a household with a firearm stored loaded and unlocked, millions" ~ uns_n_ci
       )
     )
 }
@@ -1227,28 +1209,25 @@ tbl_ratio_simple <- tbl_ratio_simple %>%
   mutate(across(starts_with("y"), ~ str_replace_all(., "%", "\\\\%")))
 
 note_ratio <- paste0(
-  "Data represent weighted estimates from the National Survey of Gun Policy, ",
-  "United States, 2013--2025. Household-level rows report the weighted share of ",
-  "survey respondents whose household has (1) a gun in the home, (2) a child ",
-  "under 18, and (3) both a gun and a child under 18; these are respondent-level ",
-  "survey estimates, not counts of US households, and no American Community ",
-  "Survey total enters them. The share of US children living in a household with ",
-  "a firearm is estimated as the ratio of the weighted number of children in ",
-  "respondent households with a firearm to the weighted number of children in ",
-  "all respondent households, a quantity computed entirely from the survey. ",
-  "Estimated counts of exposed children apply this share to the American ",
-  "Community Survey population younger than 18 years, the only point at which ",
-  "an American Community Survey total enters the calculation. Children exposed ",
-  "to loaded and unlocked firearms additionally multiply by the 2024 National ",
-  "Firearm Survey estimate that 21.1\\% (95\\% CI, 18.3\\%--24.3\\%) of ",
-  "gun-owning households with children had at least one firearm stored loaded ",
-  "and unlocked (Miller et al.\\ 2026); this rate is assumed constant across ",
-  "waves. Because 2025 American Community Survey estimates were not yet ",
-  "available, 2024 estimates were used for 2025. The 2015 wave is excluded ",
-  "because no household-level firearm ownership measure was collected. ",
-  "Confidence intervals use the delta method, treating American Community ",
-  "Survey totals as fixed and the storage estimate as independent of the ",
-  "survey estimates."
+  "Data represent weighted estimates from the National Survey of Gun Policy, a ",
+  "repeated cross-sectional survey of US adults conducted biennially from 2013 ",
+  "through 2025. Children living in a household with a firearm were estimated ",
+  "from the weighted number of children in respondent households with a ",
+  "reported firearm and the weighted number of children across all respondent ",
+  "households. The estimated number of children was obtained by multiplying ",
+  "this survey-derived share by the corresponding American Community Survey ",
+  "population younger than 18 years. Estimates of children living with a ",
+  "firearm stored loaded and unlocked were calculated by applying the 2024 ",
+  "National Firearm Survey estimate of 21.1\\% (95\\% CI, 18.3\\%-24.3\\%) of ",
+  "firearm-owning households with children having at least 1 firearm stored ",
+  "loaded and unlocked to the estimated number of children living in firearm ",
+  "households. Because 2025 ACS estimates were not yet available, 2024 ACS ",
+  "estimates were used for 2025. The 2015 survey was excluded because no ",
+  "household-level firearm ownership measure was collected. Confidence ",
+  "intervals for children living in firearm households reflect sampling error ",
+  "from the National Survey of Gun Policy; confidence intervals for children ",
+  "living with a firearm stored loaded and unlocked were calculated using the ",
+  "delta method to incorporate uncertainty from both surveys."
 )
 
 tbl_ratio <- tbl_ratio_simple %>%
@@ -1256,7 +1235,7 @@ tbl_ratio <- tbl_ratio_simple %>%
     format    = "latex",
     booktabs  = TRUE,
     escape    = FALSE,
-    caption   = "Household Firearm Prevalence and Children's Firearm Exposure, 2013-2025",
+    caption   = "Children Living in Households With Firearms, 2013--2025",
     label     = "ShareYearRatio",
     col.names = c("Characteristic", rep(c("Est.", "95\\% CI"), length(years_r))),
     linesep   = "",
@@ -1269,6 +1248,130 @@ tbl_ratio <- tbl_ratio_simple %>%
            escape = FALSE, fixed_small_size = TRUE)
 
 save_kable(tbl_ratio, file = here(path_ol, "tables/yearly-share-ratio.tex"))
+```
+
+### Yearly share ratio, with a 2013-to-2025 change column
+
+Same table as above, with one added column comparing 2025 to 2013. All four
+rows report an absolute difference: percentage-point difference for the two
+percentage rows, and a difference in millions for the two count rows (not
+relative percent change, per the table footnote).
+
+```{r}
+## exposure_ratio (not P_hat) carries the derived counts (child_est,
+## unsafe_child_est) alongside P and P_se.
+p13 <- exposure_ratio %>% filter(year == 2013)
+p25 <- exposure_ratio %>% filter(year == 2025)
+
+## ---- row 1: share living with a firearm, pp difference ----------------------------
+## Independent samples (2013 and 2025 share no respondents), so the variance
+## of the difference is the sum of the two variances.
+D        <- p25$P - p13$P
+D_se     <- sqrt(p25$P_se^2 + p13$P_se^2)
+row1_pp    <- 100 * D
+row1_pp_lb <- 100 * (D - z * D_se)
+row1_pp_ub <- 100 * (D + z * D_se)
+
+## ---- row 3: share stored loaded and unlocked, pp difference ------------------------
+## unsafe_share = s_hat * P in both years, and s_hat is the SAME external
+## estimate applied to both waves, not an independent per-year draw, so it does
+## not cancel out of a DIFFERENCE the way it would out of a ratio. Treating
+## s_hat and D as independent, Var(s_hat * D) = s_hat^2 Var(D) + D^2 Var(s_hat)
+## (delta method for a product), so this CI is genuinely wider than a naive
+## s_hat * (row 1 CI) would suggest.
+D_pp     <- 100 * D
+D_pp_se  <- 100 * D_se
+row3_pp    <- s_hat * D_pp
+row3_pp_se <- sqrt(s_hat^2 * D_pp_se^2 + D_pp^2 * s_se^2)
+row3_pp_lb <- row3_pp - z * row3_pp_se
+row3_pp_ub <- row3_pp + z * row3_pp_se
+
+## ---- row 2: children living with a firearm, millions, absolute difference ---------
+## ACS population totals are treated as fixed throughout this analysis (see
+## the table 1 footnote), so child_est's variance comes entirely from P:
+## Var(child_est) = (children * P_se)^2. Independent samples, so the variance
+## of the difference is the sum of the two years' variances.
+A     <- p25$child_est - p13$child_est
+A_se  <- sqrt((p25$children * p25$P_se)^2 + (p13$children * p13$P_se)^2)
+row2_m    <- A / 1e6
+row2_m_lb <- (A - z * A_se) / 1e6
+row2_m_ub <- (A + z * A_se) / 1e6
+
+## ---- row 4: children living with a firearm stored loaded and unlocked, millions ---
+## unsafe_child_est = child_est * s_hat in both years, and s_hat is the SAME
+## external estimate applied to both waves (not an independent per-year draw),
+## so the row 4 difference is exactly s_hat * A, not an independent quantity -
+## same product delta-method treatment as row 3, applied on the millions scale.
+row4_diff    <- s_hat * A
+row4_diff_se <- sqrt(s_hat^2 * A_se^2 + A^2 * s_se^2)
+row4_m    <- row4_diff / 1e6
+row4_m_lb <- (row4_diff - z * row4_diff_se) / 1e6
+row4_m_ub <- (row4_diff + z * row4_diff_se) / 1e6
+
+fmt_pp  <- function(x) sprintf("%.1f pp", x)
+fmt_m2  <- function(x) sprintf("%.1f M", x)
+fmt_ci2 <- function(lb, ub, f) paste0(f(lb), "--", f(ub))
+
+diff_col <- c(
+  "",  # Observations: no change column
+  paste0(fmt_pp(row1_pp), " (", fmt_ci2(row1_pp_lb, row1_pp_ub, fmt_pp), ")"),
+  paste0(fmt_m2(row2_m), " (", fmt_ci2(row2_m_lb, row2_m_ub, fmt_m2), ")"),
+  paste0(fmt_pp(row3_pp), " (", fmt_ci2(row3_pp_lb, row3_pp_ub, fmt_pp), ")"),
+  paste0(fmt_m2(row4_m), " (", fmt_ci2(row4_m_lb, row4_m_ub, fmt_m2), ")")
+)
+
+tbl_ratio_diff <- tbl_ratio_simple %>%
+  mutate(`Change, 2013 to 2025` = diff_col)
+
+## US population under 18 from the same ACS source and 2024-for-2025
+## convention used throughout this analysis: p13$children and p25$children are
+## census_estimates' figures, carried through exposure_ratio. Declined about
+## 0.9 percent over the period; computed here rather than hardcoded so it
+## stays in sync if census_estimates is ever rebuilt from a different vintage.
+acs_pop_pct_change <- 100 * (p25$children / p13$children - 1)
+
+note_ratio_diff <- esc_note(paste0(
+  "Data represent weighted estimates from the National Survey of Gun Policy, ",
+  "a repeated cross-sectional survey of US adults conducted biennially from ",
+  "2013 through 2025. The estimated number and percentage of children ",
+  "younger than 18 years living in households with firearms were calculated ",
+  "by applying survey-based estimates of firearm-owning households to ",
+  "American Community Survey estimates of the US child population; ",
+  "estimates for 2025 use the 2024 American Community Survey population ",
+  "estimate, the most recent available. Estimates of children living in ",
+  "households with firearms stored loaded and unlocked were calculated by ",
+  "applying the corresponding prevalence estimate to the estimated number of ",
+  "children living in firearm-owning households. Confidence intervals ",
+  "incorporate uncertainty from both the National Survey of Gun Policy and ",
+  "American Community Survey estimates. Changes from 2013 to 2025 are ",
+  "reported as absolute differences; for percentages, changes are expressed ",
+  "in percentage points. The estimated number of children living in ",
+  "firearm-owning households reflects both changes in the prevalence of ",
+  "firearm ownership and changes in the underlying child population. Over ",
+  "the same period, the American Community Survey population younger than ",
+  "18 years ", if (acs_pop_pct_change < 0) "decreased" else "increased",
+  " by ", sprintf("%.1f", abs(acs_pop_pct_change)), "\\%."
+))
+
+tbl_ratio_diff_latex <- tbl_ratio_diff %>%
+  kable(
+    format    = "latex",
+    booktabs  = TRUE,
+    escape    = FALSE,
+    caption   = "Estimated Number and Percentage of US Children Living in Households With Firearms, 2013--2025",
+    label     = "ShareYearRatioDiff",
+    col.names = c("Characteristic", rep(c("Est.", "95\\% CI"), length(years_r)),
+                 "Change, 2013 to 2025"),
+    linesep   = "",
+    align     = paste0("l", strrep("c", length(years_r) * 2), "c")
+  ) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(1, bold = TRUE) %>%
+  add_header_above(c(" " = 1, setNames(rep(2, length(years_r)), paste0(years_r)), " " = 1)) %>%
+  footnote(number = note_ratio_diff, threeparttable = TRUE,
+           escape = FALSE, fixed_small_size = TRUE)
+
+save_kable(tbl_ratio_diff_latex, file = here(path_ol, "tables/yearly-share-ratio-diff.tex"))
 ```
 
 
