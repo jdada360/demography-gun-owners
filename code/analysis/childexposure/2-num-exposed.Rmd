@@ -2011,3 +2011,118 @@ ggsave(
   estimator_plot, width = 8, height = 9.5, dpi = 300
 )
 ```
+
+
+## Word versions of selected tables
+
+Journals that take submissions in Word need the tables as editable .docx rather
+than LaTeX. These are built with officer and flextable from the same tibbles the
+.tex files come from, so the numbers cannot drift between the two formats.
+
+```{r}
+pacman::p_load(c("officer", "flextable"), character.only = TRUE)
+
+## The tibbles carry LaTeX escaping ("\\%", "--", "$\\times$") because they are
+## written with kable(escape = FALSE). Word wants the characters themselves.
+unesc_tex <- function(x) {
+  x %>%
+    str_replace_all(fixed("$\\times$"), "×") %>%
+    str_replace_all("\\\\+([%$&_#{}])", "\\1") %>%
+    str_replace_all("\\\\ ", " ") %>%
+    str_replace_all("--", "–")
+}
+
+## spans is an optional named vector of column counts for a merged header row
+## above the column labels, in the c(" " = 1, "2013" = 2, ...) form that
+## add_header_above() takes.
+save_table_docx <- function(df, col_labels, caption, note, file,
+                            spans = NULL, landscape = FALSE,
+                            bold_rows = NULL) {
+
+  body <- df %>% mutate(across(everything(), ~ unesc_tex(as.character(.x))))
+  names(body) <- paste0("c", seq_along(body))
+
+  ft <-
+    flextable(body) %>%
+    set_header_labels(
+      values = setNames(as.list(unesc_tex(col_labels)), names(body))
+    )
+
+  if (!is.null(spans)) {
+    ft <- add_header_row(
+      ft,
+      top      = TRUE,
+      values   = unesc_tex(names(spans)),
+      colwidths = unname(spans)
+    )
+  }
+
+  ft <-
+    ft %>%
+    theme_booktabs() %>%
+    align(align = "center", part = "all") %>%
+    align(j = 1, align = "left", part = "all") %>%
+    valign(valign = "bottom", part = "header") %>%
+    add_footer_lines(paste0("Note. ", unesc_tex(note))) %>%
+    font(fontname = "Times New Roman", part = "all") %>%
+    fontsize(size = 9, part = "all") %>%
+    fontsize(size = 8, part = "footer") %>%
+    align(align = "left", part = "footer") %>%
+    padding(padding.top = 2, padding.bottom = 2, part = "all") %>%
+    set_table_properties(layout = "autofit", width = 1)
+
+  if (!is.null(bold_rows)) ft <- bold(ft, i = bold_rows, part = "body")
+
+  section <- prop_section(
+    page_size    = page_size(
+      orient = if (landscape) "landscape" else "portrait"
+    ),
+    page_margins = page_mar(top = 1, bottom = 1, left = 1, right = 1)
+  )
+
+  read_docx() %>%
+    body_add_fpar(
+      fpar(
+        ftext(
+          unesc_tex(caption),
+          fp_text(font.family = "Times New Roman", font.size = 11, bold = TRUE)
+        )
+      )
+    ) %>%
+    body_add_par("") %>%
+    body_add_flextable(ft) %>%
+    body_set_default_section(section) %>%
+    print(target = file)
+
+  invisible(file)
+}
+
+## Landscape: 15 columns at portrait width would be unreadable.
+save_table_docx(
+  df         = tbl_ratio_diff,
+  col_labels = c("Characteristic",
+                 rep(c("Est.", "95\\% CI"), length(years_r)),
+                 "Change, 2013 to 2025"),
+  caption    = paste0(
+    "Table. Estimated Number and Percentage of US Children Living in ",
+    "Households With Firearms, 2013--2025"
+  ),
+  note       = note_ratio_diff,
+  spans      = c(" " = 1, setNames(rep(2, length(years_r)), paste0(years_r)), " " = 1),
+  landscape  = TRUE,
+  bold_rows  = which(tbl_ratio_diff$characteristic == "Observations"),
+  file       = here(path_ol, "tables", "yearly-share-ratio-diff.docx")
+)
+
+save_table_docx(
+  df         = sens_tbl,
+  col_labels = c("Characteristic", rep(c("Est.", "95\\% CI"), 2)),
+  caption    = paste0(
+    "Table. Sensitivity of 2025 Estimates to American Community Survey ",
+    "Population Totals"
+  ),
+  note       = sens_note,
+  spans      = c(" " = 1, "2024 ACS estimates" = 2, "Projected 2025 totals" = 2),
+  file       = here(path_ol, "tables", "sensitivity-acs.docx")
+)
+```
