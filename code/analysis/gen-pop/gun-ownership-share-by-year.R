@@ -225,15 +225,15 @@ female_share_plot <- ggplot(female_share_period, aes(x = 100 * female, y = fct_r
   geom_line(aes(group = race4), color = "grey70", linewidth = 3) +
   geom_point(aes(color = period), size = 5) +
   geom_text(aes(label = sprintf("%.0f%%", 100 * female), color = period),
-            vjust = -1.3, size = 3.5, show.legend = FALSE) +
+            vjust = -1.3, size = 3.5, family = "Times New Roman",
+            show.legend = FALSE) +
   scale_color_economist(name = "Survey years") +
   scale_x_continuous(breaks = seq(25, 40, by = 5), limits = c(25, NA)) +
   labs(
     x = "% of gun owners within racial and ethnic group who are female",
     y = NULL
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme
 
 ggsave(
   here(path_ol, "figures", "female-share-by-race-pooled-periods.png"),
